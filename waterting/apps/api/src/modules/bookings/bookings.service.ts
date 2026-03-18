@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { JwtPayload, BookingStatus, UnitStatus } from '@waterting/shared';
+import { JwtPayload, BookingStatus, UnitStatus, ActivityType } from '@waterting/shared';
+import { AuditService } from '../../common/audit/audit.service';
 
 @Injectable()
 export class BookingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
 
   async create(user: JwtPayload, data: any) {
     // transaction to secure unit
@@ -70,7 +74,14 @@ export class BookingsService {
   async findOne(user: JwtPayload, id: string) {
     const booking = await this.prisma.booking.findFirst({
       where: { id, lead: { tenantId: user.tenantId } },
-      include: { payments: true, commissions: true, unit: true, lead: true },
+      include: { 
+        payments: true, 
+        commissions: true, 
+        unit: true, 
+        lead: true,
+        coBuyers: true,
+        refunds: true,
+      },
     });
     if (!booking) throw new NotFoundException('Booking not found');
     return booking;
