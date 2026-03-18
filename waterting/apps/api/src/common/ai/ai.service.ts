@@ -1,11 +1,15 @@
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @Injectable()
 export class AIService {
   private readonly logger = new Logger(AIService.name);
+  private gemini: GoogleGenerativeAI;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {
+    this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+  }
 
   private async callOpenAI(endpoint: string, body: any) {
     const res = await fetch(`https://api.openai.com/v1/${endpoint}`, {
@@ -26,6 +30,14 @@ export class AIService {
   }
 
   async generateJSON<T>(prompt: string): Promise<T> {
+    if (process.env.GEMINI_API_KEY) {
+      const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const result = await model.generateContent(prompt + '\nReturn ONLY a valid JSON object.');
+      const text = result.response.text();
+      const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+      return JSON.parse(jsonStr) as T;
+    }
+
     const data = await this.callOpenAI('chat/completions', {
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
@@ -35,6 +47,12 @@ export class AIService {
   }
 
   async generateText(prompt: string): Promise<string> {
+    if (process.env.GEMINI_API_KEY) {
+      const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    }
+
     const data = await this.callOpenAI('chat/completions', {
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
