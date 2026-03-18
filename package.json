@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "migrate:prod": "npx prisma migrate deploy --schema waterting/prisma/schema.prisma || npx prisma db push --schema waterting/prisma/schema.prisma --accept-data-loss",
-    "build:api": "npm run build --workspace=api",
-    "start:api": "npm run migrate:prod && npm run start:prod --workspace=api"
+    "build:api": "npm install && cd waterting/apps/api && npx nest build",
+    "start:api": "npm run migrate:prod && cd waterting/apps/api && npm run start:prod"
   }
 }
