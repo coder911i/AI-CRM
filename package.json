@@ -13,7 +13,7 @@
     "build": "npm run build -w api",
     "build:api": "npm run build",
     "prisma:push": "npx prisma db push --schema waterting/prisma/schema.prisma --accept-data-loss",
-    "start:prod": "node waterting/apps/api/dist/apps/api/src/main.js",
+    "start:prod": "node waterting/apps/api/dist/main.js",
     "start:api": "npm run start:full",
     "start:full": "npm run build && npm run prisma:push && npm run start:prod"
   },
