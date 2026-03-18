@@ -1,31 +1,19 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { UserRole, JwtPayload } from '@waterting/shared';
 import { CurrentUser } from '../../common/decorators/user.decorator';
-import { JwtPayload } from '@waterting/shared';
 
 @Controller('analytics')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(private analytics: AnalyticsService) {}
 
-  @Get('funnel')
-  getFunnel(@CurrentUser() user: JwtPayload) {
-    return this.analyticsService.getFunnel(user);
-  }
-
-  @Get('agents')
-  getAgentPerformance(@CurrentUser() user: JwtPayload) {
-    return this.analyticsService.getAgentPerformance(user);
-  }
-
-  @Get('sources')
-  getSourceAnalytics(@CurrentUser() user: JwtPayload) {
-    return this.analyticsService.getSourceAnalytics(user);
-  }
-
-  @Post('ask')
-  askAI(@CurrentUser() user: JwtPayload, @Body('question') question: string) {
-    return this.analyticsService.askAI(user, question);
+  @Get('inventory')
+  @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
+  async getInventory(@CurrentUser() user: JwtPayload, @Query('projectId') projectId?: string) {
+    return this.analytics.getInventoryInsights(user.tenantId, projectId);
   }
 }
