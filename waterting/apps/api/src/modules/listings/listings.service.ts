@@ -58,4 +58,25 @@ export class ListingsService {
       create: leadData,
     });
   }
+
+  async bulkUpdatePrices(tenantId: string, projectId: string, increasePct: number) {
+    const factor = 1 + (increasePct / 100);
+    
+    // Update Units
+    await this.prisma.unit.updateMany({
+      where: { tower: { projectId }, status: 'AVAILABLE' },
+      data: {
+        basePrice: { multiply: factor },
+        totalPrice: { multiply: factor },
+      },
+    });
+
+    // Update Listings
+    return this.prisma.listing.updateMany({
+      where: { tenantId, projectId },
+      data: {
+        price: { multiply: factor },
+      },
+    });
+  }
 }
