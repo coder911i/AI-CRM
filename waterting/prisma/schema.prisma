@@ -22,6 +22,7 @@ enum UserRole {
   SALES_AGENT
   ACCOUNTS
   BROKER
+  BUYER
 }
 
 enum LeadStage {

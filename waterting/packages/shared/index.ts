@@ -11,8 +11,9 @@ export enum UserRole {
   TENANT_ADMIN = 'TENANT_ADMIN',
   SALES_MANAGER = 'SALES_MANAGER',
   SALES_AGENT = 'SALES_AGENT',
-  ACCOUNTS = 'ACCOUNTS',
+   ACCOUNTS = 'ACCOUNTS',
   BROKER = 'BROKER',
+  BUYER = 'BUYER',
 }
 
 export enum LeadStage {

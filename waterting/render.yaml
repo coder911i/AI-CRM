@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: waterting-api
+    runtime: node
+    buildCommand: npm install && npm run build --workspace=apps/api
+    startCommand: npm run start:prod --workspace=apps/api
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: waterting-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - fromGroup: waterting-secrets
+
+databases:
+  - name: waterting-db
+    plan: free
+    region: singapore # Adjust as needed
