@@ -185,14 +185,45 @@ model Project {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  towers      Tower[]
-  leads       Lead[]
+  tenant              Tenant               @relation(fields: [tenantId], references: [id])
+  towers              Tower[]
+  leads               Lead[]
+  media               ProjectMedia[]
+  constructionUpdates ConstructionUpdate[]
 
   @@index([tenantId])
 }
 
+model ProjectMedia {
+  id        String   @id @default(cuid())
+  projectId String
+  type      String // BROCHURE, WALKTHROUGH, IMAGE
+  url       String
+  title     String?
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+}
+
+model ConstructionUpdate {
+  id            String   @id @default(cuid())
+  projectId     String
+  milestoneName String
+  description   String?
+  photoUrls     String[]
+  progressPct   Int      @default(0)
+  updateDate    DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  project       Project  @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+}
+
 model Tower {
+  // ... existing fields ...
   id          String  @id @default(cuid())
   projectId   String
   name        String
@@ -206,6 +237,7 @@ model Tower {
 }
 
 model Unit {
+  // ... existing fields ...
   id           String     @id @default(cuid())
   towerId      String
   floor        Int
@@ -230,6 +262,7 @@ model Unit {
 }
 
 model Lead {
+  // ... existing fields ...
   id              String      @id @default(cuid())
   tenantId        String
   projectId       String?
@@ -272,6 +305,7 @@ model Lead {
 }
 
 model Activity {
+  // ... existing fields ...
   id          String       @id @default(cuid())
   leadId      String
   userId      String?
@@ -288,6 +322,7 @@ model Activity {
 }
 
 model SiteVisit {
+  // ... existing fields ...
   id            String        @id @default(cuid())
   leadId        String
   agentId       String?
@@ -308,6 +343,7 @@ model SiteVisit {
 }
 
 model Broker {
+  // ... existing fields ...
   id            String  @id @default(cuid())
   tenantId      String
   name          String
@@ -338,6 +374,7 @@ model Booking {
   nomineeName     String?
   bookingAmount   Float
   status          BookingStatus @default(INITIATED)
+  isVerified      Boolean       @default(false)
   documents       String[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -346,12 +383,44 @@ model Booking {
   lead            Lead      @relation(fields: [leadId], references: [id])
   payments        Payment[]
   commissions     Commission[]
+  coBuyers        CoBuyer[]
+  refunds         Refund[]
 
   @@index([leadId])
   @@index([unitId])
 }
 
+model CoBuyer {
+  id          String   @id @default(cuid())
+  bookingId   String
+  name        String
+  phone       String
+  email       String?
+  relation    String? // SPOUSE, PARTNER, PARENT, etc.
+  createdAt   DateTime @default(now())
+
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId])
+}
+
+model Refund {
+  id              String   @id @default(cuid())
+  bookingId       String
+  amount          Float
+  reason          String?
+  status          String   @default("PENDING") // PENDING, PROCESSED, REJECTED
+  referenceNumber String?
+  processedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  booking         Booking  @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId])
+}
+
 model Payment {
+  // ... existing fields ...
   id              String        @id @default(cuid())
   bookingId       String
   amount          Float
@@ -360,6 +429,7 @@ model Payment {
   method          PaymentMethod?
   referenceNumber String?
   receiptUrl      String?
+  isVerified      Boolean       @default(false) // Approved by Accounts role
   isOverdue       Boolean       @default(false)
   createdAt       DateTime      @default(now())
 
@@ -370,6 +440,7 @@ model Payment {
 }
 
 model Commission {
+  // ... existing fields ...
   id          String   @id @default(cuid())
   brokerId    String
   bookingId   String
@@ -385,6 +456,7 @@ model Commission {
 }
 
 model Automation {
+  // ... existing fields ...
   id          String   @id @default(cuid())
   tenantId    String
   name        String
@@ -400,6 +472,7 @@ model Automation {
 }
 
 model Embedding {
+  // ... existing fields ...
   id          String   @id @default(cuid())
   tenantId    String
   leadId      String?
@@ -413,7 +486,9 @@ model Embedding {
 
   @@index([tenantId])
 }
+
 model Notification {
+  // ... existing fields ...
   id        String   @id @default(cuid())
   tenantId  String
   userId    String
@@ -432,6 +507,7 @@ model Notification {
 }
 
 model BrokerDispute {
+  // ... existing fields ...
   id          String   @id @default(cuid())
   tenantId    String
   brokerId    String
@@ -444,3 +520,22 @@ model BrokerDispute {
 
   broker      Broker @relation(fields: [brokerId], references: [id])
 }
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String?
+  action      String
+  entity      String
+  entityId    String
+  oldData     Json?
+  newData     Json?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  tenant      Tenant @relation(fields: [tenantId], references: [id], name: "TenantAuditLogs")
+}
+
+// Add relation back to Tenant for AuditLogs
+// Needs update to Tenant model
+
