@@ -144,6 +144,7 @@ model Tenant {
   automations Automation[]
   embeddings  Embedding[]
   notifications Notification[]
+  auditLogs     AuditLog[]   @relation("TenantAuditLogs")
 }
 
 model User {
