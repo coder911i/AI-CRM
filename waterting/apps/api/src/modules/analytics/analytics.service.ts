@@ -1,75 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload } from '@waterting/shared';
-import { AIService } from '../../common/ai/ai.service';
 
 @Injectable()
 export class AnalyticsService {
-  constructor(
-    private prisma: PrismaService,
-    private ai: AIService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  async getFunnel(user: JwtPayload) {
-    const stages = ['NEW_LEAD', 'CONTACTED', 'INTERESTED', 'VISIT_SCHEDULED', 'VISIT_DONE', 'NEGOTIATION', 'BOOKING_DONE', 'LOST'];
-    const results = await this.prisma.lead.groupBy({
-      by: ['stage'],
-      where: { tenantId: user.tenantId },
-      _count: { id: true },
+  async getInventoryInsights(tenantId: string, projectId?: string) {
+    // 1. Total Inventory & Status Breakdown
+    const units = await this.prisma.unit.findMany({
+      where: projectId 
+        ? { tower: { projectId } } 
+        : { tower: { project: { tenantId } } },
+      select: { status: true, totalPrice: true },
     });
 
-    return stages.map((stage) => ({
-      stage,
-      count: results.find((r) => r.stage === stage)?._count.id || 0,
-    }));
-  }
+    const counts = {
+      TOTAL: units.length,
+      AVAILABLE: units.filter(u => u.status === 'AVAILABLE').length,
+      BOOKED: units.filter(u => u.status === 'BOOKED').length,
+      SOLD: units.filter(u => u.status === 'SOLD').length,
+      RESERVED: units.filter(u => u.status === 'RESERVED').length,
+    };
 
-  async getAgentPerformance(user: JwtPayload) {
-    const agents = await this.prisma.user.findMany({
-      where: { tenantId: user.tenantId, role: { in: ['SALES_AGENT', 'SALES_MANAGER'] } },
-      select: {
-        id: true,
-        name: true,
-        _count: { select: { leads: true, siteVisits: true } },
-      },
+    // 2. Sales Value
+    const salesValue = units
+      .filter(u => u.status === 'BOOKED' || u.status === 'SOLD')
+      .reduce((acc, u) => acc + u.totalPrice, 0);
+
+    // 3. Absorption Rate (Booking per month - simplify simplified)
+    const bookings = await this.prisma.booking.count({
+      where: { lead: { tenantId }, createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
     });
-    return agents;
-  }
-
-  async getSourceAnalytics(user: JwtPayload) {
-    const results = await this.prisma.lead.groupBy({
-      by: ['source'],
-      where: { tenantId: user.tenantId },
-      _count: { id: true },
-    });
-    return results.map((r) => ({ source: r.source, count: r._count.id }));
-  }
-
-  async askAI(user: JwtPayload, question: string) {
-    const leads = await this.getFunnel(user);
-    const sourceData = await this.getSourceAnalytics(user);
-
-    const prompt = `
-Question: ${question}
-Context Data: 
-Funnel: ${JSON.stringify(leads)}
-Sources: ${JSON.stringify(sourceData)}
-
-As a CRM Analyst, provide a 2-sentence answer and a suggested chart type (Bar, Pie, or Line).
-Return ONLY JSON: { "answer": "...", "chartType": "..." }`;
-
-    const aiRes = await this.ai.generateJSON<{ answer: string; chartType: string }>(prompt);
-    
-    // Attach the relevant data based on chartType
-    let chartData = [];
-    if (aiRes.chartType?.toUpperCase() === 'BAR') chartData = leads;
-    if (aiRes.chartType?.toUpperCase() === 'PIE') chartData = sourceData;
-    if (aiRes.chartType?.toUpperCase() === 'LINE') chartData = leads; // Fallback to funnel trends
 
     return {
-      ...aiRes,
-      chartData,
-      timestamp: new Date().toISOString(),
+      statusBreakdown: counts,
+      totalSalesValue: salesValue,
+      absorptionRate30d: bookings,
+      occupancyPct: Math.round(((counts.TOTAL - counts.AVAILABLE) / counts.TOTAL) * 100) || 0,
     };
   }
 }
