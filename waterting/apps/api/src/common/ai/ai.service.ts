@@ -61,6 +61,12 @@ export class AIService {
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
+    if (process.env.GEMINI_API_KEY) {
+      const model = this.gemini.getGenerativeModel({ model: 'text-embedding-004' });
+      const result = await model.embedContent(text);
+      return result.embedding.values;
+    }
+
     const data = await this.callOpenAI('embeddings', {
       model: 'text-embedding-3-small',
       input: text,
