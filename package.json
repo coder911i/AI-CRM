@@ -10,7 +10,7 @@
     "waterting/packages/*"
   ],
   "scripts": {
-    "migrate:prod": "npx prisma migrate deploy --schema waterting/prisma/schema.prisma",
+    "migrate:prod": "npx prisma migrate deploy --schema waterting/prisma/schema.prisma || npx prisma db push --schema waterting/prisma/schema.prisma --accept-data-loss",
     "build:api": "npm run build --workspace=api",
     "start:api": "npm run migrate:prod && npm run start:prod --workspace=api"
   }
