@@ -20,7 +20,6 @@ export default function NotificationBell() {
 
   useEffect(() => {
     if (socket && user) {
-      socket.emit('join-user', { userId: user.id });
       socket.on('notification', (notif) => {
         setNotifications((prev) => [notif, ...prev]);
         setUnreadCount((prev) => prev + 1);

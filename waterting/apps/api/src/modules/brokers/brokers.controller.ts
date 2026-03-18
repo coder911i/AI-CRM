@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Res, Query } from '@nestjs/common';
 import { Response } from 'express';
 import * as QRCode from 'qrcode';
 import { BrokersService } from './brokers.service';
@@ -25,8 +25,8 @@ export class BrokersController {
 
   @Get()
   @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER, UserRole.SALES_AGENT)
-  findAll(@CurrentUser() user: JwtPayload) {
-    return this.brokersService.findAll(user);
+  findAll(@CurrentUser() user: JwtPayload, @Query('page') page?: number, @Query('limit') limit?: number) {
+    return this.brokersService.findAll(user, Number(page || 1), Number(limit || 50));
   }
 
   @Get(':id')
@@ -53,5 +53,10 @@ export class BrokersController {
     const qrBuffer = await QRCode.toBuffer(url, { width: 400, type: 'png' });
     res.setHeader('Content-Type', 'image/png');
     res.send(qrBuffer);
+  }
+
+  @Get(':id/statement')
+  getStatement(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.brokersService.getStatement(user, id);
   }
 }

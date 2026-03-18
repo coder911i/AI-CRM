@@ -3,16 +3,15 @@ import { Job } from 'bull';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { EventsGateway } from '../gateways/events.gateway';
-import OpenAI from 'openai';
+import { AIService } from '../common/ai/ai.service';
 
 @Processor('ai-scoring')
 @Injectable()
 export class AiLeadScoringWorker {
-  private openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
   constructor(
     private prisma: PrismaService,
     private events: EventsGateway,
+    private ai: AIService,
   ) {}
 
   @Process('score-lead')
@@ -56,17 +55,10 @@ Behavioral signals (15%): Source is ${lead.source}.
 Demographics (10%): No demographic data yet.
 
 Return ONLY valid JSON with no extra text:
-{"score": <0-100>, "label": "Cold|Warm|Hot|Very Hot", "reasoning": "<2 sentences max>"}
+{"score": <number>, "label": "Cold|Warm|Hot|Very Hot", "reasoning": "string"}
 `;
 
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      max_tokens: 200,
-    });
-
-    const result = JSON.parse(response.choices[0].message.content!);
+    const result = await this.ai.generateJSON<{ score: number; label: string; reasoning: string }>(prompt);
     const score = Math.min(100, Math.max(0, result.score));
     const scoreLabel = result.label as string;
 
@@ -79,7 +71,7 @@ Return ONLY valid JSON with no extra text:
     await this.prisma.activity.create({
       data: {
         leadId,
-        type: 'AI_ACTION',
+        type: 'AI_ACTION' as any,
         title: `AI Score: ${score}/100 (${scoreLabel})`,
         description: result.reasoning,
       },

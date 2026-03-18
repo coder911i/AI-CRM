@@ -1,5 +1,4 @@
 import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request, Res, Query, NotFoundException } from '@nestjs/common';
-import OpenAI from 'openai';
 import { LeadsService } from './leads.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -7,14 +6,15 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/user.decorator';
 import { JwtPayload, UserRole } from '@waterting/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { AIService } from '../../common/ai/ai.service';
 
 @Controller('leads')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class LeadsController {
-  private openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   constructor(
     private readonly leadsService: LeadsService,
     private prisma: PrismaService,
+    private ai: AIService,
   ) {}
 
   @Post()
@@ -23,13 +23,33 @@ export class LeadsController {
   }
 
   @Get()
-  findAll(@CurrentUser() user: JwtPayload) {
-    return this.leadsService.findAll(user);
+  findAll(@CurrentUser() user: JwtPayload, @Query('page') page?: number, @Query('limit') limit?: number) {
+    return this.leadsService.findAll(user, Number(page || 1), Number(limit || 50));
   }
 
   @Get(':id')
   findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return this.leadsService.findOne(user, id);
+  }
+
+  @Patch(':id')
+  update(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() data: any) {
+    return this.leadsService.update(user, id, data);
+  }
+
+  @Patch(':id/assign')
+  assign(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body('userId') userId: string) {
+    return this.leadsService.assign(user, id, userId);
+  }
+
+  @Post(':id/notes')
+  addNote(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body('title') title: string, @Body('description') description: string) {
+    return this.leadsService.addNote(user, id, title, description);
+  }
+
+  @Post(':id/calls')
+  addCall(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body('duration') duration: string, @Body('outcome') outcome: string) {
+    return this.leadsService.addCall(user, id, duration, outcome);
   }
 
   @Patch(':id/stage')
@@ -125,14 +145,7 @@ Return ONLY valid JSON:
   "suggestedOpener": "exact opening line for the call"
 }`;
 
-    const res = await this.openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      max_tokens: 400,
-    });
-
-    return JSON.parse(res.choices[0].message.content!);
+    return this.ai.generateJSON(prompt);
   }
 
   @Get(':id/recommendations')
@@ -172,12 +185,8 @@ Return ONLY valid JSON:
     Budget: ₹${lead.budgetMin} - ₹${lead.budgetMax}
     Recent Actions: ${lead.activities.map(a => a.description).join('; ')}`;
 
-    const res = await this.openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 200,
-    });
+    const summary = await this.ai.generateText(prompt);
 
-    return { summary: res.choices[0].message.content };
+    return { summary };
   }
 }

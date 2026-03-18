@@ -32,4 +32,16 @@ export class TowersService {
       include: { units: true },
     });
   }
+
+  async update(user: JwtPayload, id: string, data: any) {
+    const tower = await this.prisma.tower.findFirst({
+      where: { id, project: { tenantId: user.tenantId } },
+    });
+    if (!tower) throw new NotFoundException('Tower not found');
+
+    return this.prisma.tower.update({
+      where: { id },
+      data,
+    });
+  }
 }

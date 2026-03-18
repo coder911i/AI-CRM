@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload } from '@waterting/shared';
-import OpenAI from 'openai';
+import { AIService } from '../../common/ai/ai.service';
 
 @Injectable()
 export class AnalyticsService {
-  private openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private ai: AIService,
+  ) {}
 
   async getFunnel(user: JwtPayload) {
     const stages = ['NEW_LEAD', 'CONTACTED', 'INTERESTED', 'VISIT_SCHEDULED', 'VISIT_DONE', 'NEGOTIATION', 'BOOKING_DONE', 'LOST'];
@@ -56,13 +58,7 @@ Sources: ${JSON.stringify(sourceData)}
 As a CRM Analyst, provide a 2-sentence answer and a suggested chart type (Bar, Pie, or Line).
 Return ONLY JSON: { "answer": "...", "chartType": "..." }`;
 
-    const res = await this.openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    });
-
-    const aiRes = JSON.parse(res.choices[0].message.content!);
+    const aiRes = await this.ai.generateJSON<{ answer: string; chartType: string }>(prompt);
     
     // Attach the relevant data based on chartType
     let chartData = [];

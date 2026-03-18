@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { api, getToken, setToken, clearToken } from './api-client';
 
 interface User {
+  id: string;
   sub: string;
   tenantId: string;
   role: string;

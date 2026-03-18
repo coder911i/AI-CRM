@@ -42,13 +42,41 @@ export class LeadsService {
       data: { ...data, phone, tenantId: user.tenantId },
       include: { project: true },
     });
+    
+    // NEW_LEAD trigger: auto-assign agent (round-robin) + welcome email
+    const assignedToId = await this.autoAssign(user.tenantId);
+    if (assignedToId) {
+      await this.prisma.lead.update({
+        where: { id: lead.id },
+        data: { assignedToId },
+      });
+      await this.notificationsService.create({
+        tenantId: user.tenantId,
+        userId: assignedToId,
+        title: 'New Lead Assigned',
+        message: `You have been assigned a new lead: ${lead.name}`,
+        type: 'NEW_LEAD',
+        leadId: lead.id,
+      });
+    }
+
+    if (lead.email && !lead.emailOptOut) {
+      await this.emailQueue.add('send', {
+        to: lead.email,
+        subject: `Welcome to ${lead.project?.name || 'Waterting CRM'}`,
+        html: `Hi ${lead.name}, thanks for your interest. Our representative will contact you soon.`,
+      });
+    }
+
     await this.aiScoringQueue.add('score-lead', { leadId: lead.id, tenantId: user.tenantId });
     return lead;
   }
 
-  async findAll(user: JwtPayload) {
+  async findAll(user: JwtPayload, page = 1, limit = 50) {
     return this.prisma.lead.findMany({
       where: { tenantId: user.tenantId },
+      take: limit,
+      skip: (page - 1) * limit,
       include: {
         project: true,
         assignedTo: { select: { id: true, name: true } },
@@ -69,6 +97,69 @@ export class LeadsService {
     });
     if (!lead) throw new NotFoundException('Lead not found');
     return lead;
+  }
+
+  async update(user: JwtPayload, id: string, data: any) {
+    const lead = await this.prisma.lead.findFirst({
+      where: { id, tenantId: user.tenantId },
+    });
+    if (!lead) throw new NotFoundException('Lead not found');
+
+    return this.prisma.lead.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async assign(user: JwtPayload, id: string, userId: string) {
+    const lead = await this.prisma.lead.findFirst({
+      where: { id, tenantId: user.tenantId },
+    });
+    if (!lead) throw new NotFoundException('Lead not found');
+
+    const agent = await this.prisma.user.findFirst({
+      where: { id: userId, tenantId: user.tenantId },
+    });
+    if (!agent) throw new NotFoundException('Agent not found');
+
+    return this.prisma.lead.update({
+      where: { id },
+      data: { assignedToId: userId },
+    });
+  }
+
+  async addNote(user: JwtPayload, id: string, title: string, description: string) {
+    const lead = await this.prisma.lead.findFirst({
+      where: { id, tenantId: user.tenantId },
+    });
+    if (!lead) throw new NotFoundException('Lead not found');
+
+    return this.prisma.activity.create({
+      data: {
+        leadId: id,
+        userId: user.sub,
+        type: ActivityType.NOTE,
+        title,
+        description,
+      },
+    });
+  }
+
+  async addCall(user: JwtPayload, id: string, duration: string, outcome: string) {
+    const lead = await this.prisma.lead.findFirst({
+      where: { id, tenantId: user.tenantId },
+    });
+    if (!lead) throw new NotFoundException('Lead not found');
+
+    return this.prisma.activity.create({
+      data: {
+        leadId: id,
+        userId: user.sub,
+        type: ActivityType.CALL,
+        title: `Call logged - ${outcome}`,
+        description: `Duration: ${duration}. Outcome: ${outcome}`,
+      },
+    });
   }
 
   async updateStage(user: JwtPayload, id: string, stage: string) {
@@ -93,14 +184,73 @@ export class LeadsService {
 
   private async handleStageTrigger(user: JwtPayload, lead: any, stage: string) {
     switch (stage) {
-      case 'VISIT_SCHEDULED':
-        await this.emailQueue.add('send', {
-          to: lead.email,
-          subject: 'Site Visit Scheduled',
-          template: 'visit-confirmation',
-          context: { name: lead.name, date: new Date().toLocaleDateString() },
-        });
+      case 'CONTACTED':
+        // schedule 48h follow-up reminder
+        // This is handled by StaleLeadWorker which monitors lastActivityAt
         break;
+
+      case 'INTERESTED':
+        // queue brochure email + add to nurture sequence
+        if (lead.email && !lead.emailOptOut) {
+          await this.emailQueue.add('send', {
+            to: lead.email,
+            subject: 'Project Brochure',
+            html: `Hi ${lead.name}, please find the brochure attached.`,
+          });
+        }
+        break;
+
+      case 'VISIT_SCHEDULED':
+        if (lead.email && !lead.emailOptOut) {
+          await this.emailQueue.add('send', {
+            to: lead.email,
+            subject: 'Site Visit Scheduled',
+            template: 'visit-confirmation',
+            context: { name: lead.name, date: new Date().toLocaleDateString() },
+          });
+          // 24h reminder
+          await this.emailQueue.add('send', {
+            to: lead.email,
+            subject: 'Reminder: Site Visit Tomorrow',
+            html: `Hi ${lead.name}, your visit is scheduled for tomorrow.`,
+          }, { delay: 24 * 3600000 });
+          // 2h reminder
+          await this.emailQueue.add('send', {
+            to: lead.email,
+            subject: 'Reminder: Site Visit in 2 Hours',
+            html: `Hi ${lead.name}, your visit starts in 2 hours!`,
+          }, { delay: 22 * 3600000 }); // Assuming scheduled in 24h
+        }
+        break;
+
+      case 'VISIT_DONE':
+        // queue post-visit nurture email (4h delay)
+        if (lead.email && !lead.emailOptOut) {
+          await this.emailQueue.add('send', {
+            to: lead.email,
+            subject: 'Thank you for visiting!',
+            html: `Hi ${lead.name}, it was great meeting you today. Let us know if you have questions.`,
+          }, { delay: 4 * 3600000 });
+        }
+        break;
+
+      case 'NEGOTIATION':
+        // notify all SalesManagers + TenantAdmin
+        const admins = await this.prisma.user.findMany({
+          where: { tenantId: user.tenantId, role: { in: ['TENANT_ADMIN', 'SALES_MANAGER'] } },
+        });
+        for (const admin of admins) {
+          await this.notificationsService.create({
+            tenantId: user.tenantId,
+            userId: admin.id,
+            title: `Negotiation Stage: ${lead.name}`,
+            message: `${lead.assignedTo?.name || 'Agent'} moved ${lead.name} to Negotiation. Close it!`,
+            type: 'NEGOTIATION',
+            leadId: lead.id,
+          });
+        }
+        break;
+
       case 'BOOKING_DONE':
         const booking = await this.prisma.booking.findFirst({
           where: { leadId: lead.id },
@@ -128,6 +278,20 @@ export class LeadsService {
               type: 'BOOKING',
               leadId: lead.id,
             });
+          }
+        }
+        break;
+
+      case 'LOST':
+        // queue re-engagement emails at 90/120/180 days
+        if (lead.email && !lead.emailOptOut) {
+          const delays = [90, 120, 180].map(d => d * 24 * 3600000);
+          for (const d of delays) {
+            await this.emailQueue.add('send', {
+              to: lead.email,
+              subject: 'Checking in',
+              html: `Hi ${lead.name}, we haven't spoken in a while. Any updates on your home search?`,
+            }, { delay: d });
           }
         }
         break;

@@ -28,10 +28,11 @@ export class UnitsController {
 
   @Patch('units/bulk-price')
   @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
-  async bulkPrice(@Body() dto: { towerId: string; floor?: number; basePrice: number }) {
+  async bulkPrice(@CurrentUser() user: JwtPayload, @Body() dto: { towerId: string; floor?: number; basePrice: number }) {
     return this.prisma.unit.updateMany({
       where: {
         towerId: dto.towerId,
+        tower: { project: { tenantId: user.tenantId } },
         ...(dto.floor !== undefined && { floor: dto.floor }),
       },
       data: { basePrice: dto.basePrice, totalPrice: dto.basePrice },
@@ -39,11 +40,11 @@ export class UnitsController {
   }
 
   @Patch('units/:id/hold')
-  async holdUnit(@Param('id') id: string, @Body() dto: { holdHours: 48 | 72 }) {
+  async holdUnit(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: { holdHours: 48 | 72 }) {
     const holdUntil = new Date(Date.now() + (dto.holdHours || 48) * 3600000);
     return this.prisma.unit.update({
-      where: { id },
-      data: { status: 'RESERVED', holdUntil },
+      where: { id, tower: { project: { tenantId: user.tenantId } } },
+      data: { status: UnitStatus.RESERVED, holdUntil },
     });
   }
 
@@ -60,9 +61,9 @@ export class UnitsController {
 
   @Get('projects/:projectId/units/export')
   @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
-  async exportUnits(@Param('projectId') projectId: string, @Res() res: any) {
+  async exportUnits(@CurrentUser() user: JwtPayload, @Param('projectId') projectId: string, @Res() res: any) {
     const units = await this.prisma.unit.findMany({
-      where: { tower: { projectId } },
+      where: { tower: { projectId, project: { tenantId: user.tenantId } } },
       include: { tower: true },
     });
     

@@ -15,6 +15,7 @@ export class StaleLeadWorker {
   async checkStaleLeads() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
 
     const stale = await this.prisma.lead.findMany({
       where: {
@@ -33,9 +34,17 @@ export class StaleLeadWorker {
       },
     });
 
+    // Contacted leads — 2 day threshold
+    const contactedStale = await this.prisma.lead.findMany({
+      where: {
+        stage: 'CONTACTED',
+        lastActivityAt: { lt: twoDaysAgo },
+      },
+    });
+
     // Merge Unique
     const staleMap = new Map();
-    [...stale, ...hotStale].forEach(lead => staleMap.set(lead.id, lead));
+    [...stale, ...hotStale, ...contactedStale].forEach(lead => staleMap.set(lead.id, lead));
     const allStale = Array.from(staleMap.values());
 
     for (const lead of allStale) {

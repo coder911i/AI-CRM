@@ -53,10 +53,12 @@ export class BookingsService {
     });
   }
 
-  async findAll(user: JwtPayload) {
+  async findAll(user: JwtPayload, page = 1, limit = 50) {
     // Retrieve all bookings for the tenant
     return this.prisma.booking.findMany({
       where: { lead: { tenantId: user.tenantId } },
+      take: limit,
+      skip: (page - 1) * limit,
       include: {
         unit: { include: { tower: { include: { project: true } } } },
         lead: true,
@@ -72,5 +74,42 @@ export class BookingsService {
     });
     if (!booking) throw new NotFoundException('Booking not found');
     return booking;
+  }
+
+  async schedulePayments(user: JwtPayload, id: string, payments: any[]) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, unit: { tower: { project: { tenantId: user.tenantId } } } },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    return this.prisma.$transaction(async (prisma) => {
+      // Delete existing unpaid payments
+      await prisma.payment.deleteMany({
+        where: { bookingId: id, paidAt: null },
+      });
+
+      return prisma.payment.createMany({
+        data: payments.map(p => ({
+          ...p,
+          bookingId: id,
+          dueDate: new Date(p.dueDate),
+        })),
+      });
+    });
+  }
+
+  async recordPayment(user: JwtPayload, id: string, paymentId: string, data: any) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, unit: { tower: { project: { tenantId: user.tenantId } } } },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    return this.prisma.payment.update({
+      where: { id: paymentId, bookingId: id },
+      data: {
+        ...data,
+        paidAt: data.paidAt ? new Date(data.paidAt) : new Date(),
+      },
+    });
   }
 }

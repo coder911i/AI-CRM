@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
 import { TowersService } from './towers.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -20,5 +20,11 @@ export class TowersController {
   @Get()
   findAll(@CurrentUser() user: JwtPayload, @Param('projectId') projectId: string) {
     return this.towersService.findAllByProject(user, projectId);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
+  update(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() data: any) {
+    return this.towersService.update(user, id, data);
   }
 }

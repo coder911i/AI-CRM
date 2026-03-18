@@ -33,8 +33,38 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       transports: ['websocket'],
     });
 
-    newSocket.on('connect', () => setIsConnected(true));
+    newSocket.on('connect', () => {
+      setIsConnected(true);
+      if (user) {
+        newSocket.emit('join', { tenantId: user.tenantId });
+        newSocket.emit('join-user', { userId: user.id });
+      }
+    });
     newSocket.on('disconnect', () => setIsConnected(false));
+
+    newSocket.on('lead:new', (lead) => {
+      // Global toast or state update could go here
+      console.log('New lead received:', lead);
+    });
+
+    newSocket.on('lead:scored', ({ leadId, score }) => {
+      console.log(`Lead ${leadId} scored: ${score}`);
+    });
+
+    newSocket.on('lead:updated', (lead) => {
+      console.log('Lead updated:', lead);
+    });
+
+    newSocket.on('unit:status', ({ unitId, status }) => {
+      console.log(`Unit ${unitId} status: ${status}`);
+    });
+
+    newSocket.on('notification', (notif) => {
+      // Global toast notification logic
+      if (window.Notification && Notification.permission === 'granted') {
+        new Notification(notif.title, { body: notif.message });
+      }
+    });
 
     setSocket(newSocket);
 

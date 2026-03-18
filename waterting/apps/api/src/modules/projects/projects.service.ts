@@ -6,10 +6,13 @@ import { JwtPayload } from '@waterting/shared';
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(user: JwtPayload) {
+  async findAll(user: JwtPayload, page = 1, limit = 50) {
     return this.prisma.project.findMany({
       where: { tenantId: user.tenantId },
+      take: limit,
+      skip: (page - 1) * limit,
       include: { towers: true },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
