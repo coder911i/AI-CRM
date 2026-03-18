@@ -1,0 +1,11 @@
+{
+  "name": "ai-crm-root",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build:api": "npm run build --workspace=apps/api --prefix waterting",
+    "start:api": "npm run start:prod --workspace=apps/api --prefix waterting"
+  }
+}
