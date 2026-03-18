@@ -1,0 +1,21 @@
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install API deps
+        run: cd apps/api && npm ci
+      - name: Generate Prisma Client
+        run: cd apps/api && npx prisma generate --schema=../../prisma/schema.prisma
+      - name: Install Web deps
+        run: cd apps/web && npm ci
+      - name: Build Web
+        run: cd apps/web && npm run build
+        env:
+          NEXT_PUBLIC_API_URL: https://waterting-api.onrender.com
+          NEXT_PUBLIC_APP_URL: https://waterting.vercel.app
