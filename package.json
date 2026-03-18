@@ -10,8 +10,8 @@
     "waterting/packages/*"
   ],
   "scripts": {
+    "build:api": "npm install && npm run build -w api",
     "migrate:prod": "npx prisma migrate deploy --schema waterting/prisma/schema.prisma || npx prisma db push --schema waterting/prisma/schema.prisma --accept-data-loss",
-    "build:api": "npm install && cd waterting/apps/api && npx nest build && cd ../../.. && (rm -rf dist || true) && cp -r waterting/apps/api/dist dist",
-    "start:api": "npm run migrate:prod && node dist/main"
+    "start:api": "npm run migrate:prod && node waterting/apps/api/dist/apps/api/src/main"
   }
 }
