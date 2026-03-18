@@ -478,7 +478,7 @@ model Embedding {
   tenantId    String
   leadId      String?
   unitId      String?
-  embedding   Unsupported("vector(1024)")?
+  embedding   Unsupported("vector(1536)")?
   metadata    Json     @default("{}")
   createdAt   DateTime @default(now())
 
