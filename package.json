@@ -4,9 +4,14 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "workspaces": [
+    "waterting",
+    "waterting/apps/*",
+    "waterting/packages/*"
+  ],
   "scripts": {
     "migrate:prod": "npx prisma migrate deploy --schema waterting/prisma/schema.prisma",
-    "build:api": "npm run build --workspace=apps/api --prefix waterting",
-    "start:api": "npm run migrate:prod && npm run start:prod --workspace=apps/api --prefix waterting"
+    "build:api": "npm run build --workspace=api",
+    "start:api": "npm run migrate:prod && npm run start:prod --workspace=api"
   }
 }
