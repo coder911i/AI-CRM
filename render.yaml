@@ -2,8 +2,8 @@ services:
   - type: web
     name: waterting-api
     runtime: node
-    buildCommand: npm install && npm run build --workspace=apps/api
-    startCommand: npm run start:prod --workspace=apps/api
+    buildCommand: cd waterting && npm install && npm run build --workspace=apps/api
+    startCommand: cd waterting && npm run start:prod --workspace=apps/api
     envVars:
       - key: DATABASE_URL
         fromDatabase:
