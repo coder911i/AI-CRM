@@ -45,26 +45,35 @@ export class AiLeadScoringWorker {
     const maxPrice = prices.length ? Math.max(...prices) : 0;
 
     const prompt = `
-Score this real estate lead 0-100 for purchase conversion probability.
+Score this real estate lead from 0 to 100 for purchase conversion probability based on these PRD weights:
 
-Budget match (25%): Lead budget ₹${lead.budgetMax ?? 'unknown'}, project range ₹${minPrice}–₹${maxPrice}.
-Source quality (20%): Historical conversion for ${lead.source} is ${conversionRate}%.
-Timeline urgency (15%): Wants to buy in ${lead.timeline ?? 'unknown'}.
-Response speed (15%): Lead was created ${Math.round((Date.now() - lead.createdAt.getTime()) / 3600000)} hours ago.
-Behavioral signals (15%): Source is ${lead.source}.
-Demographics (10%): No demographic data yet.
+1. Budget match (25%): Lead budget up to ₹${lead.budgetMax ?? 'unknown'}, project price range ₹${minPrice}–₹${maxPrice}.
+2. Source quality (20%): Historical conversion for ${lead.source} is ${conversionRate}%.
+3. Response speed (15%): Lead was created ${Math.round((Date.now() - lead.createdAt.getTime()) / 3600000)} hours ago. (Lower is better)
+4. Timeline urgency (15%): Wants to buy in ${lead.timeline ?? 'unknown'}. (Immediate is best)
+5. Behavioral signals (15%): Source is ${lead.source}. (Organic/Portal is better than Mass Campaign)
+6. Demographics (10%): No specific data yet.
 
-Return ONLY valid JSON with no extra text:
-{"score": <number>, "label": "Cold|Warm|Hot|Very Hot", "reasoning": "string"}
+PRD Score Labels:
+- Cold: 0-30
+- Warm: 31-60
+- Hot: 61-80
+- Very Hot: 81-100
+
+Return ONLY valid JSON:
+{"score": <number>, "label": "COLD|WARM|HOT|VERY_HOT", "reasoning": "string"}
 `;
 
     const result = await this.ai.generateJSON<{ score: number; label: string; reasoning: string }>(prompt);
     const score = Math.min(100, Math.max(0, result.score));
-    const scoreLabel = result.label as string;
+    const scoreLabel = result.label.toUpperCase().replace(' ', '_');
 
     await this.prisma.lead.update({
       where: { id: leadId },
-      data: { score, scoreLabel: scoreLabel.replace(' ', '_').toUpperCase() as any },
+      data: { 
+        score, 
+        scoreLabel: scoreLabel as any 
+      },
     });
 
     // Log activity
