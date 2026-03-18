@@ -10,8 +10,13 @@
     "waterting/packages/*"
   ],
   "scripts": {
-    "build:api": "npm run build -w api",
+    "build": "npm run build -w api",
     "prisma:push": "npx prisma db push --schema waterting/prisma/schema.prisma --accept-data-loss",
-    "start:api": "npm run prisma:push && node waterting/apps/api/dist/apps/api/src/main.js"
+    "start:prod": "node waterting/apps/api/dist/apps/api/src/main.js",
+    "start:full": "npm run build && npm run prisma:push && npm run start:prod"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "prisma": "^5.22.0"
   }
 }
