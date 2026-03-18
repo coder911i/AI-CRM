@@ -1,6 +1,7 @@
-import { Controller, Post, Get, Body } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
 import { PortalService } from './portal.service';
 import { Public } from '../../common/decorators/public.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @Controller('portal')
 export class PortalController {
@@ -19,12 +20,26 @@ export class PortalController {
   }
 
   @Get('dashboard')
-  getDashboard(@Body('email') email: string) {
-    return this.portalService.getDashboard(email);
+  @UseGuards(JwtAuthGuard)
+  getDashboard(@Request() req: any) {
+    return this.portalService.getDashboard(req.user.email);
   }
 
   @Get('payments')
-  getPayments(@Body('email') email: string) {
-    return this.portalService.getPayments(email);
+  @UseGuards(JwtAuthGuard)
+  getPayments(@Request() req: any) {
+    return this.portalService.getPayments(req.user.email);
+  }
+
+  @Get('documents')
+  @UseGuards(JwtAuthGuard)
+  getDocuments(@Request() req: any) {
+    return this.portalService.getDocuments(req.user.email);
+  }
+
+  @Get('property')
+  @UseGuards(JwtAuthGuard)
+  getProperty(@Request() req: any) {
+    return this.portalService.getProperty(req.user.email);
   }
 }

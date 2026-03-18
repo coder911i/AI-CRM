@@ -1,10 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload, LeadSource, ActivityType } from '@waterting/shared';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { EventsGateway } from '../../gateways/events.gateway';
 
 @Injectable()
 export class LeadsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gateway: EventsGateway,
+    @InjectQueue('ai-scoring') private aiScoringQueue: Queue,
+    @InjectQueue('email') private emailQueue: Queue,
+  ) {}
 
   // Helper: Format phone to E.164 conceptually
   private normalizePhone(phone: string) {
@@ -34,7 +42,7 @@ export class LeadsService {
       return existing;
     }
 
-    return this.prisma.lead.create({
+    const lead = await this.prisma.lead.create({
       data: {
         ...data,
         phone,
@@ -42,6 +50,10 @@ export class LeadsService {
       },
       include: { project: true },
     });
+
+    await this.aiScoringQueue.add('score-lead', { leadId: lead.id, tenantId: user.tenantId });
+
+    return lead;
   }
 
   async findAll(user: JwtPayload) {
@@ -70,8 +82,11 @@ export class LeadsService {
   }
 
   async updateStage(user: JwtPayload, id: string, stage: string) {
-    const lead = await this.prisma.lead.updateMany({
-      where: { id, tenantId: user.tenantId },
+    const lead = await this.prisma.lead.findUnique({ where: { id } });
+    if (!lead) throw new NotFoundException('Lead not found');
+
+    await this.prisma.lead.update({
+      where: { id },
       data: { stage: stage as any },
     });
     
@@ -85,6 +100,43 @@ export class LeadsService {
       },
     });
 
+    // Emit WebSocket event
+    this.gateway.emitToTenant(user.tenantId, 'lead:updated', { leadId: id, stage });
+
+    // Handle triggers
+    if (stage === 'VISIT_SCHEDULED') {
+      await this.emailQueue.add('send', {
+        to: lead.email,
+        subject: 'Site Visit Scheduled',
+        template: 'visit-confirmation',
+        context: { name: lead.name, date: new Date().toLocaleDateString() },
+      });
+    }
+
+    return lead;
+  }
+
+  async autoAssign(tenantId: string): Promise<string | null> {
+    const agents = await this.prisma.user.findMany({
+      where: { tenantId, role: 'SALES_AGENT', isActive: true },
+      include: { _count: { select: { leads: true } } },
+      orderBy: { leads: { _count: 'asc' } },
+    });
+    return agents[0]?.id ?? null;
+  }
+
+  async createFromWebhook(data: any) {
+    const tenant = await this.prisma.tenant.findFirst();
+    if (!tenant) throw new Error('No default tenant found for webhook');
+    const phone = this.normalizePhone(data.phone);
+    const existing = await this.prisma.lead.findFirst({
+      where: { tenantId: tenant.id, phone },
+    });
+    if (existing) return existing;
+    const lead = await this.prisma.lead.create({
+      data: { ...data, phone, tenantId: tenant.id },
+    });
+    await this.aiScoringQueue.add('score-lead', { leadId: lead.id, tenantId: tenant.id });
     return lead;
   }
 }

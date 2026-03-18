@@ -1,10 +1,14 @@
-import { Controller, Get, Post, Body, Query, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param, UseGuards, Headers } from '@nestjs/common';
 import { WebhooksService } from './webhooks.service';
+import { LeadsService } from '../leads/leads.service';
 import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('webhooks')
 export class WebhooksController {
-  constructor(private readonly webhooksService: WebhooksService) {}
+  constructor(
+    private readonly webhooksService: WebhooksService,
+    private readonly leadsService: LeadsService,
+  ) {}
 
   @Public()
   @Get('facebook')
@@ -16,5 +20,30 @@ export class WebhooksController {
   @Post('facebook/:tenantId')
   handleFacebookLead(@Param('tenantId') tenantId: string, @Body() body: any) {
     return this.webhooksService.handleFacebookLead(tenantId, body);
+  }
+
+  @Public()
+  @Post('99acres')
+  async ninetyNineAcres(@Body() body: any, @Headers('x-webhook-secret') secret: string) {
+    // Basic stub, real impl requires tenant lookup via secret mapping in DB
+    const lead = this.mapPortalLead(body, 'PORTAL_99ACRES');
+    return this.leadsService.createFromWebhook(lead);
+  }
+
+  @Public()
+  @Post('magicbricks')
+  async magicBricks(@Body() body: any, @Headers('x-webhook-secret') secret: string) {
+    const lead = this.mapPortalLead(body, 'PORTAL_MAGICBRICKS');
+    return this.leadsService.createFromWebhook(lead);
+  }
+
+  private mapPortalLead(body: any, source: string) {
+    return {
+      name: body.name ?? body.full_name ?? body.contact_name ?? 'Unknown',
+      phone: body.phone ?? body.mobile ?? body.contact_number ?? '',
+      email: body.email ?? body.email_id ?? undefined,
+      source,
+      utmSource: source,
+    };
   }
 }

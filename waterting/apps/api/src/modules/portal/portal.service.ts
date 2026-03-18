@@ -59,4 +59,29 @@ export class PortalService {
 
     return bookings.flatMap((b) => b.payments);
   }
+
+  async getDocuments(email: string) {
+    const bookings = await this.prisma.booking.findMany({
+      where: { buyerEmail: email },
+      include: { 
+        lead: { include: { activities: { where: { type: 'DOCUMENT_SHARED' } } } }
+      },
+    });
+    // In production, these would be R2 signed URLs
+    return bookings.map(b => ({
+      bookingId: b.id,
+      documents: (b as any).lead?.activities || []
+    }));
+  }
+
+  async getProperty(email: string) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { buyerEmail: email },
+      include: {
+        unit: { include: { tower: { include: { project: true } } } }
+      }
+    });
+    if (!booking) throw new NotFoundException();
+    return booking.unit;
+  }
 }

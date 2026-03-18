@@ -34,6 +34,21 @@ export class BookingsService {
         data: { status: UnitStatus.BOOKED },
       });
 
+      // Auto-calculate commission if broker referred this lead
+      const lead = await prisma.lead.findUnique({ where: { id: data.leadId } });
+      if (lead?.brokerId) {
+        const broker = await prisma.broker.findUnique({ where: { id: lead.brokerId } });
+        if (broker) {
+          await prisma.commission.create({
+            data: {
+              brokerId: broker.id,
+              bookingId: booking.id,
+              amount: booking.bookingAmount * (broker.commissionPct / 100),
+            },
+          });
+        }
+      }
+
       return booking;
     });
   }

@@ -13,24 +13,25 @@ export function getTenantPrisma(tenantId: string) {
           const modelsWithTenant = ['User', 'Project', 'Lead', 'Broker', 'Automation', 'Embedding'];
           
           if (modelsWithTenant.includes(model)) {
-            let where = args.where as any;
-            if (!where) {
-              where = {};
-            }
-            // Only inject tenantId if not explicitly provided / handling nested relates
+            // Only inject tenantId if not explicitly provided
             if (operation === 'findMany' || operation === 'findFirst' || operation === 'findUnique' || operation === 'count') {
+              let where = (args as any).where || {};
               where.tenantId = tenantId;
+              (args as any).where = where;
             } else if (operation === 'create' || operation === 'createMany') {
-               const data = args.data as any;
-               if (Array.isArray(data)) {
-                 data.forEach(d => { if (!d.tenantId) d.tenantId = tenantId });
-               } else {
-                 if (!data.tenantId) data.tenantId = tenantId;
+               const data = (args as any).data;
+               if (data) {
+                 if (Array.isArray(data)) {
+                   data.forEach(d => { if (!d.tenantId) d.tenantId = tenantId });
+                 } else {
+                   if (!data.tenantId) data.tenantId = tenantId;
+                 }
                }
             } else if (operation === 'update' || operation === 'updateMany' || operation === 'delete' || operation === 'deleteMany') {
+                let where = (args as any).where || {};
                 where.tenantId = tenantId;
+                (args as any).where = where;
             }
-            args.where = where;
           }
 
           return query(args);

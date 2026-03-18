@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../../../common/prisma/prisma.service';
+import { PrismaService } from '../../common/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtPayload, UserRole } from '@waterting/shared';
 import { RegisterDto } from './dto/register.dto';
@@ -80,5 +80,23 @@ export class AuthService {
       access_token: this.jwtService.sign(user),
       user,
     };
+  }
+
+  async createStaff(dto: any, tenantId: string) {
+    const existing = await this.prisma.user.findFirst({ where: { email: dto.email }});
+    if (existing) {
+      throw new BadRequestException('User already exists');
+    }
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    return this.prisma.user.create({
+      data: {
+        email: dto.email,
+        password: hashedPassword,
+        name: dto.name,
+        role: dto.role || 'SALES_AGENT',
+        tenantId,
+      },
+      select: { id: true, name: true, email: true, role: true, createdAt: true }
+    });
   }
 }

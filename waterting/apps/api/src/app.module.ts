@@ -24,8 +24,22 @@ import { AutomationsModule } from './modules/automations/automations.module';
 import { PortalModule } from './modules/portal/portal.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
 
+import { BullModule } from '@nestjs/bull';
+import { ScheduleModule } from '@nestjs/schedule';
+import { WorkersModule } from './workers/workers.module';
+
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
+    BullModule.forRoot({
+      redis: process.env.REDIS_URL,
+    }),
+    BullModule.registerQueue(
+      { name: 'ai-scoring' },
+      { name: 'email' },
+      { name: 'pdf' },
+      { name: 'portal-sync' },
+    ),
     PrismaModule,
     AuthModule,
     TenantsModule,
@@ -45,6 +59,7 @@ import { ActivitiesModule } from './modules/activities/activities.module';
     AutomationsModule,
     PortalModule,
     ActivitiesModule,
+    WorkersModule,
   ],
   controllers: [AppController],
   providers: [
