@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "migrate:prod": "npx prisma migrate deploy --schema waterting/prisma/schema.prisma || npx prisma db push --schema waterting/prisma/schema.prisma --accept-data-loss",
-    "build:api": "npm install && cd waterting/apps/api && npx nest build",
-    "start:api": "npm run migrate:prod && cd waterting/apps/api && (node dist/main || (echo 'DEBUG: Listing files...' && ls -R dist && node dist/main))"
+    "build:api": "npm install && cd waterting/apps/api && npx nest build && cd ../../.. && (rm -rf dist || true) && cp -r waterting/apps/api/dist dist",
+    "start:api": "npm run migrate:prod && node dist/main"
   }
 }
