@@ -21,6 +21,8 @@ const bottomItems = [
   { label: 'Settings', href: '/settings', icon: '⚙️' },
 ];
 
+import NotificationBell from './NotificationBell';
+
 export default function CRMLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -34,9 +36,12 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
             {!collapsed && <h1>Waterting</h1>}
             {collapsed && <h1>W</h1>}
           </div>
-          <button className="collapse-btn" onClick={() => setCollapsed(!collapsed)}>
-            {collapsed ? '→' : '←'}
-          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <NotificationBell />
+            <button className="collapse-btn" onClick={() => setCollapsed(!collapsed)}>
+              {collapsed ? '→' : '←'}
+            </button>
+          </div>
         </div>
 
         <nav className="sidebar-nav">

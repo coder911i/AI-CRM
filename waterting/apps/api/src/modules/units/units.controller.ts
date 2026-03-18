@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Res } from '@nestjs/common';
 import { UnitsService } from './units.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -56,5 +56,23 @@ export class UnitsController {
     @Body('holdUntil') holdUntil?: string
   ) {
     return this.unitsService.updateStatus(user, id, status, holdUntil ? new Date(holdUntil) : undefined);
+  }
+
+  @Get('projects/:projectId/units/export')
+  @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
+  async exportUnits(@Param('projectId') projectId: string, @Res() res: any) {
+    const units = await this.prisma.unit.findMany({
+      where: { tower: { projectId } },
+      include: { tower: true },
+    });
+    
+    let csv = 'Unit Number,Tower,Floor,Type,Carpet Area,Total Price,Status\n';
+    units.forEach(u => {
+      csv += `${u.unitNumber},${u.tower.name},${u.floor},${u.type},${u.carpetArea},${u.totalPrice},${u.status}\n`;
+    });
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=inventory-export-${projectId}.csv`);
+    res.send(csv);
   }
 }

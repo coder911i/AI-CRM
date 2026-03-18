@@ -14,7 +14,17 @@ export class EventsGateway {
     return { event: 'joined', room: `tenant:${data.tenantId}` };
   }
 
+  @SubscribeMessage('join-user')
+  handleJoinUser(@MessageBody() data: { userId: string }, @ConnectedSocket() client: Socket) {
+    client.join(`user:${data.userId}`);
+    return { event: 'joined-user', room: `user:${data.userId}` };
+  }
+
   emitToTenant(tenantId: string, event: string, payload: any) {
     this.server.to(`tenant:${tenantId}`).emit(event, payload);
+  }
+
+  emitToUser(userId: string, event: string, payload: any) {
+    this.server.to(`user:${userId}`).emit(event, payload);
   }
 }

@@ -23,6 +23,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AutomationsModule } from './modules/automations/automations.module';
 import { PortalModule } from './modules/portal/portal.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -59,6 +60,7 @@ import { WorkersModule } from './workers/workers.module';
     AutomationsModule,
     PortalModule,
     ActivitiesModule,
+    NotificationsModule,
     WorkersModule,
   ],
   controllers: [AppController],

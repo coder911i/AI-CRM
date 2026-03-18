@@ -34,10 +34,14 @@ export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Modal State
+  // Modal States
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [newStatus, setNewStatus] = useState<string>('');
   const [holdHours, setHoldHours] = useState(24);
+  const [showBulkPrice, setShowBulkPrice] = useState(false);
+  const [bulkTowerId, setBulkTowerId] = useState('');
+  const [bulkFloor, setBulkFloor] = useState<number | ''>('');
+  const [bulkPrice, setBulkPrice] = useState<number | ''>('');
 
   useEffect(() => {
     if (!loading && !user) router.push('/login');
@@ -59,10 +63,10 @@ export default function InventoryPage() {
   };
 
   const fetchUnits = async () => {
+    if (!selectedProjectId) return;
     setIsRefreshing(true);
     try {
       const data = await api.get<Unit[]>(`/projects/${selectedProjectId}/units`);
-      // If tower selected, filter here (or backend if supported)
       setUnits(data);
     } catch (err) {
       console.error('Failed to fetch units', err);
@@ -74,17 +78,34 @@ export default function InventoryPage() {
   const handleStatusUpdate = async () => {
     if (!selectedUnit) return;
     try {
-      if (newStatus === 'RESERVED') {
-        await api.patch(`/units/${selectedUnit.id}/hold`, { holdHours });
-      } else {
-        // Generic status update if backend allows
-        // Here we just use the hold endpoint for simulation or extend API
-      }
+      await api.patch(`/units/${selectedUnit.id}/status`, { status: newStatus as any });
       setSelectedUnit(null);
       fetchUnits();
     } catch (err) {
       alert('Update failed');
     }
+  };
+
+  const handleBulkPriceUpdate = async () => {
+    if (!bulkTowerId || !bulkPrice) return;
+    try {
+      await api.patch('/units/bulk-price', {
+        towerId: bulkTowerId,
+        floor: bulkFloor === '' ? undefined : Number(bulkFloor),
+        basePrice: Number(bulkPrice)
+      });
+      setShowBulkPrice(false);
+      fetchUnits();
+      alert('Prices updated successfully');
+    } catch (err) {
+      alert('Bulk update failed');
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!selectedProjectId) return;
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/projects/${selectedProjectId}/units/export`;
+    window.open(url, '_blank');
   };
 
   const filteredUnits = units.filter(u => {
@@ -103,12 +124,12 @@ export default function InventoryPage() {
           <p className="subtitle">Real-time availability across all towers</p>
         </div>
         <div style={{display:'flex', gap: 12}}>
-          <button className="btn btn-secondary btn-sm">Export CSV</button>
-          <button className="btn btn-primary btn-sm">Bulk Price Update</button>
+          <button className="btn btn-secondary btn-sm" onClick={handleExportCSV}>Export CSV</button>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowBulkPrice(true)}>Bulk Price Update</button>
         </div>
       </div>
 
-      <div className="card" style={{marginBottom: 24}}>
+      <div className="card shadow-sm" style={{marginBottom: 24}}>
         <div style={{display:'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16}}>
           <div className="form-group">
             <label className="form-label">Project</label>
@@ -164,7 +185,7 @@ export default function InventoryPage() {
       ) : (
         <div style={{display:'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16}}>
           {filteredUnits.map(unit => (
-            <div key={unit.id} className="card" style={{cursor:'pointer'}} onClick={() => setSelectedUnit(unit)}>
+            <div key={unit.id} className="card shadow-sm hover-card" style={{cursor:'pointer'}} onClick={() => setSelectedUnit(unit)}>
               <div style={{display:'flex', justifyContent:'space-between', marginBottom: 12}}>
                 <span style={{fontWeight: 700, fontSize: 16}}>{unit.unitNumber}</span>
                 <span className={`badge unit-${unit.status.toLowerCase()}`}>{unit.status}</span>
@@ -182,11 +203,6 @@ export default function InventoryPage() {
               </div>
             </div>
           ))}
-          {filteredUnits.length === 0 && (
-            <div style={{gridColumn:'1/-1', textAlign:'center', padding: 40, border:'2px dashed var(--border)', borderRadius: 12}}>
-              <p>No units found matching your filters.</p>
-            </div>
-          )}
         </div>
       )}
 
@@ -194,28 +210,54 @@ export default function InventoryPage() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>Management: {selectedUnit.unitNumber}</h3>
+              <h3>Action: {selectedUnit.unitNumber}</h3>
               <button className="modal-close" onClick={() => setSelectedUnit(null)}>&times;</button>
             </div>
-            <div className="form-group">
-              <label className="form-label">Action</label>
+            <div className="form-group" style={{marginTop: 16}}>
+              <label className="form-label">Set Status</label>
               <select className="form-select" value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
-                <option value="">Select Action</option>
-                <option value="RESERVED">Put on Hold</option>
-                <option value="BLOCKED">Block Unit</option>
+                <option value="">Select Status</option>
                 <option value="AVAILABLE">Make Available</option>
-                <option value="BOOKING">Create Booking</option>
+                <option value="RESERVED">Hold (Temporary)</option>
+                <option value="BLOCKED">Internal Block</option>
+                <option value="SOLD">Mark SOLD</option>
               </select>
             </div>
-            {newStatus === 'RESERVED' && (
-              <div className="form-group">
-                <label className="form-label">Hold Duration (Hours)</label>
-                <input type="number" className="form-input" value={holdHours} onChange={(e) => setHoldHours(Number(e.target.value))} />
-              </div>
-            )}
             <div style={{display:'flex', gap: 12, marginTop: 24}}>
               <button className="btn btn-secondary" style={{flex:1}} onClick={() => setSelectedUnit(null)}>Cancel</button>
-              <button className="btn btn-primary" style={{flex:1}} onClick={handleStatusUpdate}>Apply Change</button>
+              <button className="btn btn-primary" style={{flex:1}} onClick={handleStatusUpdate}>Apply</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBulkPrice && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Bulk Price Update</h3>
+              <button className="modal-close" onClick={() => setShowBulkPrice(false)}>&times;</button>
+            </div>
+            <div className="form-group" style={{marginTop: 16}}>
+              <label className="form-label">Tower (Required)</label>
+              <select className="form-select" value={bulkTowerId} onChange={(e) => setBulkTowerId(e.target.value)}>
+                <option value="">Select Tower</option>
+                {projects.find(p => p.id === selectedProjectId)?.towers.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Floor (Optional - Empty for all floors)</label>
+              <input type="number" className="form-input" value={bulkFloor} onChange={(e) => setBulkFloor(e.target.value === '' ? '' : Number(e.target.value))} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">New Base Price (₹)</label>
+              <input type="number" className="form-input" value={bulkPrice} onChange={(e) => setBulkPrice(Number(e.target.value))} placeholder="Ex: 8500000" />
+            </div>
+            <div style={{display:'flex', gap: 12, marginTop: 24}}>
+              <button className="btn btn-secondary" style={{flex:1}} onClick={() => setShowBulkPrice(false)}>Cancel</button>
+              <button className="btn btn-primary" style={{flex:1}} onClick={handleBulkPriceUpdate}>Update All Units</button>
             </div>
           </div>
         </div>

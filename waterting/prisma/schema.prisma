@@ -143,6 +143,7 @@ model Tenant {
   brokers     Broker[]
   automations Automation[]
   embeddings  Embedding[]
+  notifications Notification[]
 }
 
 model User {
@@ -162,6 +163,7 @@ model User {
   leads       Lead[]     @relation("AssignedLeads")
   activities  Activity[]
   siteVisits  SiteVisit[]
+  notifications Notification[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -321,6 +323,7 @@ model Broker {
   tenant        Tenant   @relation(fields: [tenantId], references: [id])
   leads         Lead[]
   commissions   Commission[]
+  disputes      BrokerDispute[]
 
   @@index([tenantId])
 }
@@ -409,4 +412,35 @@ model Embedding {
   lead        Lead?  @relation(fields: [leadId], references: [id])
 
   @@index([tenantId])
+}
+model Notification {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  title     String
+  message   String
+  type      String   @default("SYSTEM")
+  leadId    String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  user      User   @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+  @@index([tenantId])
+}
+
+model BrokerDispute {
+  id          String   @id @default(cuid())
+  tenantId    String
+  brokerId    String
+  leadId      String
+  reason      String
+  status      String   @default("OPEN")
+  resolution  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  broker      Broker @relation(fields: [brokerId], references: [id])
 }

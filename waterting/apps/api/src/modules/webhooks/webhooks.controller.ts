@@ -23,18 +23,17 @@ export class WebhooksController {
   }
 
   @Public()
-  @Post('99acres')
-  async ninetyNineAcres(@Body() body: any, @Headers('x-webhook-secret') secret: string) {
-    // Basic stub, real impl requires tenant lookup via secret mapping in DB
+  @Post('99acres/:tenantId')
+  async ninetyNineAcres(@Param('tenantId') tenantId: string, @Body() body: any) {
     const lead = this.mapPortalLead(body, 'PORTAL_99ACRES');
-    return this.leadsService.createFromWebhook(lead);
+    return this.leadsService.createFromWebhook({ ...lead, tenantId });
   }
 
   @Public()
-  @Post('magicbricks')
-  async magicBricks(@Body() body: any, @Headers('x-webhook-secret') secret: string) {
+  @Post('magicbricks/:tenantId')
+  async magicBricks(@Param('tenantId') tenantId: string, @Body() body: any) {
     const lead = this.mapPortalLead(body, 'PORTAL_MAGICBRICKS');
-    return this.leadsService.createFromWebhook(lead);
+    return this.leadsService.createFromWebhook({ ...lead, tenantId });
   }
 
   private mapPortalLead(body: any, source: string) {

@@ -9,6 +9,8 @@ import { StaleLeadWorker } from './stale-lead.worker';
 import { PdfGeneratorWorker } from './pdf-generator.worker';
 import { EventsGateway } from '../gateways/events.gateway';
 import { PrismaModule } from '../common/prisma/prisma.module';
+import { AIService } from '../common/ai/ai.service';
+import { AiFollowUpWorker } from './ai-follow-up.worker';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { PrismaModule } from '../common/prisma/prisma.module';
   ],
   providers: [
     EventsGateway,
+    AIService,
     AiLeadScoringWorker,
     EmailWorker,
     VisitReminderWorker,
@@ -29,7 +32,8 @@ import { PrismaModule } from '../common/prisma/prisma.module';
     UnitHoldExpiryWorker,
     StaleLeadWorker,
     PdfGeneratorWorker,
+    AiFollowUpWorker,
   ],
-  exports: [EventsGateway]
+  exports: [EventsGateway, AiFollowUpWorker]
 })
 export class WorkersModule {}

@@ -46,6 +46,16 @@ export class LeadsController {
     return { message: 'Unsubscribed' };
   }
 
+  // GET /leads/unsubscribe/:leadId — public endpoint (no auth)
+  @Get('unsubscribe/:leadId')
+  async publicUnsubscribe(@Param('leadId') leadId: string, @Res() res: any) {
+    await this.prisma.lead.update({
+      where: { id: leadId },
+      data: { emailOptOut: true },
+    });
+    res.send('<h2>You have been unsubscribed.</h2><p>You will no longer receive emails from us.</p>');
+  }
+
   @Post('bulk')
   @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
   async bulkAction(@Body() dto: any, @Request() req: any) {
