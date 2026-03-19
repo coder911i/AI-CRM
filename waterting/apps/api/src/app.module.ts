@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { AuditModule } from './common/audit/audit.module';
+import { AIModule } from './common/ai/ai.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -44,6 +45,7 @@ import { WorkersModule } from './workers/workers.module';
     ),
     PrismaModule,
     AuditModule,
+    AIModule,
     AuthModule,
     TenantsModule,
     UsersModule,
