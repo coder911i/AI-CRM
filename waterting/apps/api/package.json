@@ -5,6 +5,9 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "build": "nest build && tsc-alias -p tsconfig.build.json",
     "prebuild": "npx prisma generate --schema ../../prisma/schema.prisma",
