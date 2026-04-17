@@ -50,4 +50,9 @@ export class BookingsController {
     res.setHeader('Content-Disposition', `attachment; filename=booking-${id}-payments.csv`);
     res.send(header + rows);
   }
+
+  @Post(':id/refunds')
+  createRefund(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() data: any) {
+    return this.bookingsService.createRefund(user, id, data);
+  }
 }

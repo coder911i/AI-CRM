@@ -5,7 +5,8 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
-import { JwtPayload } from '@waterting/shared';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { JwtPayload, UserRole } from '@waterting/shared';
 
 @Controller('bookings/:bookingId/payments')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,6 +29,12 @@ export class PaymentsController {
   @Patch(':id/record')
   recordPayment(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() data: any) {
     return this.paymentsService.recordPayment(user, id, data);
+  }
+
+  @Patch(':id/verify')
+  @Roles(UserRole.ACCOUNTS, UserRole.TENANT_ADMIN)
+  verifyPayment(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() data: { isVerified: boolean }) {
+    return this.paymentsService.verifyPayment(user, id, data.isVerified);
   }
 
   @Get('export/csv')

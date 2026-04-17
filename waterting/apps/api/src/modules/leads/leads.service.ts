@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload, LeadSource, ActivityType } from '@waterting/shared';
 import { InjectQueue } from '@nestjs/bull';
@@ -38,10 +39,18 @@ export class LeadsService {
       });
       return existing;
     }
-    const lead = await this.prisma.lead.create({
-      data: { ...data, phone, tenantId: user.tenantId },
-      include: { project: true },
-    });
+    let lead;
+    try {
+      lead = await this.prisma.lead.create({
+        data: { ...data, phone, tenantId: user.tenantId },
+        include: { project: true },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException('Lead with this phone number already exists');
+      }
+      throw e;
+    }
     
     // NEW_LEAD trigger: auto-assign agent (round-robin) + welcome email
     const assignedToId = await this.autoAssign(user.tenantId);

@@ -27,6 +27,7 @@ async function request<T>(method: string, path: string, body?: unknown, auth = t
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    credentials: 'include',
   });
   if (res.status === 401) { clearToken(); window.location.href = '/login'; throw new Error('Unauthorized'); }
   if (!res.ok) {

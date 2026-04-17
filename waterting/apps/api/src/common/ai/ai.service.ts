@@ -31,11 +31,15 @@ export class AIService {
 
   async generateJSON<T>(prompt: string): Promise<T> {
     if (process.env.GEMINI_API_KEY) {
-      const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const result = await model.generateContent(prompt + '\nReturn ONLY a valid JSON object.');
-      const text = result.response.text();
-      const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-      return JSON.parse(jsonStr) as T;
+      try {
+        const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const result = await model.generateContent(prompt + '\nReturn ONLY a valid JSON object.');
+        const text = result.response.text();
+        const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+        return JSON.parse(jsonStr) as T;
+      } catch (error) {
+        this.logger.warn('Gemini generateJSON failed, falling back to OpenAI', error);
+      }
     }
 
     const data = await this.callOpenAI('chat/completions', {
@@ -48,9 +52,13 @@ export class AIService {
 
   async generateText(prompt: string): Promise<string> {
     if (process.env.GEMINI_API_KEY) {
-      const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const result = await model.generateContent(prompt);
-      return result.response.text();
+      try {
+        const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+      } catch (error) {
+        this.logger.warn('Gemini generateText failed, falling back to OpenAI', error);
+      }
     }
 
     const data = await this.callOpenAI('chat/completions', {

@@ -38,6 +38,17 @@ export class BookingsService {
         data: { status: UnitStatus.BOOKED },
       });
 
+      // Audit Log for Booking Creation
+      await this.audit.log(
+        user.tenantId,
+        'CREATE_BOOKING',
+        'Booking',
+        booking.id,
+        user.sub,
+        null,
+        booking,
+      );
+
       // Auto-calculate commission if broker referred this lead
       const lead = await prisma.lead.findUnique({ where: { id: data.leadId } });
       if (lead?.brokerId) {
@@ -122,5 +133,31 @@ export class BookingsService {
         paidAt: data.paidAt ? new Date(data.paidAt) : new Date(),
       },
     });
+  }
+
+  async createRefund(user: JwtPayload, id: string, data: any) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, lead: { tenantId: user.tenantId } },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    const refund = await this.prisma.refund.create({
+      data: {
+        ...data,
+        bookingId: id,
+      },
+    });
+
+    await this.audit.log(
+      user.tenantId,
+      'CREATE_REFUND',
+      'Refund',
+      refund.id,
+      user.sub,
+      null,
+      refund,
+    );
+
+    return refund;
   }
 }

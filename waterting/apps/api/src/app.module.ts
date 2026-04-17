@@ -26,6 +26,8 @@ import { AutomationsModule } from './modules/automations/automations.module';
 import { PortalModule } from './modules/portal/portal.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ListingsModule } from './modules/listings/listings.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -65,7 +67,12 @@ import { WorkersModule } from './workers/workers.module';
     PortalModule,
     ActivitiesModule,
     NotificationsModule,
+    ListingsModule,
     WorkersModule,
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 10,
+    }]),
   ],
   controllers: [AppController],
   providers: [
@@ -77,6 +84,10 @@ import { WorkersModule } from './workers/workers.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

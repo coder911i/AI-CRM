@@ -1,4 +1,6 @@
-import { Controller, Post, Body, UseGuards, Get, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, Res } from '@nestjs/common';
+import { Response } from 'express';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -20,9 +22,19 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.login(loginDto);
+    
+    res.cookie('auth_token', result.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return result;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -39,8 +51,8 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
-  async logout(@Request() req: any) {
-    // Basic logout response, since we use short-lived JWTs and maybe a blacklist in Redis if implemented
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('auth_token');
     return { message: 'Logged out successfully' };
   }
 
@@ -49,5 +61,11 @@ export class AuthController {
   @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
   async createStaff(@Body() dto: any, @Request() req: any) {
     return this.authService.createStaff(dto, req.user.tenantId);
+  }
+
+  @Get('staff')
+  @UseGuards(JwtAuthGuard)
+  async getStaff(@CurrentUser() user: JwtPayload) {
+    return this.authService.getStaff(user.tenantId);
   }
 }

@@ -1,4 +1,5 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
+import { AuditService } from '../../common/audit/audit.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -11,11 +12,15 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private audit: AuditService,
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.prisma.user.findFirst({ where: { email } });
     if (user && await bcrypt.compare(pass, user.password)) {
+      if (!user.isActive) {
+        return null;
+      }
       const { password, ...result } = user;
       return result;
     }
@@ -28,6 +33,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     const payload: JwtPayload = { sub: user.id, tenantId: user.tenantId, role: user.role as UserRole, email: user.email };
+    
+    await this.audit.log(
+      user.tenantId,
+      'USER_LOGIN',
+      'User',
+      user.id,
+      user.id,
+      null,
+      { email: user.email, timestamp: new Date() }
+    );
+
     return {
       access_token: this.jwtService.sign(payload),
       user: payload
@@ -97,6 +113,16 @@ export class AuthService {
         tenantId,
       },
       select: { id: true, name: true, email: true, role: true, createdAt: true }
+    });
+  }
+
+  async getStaff(tenantId: string) {
+    return this.prisma.user.findMany({
+      where: { 
+        tenantId,
+        role: { in: [UserRole.SALES_AGENT, UserRole.SALES_MANAGER, UserRole.ACCOUNTS] }
+      },
+      select: { id: true, name: true, role: true, isActive: true }
     });
   }
 }

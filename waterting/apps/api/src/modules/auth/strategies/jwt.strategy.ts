@@ -7,7 +7,13 @@ import { JwtPayload } from '@waterting/shared';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (req: any) => {
+        let token = null;
+        if (req && req.cookies) {
+          token = req.cookies['auth_token'];
+        }
+        return token || ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+      },
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET || 'super-secret-minimum-32-character-strong-secret-here',
     });
