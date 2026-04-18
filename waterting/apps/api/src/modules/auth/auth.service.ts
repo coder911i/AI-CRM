@@ -25,32 +25,49 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.prisma.user.findFirst({ where: { email: loginDto.email } });
-    if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
-      throw new UnauthorizedException('Invalid email or password');
+    try {
+      const user = await this.prisma.user.findFirst({ where: { email: loginDto.email } });
+      if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+      if (!user.isActive) {
+        throw new UnauthorizedException('Your account has been suspended. Please contact your administrator.');
+      }
+
+      const payload: JwtPayload = { sub: user.id, tenantId: user.tenantId, role: user.role as any, email: user.email };
+
+      // Audit login event - Wrapped in a silent catch to prevent login failure if audit fails
+      try {
+        await this.prisma.auditLog.create({
+          data: {
+            tenantId: user.tenantId,
+            userId: user.id,
+            action: 'LOGIN',
+            entity: 'User',
+            entityId: user.id,
+            newData: { email: user.email, role: user.role },
+          },
+        });
+      } catch (auditError) {
+        console.error('Audit Log failed but proceeding with login:', auditError);
+      }
+
+      return {
+        access_token: this.jwtService.sign(payload),
+        user: { 
+          id: user.id,
+          sub: user.id,
+          email: user.email,
+          role: user.role,
+          tenantId: user.tenantId,
+          name: user.name 
+        },
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
+      console.error('Login error:', error);
+      throw new BadRequestException('An unexpected error occurred during login. Please try again.');
     }
-    if (!user.isActive) {
-      throw new UnauthorizedException('Your account has been suspended. Please contact your administrator.');
-    }
-
-    const payload: JwtPayload = { sub: user.id, tenantId: user.tenantId, role: user.role as UserRole, email: user.email };
-
-    // Audit login event
-    await this.prisma.auditLog.create({
-      data: {
-        tenantId: user.tenantId,
-        userId: user.id,
-        action: 'LOGIN',
-        entity: 'User',
-        entityId: user.id,
-        newData: { email: user.email, role: user.role },
-      },
-    });
-
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: { ...payload, name: user.name },
-    };
   }
 
   async register(registerDto: RegisterDto) {
