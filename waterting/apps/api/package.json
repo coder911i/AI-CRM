@@ -9,7 +9,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "build": "nest build && tsc-alias -p tsconfig.build.json",
+    "build": "npx nest build && npx tsc-alias -p tsconfig.build.json",
     "prebuild": "npx prisma generate --schema ../../prisma/schema.prisma",
     "prisma:push": "npx prisma db push --schema ../../prisma/schema.prisma --accept-data-loss",
     "start": "nest start",
