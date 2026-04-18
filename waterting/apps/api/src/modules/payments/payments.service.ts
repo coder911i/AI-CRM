@@ -48,44 +48,32 @@ export class PaymentsService {
       },
     });
 
-    await this.audit.log(
-      user.tenantId,
-      'RECORD_PAYMENT',
-      'Payment',
-      id,
-      user.sub,
-      payment,
-      updated,
-    );
+    await this.audit.log({
+      tenantId: user.tenantId,
+      action: 'RECORD_PAYMENT',
+      entity: 'Payment',
+      entityId: id,
+      userId: user.sub,
+      oldData: payment,
+      newData: updated,
+    });
 
     return updated;
   }
 
-  async verifyPayment(user: JwtPayload, id: string, isVerified: boolean) {
-    if (user.role !== 'ACCOUNTS' && user.role !== 'TENANT_ADMIN') {
-      throw new Error('Only accounts role can verify payments');
-    }
-
+  async verify(user: JwtPayload, paymentId: string) {
+    // First confirm this payment belongs to the tenant
     const payment = await this.prisma.payment.findFirst({
-      where: { id, booking: { lead: { tenantId: user.tenantId } } },
+      where: {
+        id: paymentId,
+        booking: { lead: { tenantId: user.tenantId } },
+      },
     });
     if (!payment) throw new NotFoundException('Payment not found');
 
-    const updated = await this.prisma.payment.update({
-      where: { id },
-      data: { isVerified },
+    return this.prisma.payment.update({
+      where: { id: paymentId },
+      data: { isVerified: true },
     });
-
-    await this.audit.log(
-      user.tenantId,
-      'VERIFY_PAYMENT',
-      'Payment',
-      id,
-      user.sub,
-      payment,
-      updated,
-    );
-
-    return updated;
   }
 }

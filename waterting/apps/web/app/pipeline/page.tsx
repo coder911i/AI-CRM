@@ -42,10 +42,10 @@ export default function PipelinePage() {
     if (user) { 
       Promise.all([
         api.get<any[]>('/leads'),
-        api.get<any[]>('/auth/staff') // Need this endpoint for agent filter
+        api.get<any[]>('/auth/staff').catch(() => []), // Graceful fallback
       ]).then(([l, a]) => {
-        setLeads(l);
-        setAgents(a);
+        setLeads(Array.isArray(l) ? l : []);
+        setAgents(Array.isArray(a) ? a : []);
       }).catch(console.error).finally(() => setLoading(false));
     }
   }, [user, authLoading]);

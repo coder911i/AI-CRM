@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Get, Request, Res } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, Res, Query } from '@nestjs/common';
 import { Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -10,12 +10,17 @@ import { CurrentUser } from '../../common/decorators/user.decorator';
 import { JwtPayload, UserRole } from '@waterting/shared';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { PrismaService } from '../../common/prisma/prisma.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
@@ -65,7 +70,21 @@ export class AuthController {
 
   @Get('staff')
   @UseGuards(JwtAuthGuard)
-  async getStaff(@CurrentUser() user: JwtPayload) {
-    return this.authService.getStaff(user.tenantId);
+  async getStaff(@Request() req: any) {
+    return this.prisma.user.findMany({
+      where: {
+        tenantId: req.user.tenantId,
+        isActive: true,
+        role: { in: ['SALES_AGENT', 'SALES_MANAGER'] },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        phone: true,
+      },
+      orderBy: { name: 'asc' },
+    });
   }
 }

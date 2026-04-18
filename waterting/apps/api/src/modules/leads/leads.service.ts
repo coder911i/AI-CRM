@@ -22,63 +22,29 @@ export class LeadsService {
     return phone.replace(/\D/g, '');
   }
 
-  async create(user: JwtPayload, data: any) {
-    const phone = this.normalizePhone(data.phone);
-    const existing = await this.prisma.lead.findFirst({
-      where: { tenantId: user.tenantId, phone },
-    });
-    if (existing) {
-      await this.prisma.activity.create({
+  async create(user: JwtPayload, dto: any) {
+    try {
+      const lead = await this.prisma.lead.create({
         data: {
-          leadId: existing.id,
-          userId: user.sub,
-          type: ActivityType.NOTE,
-          title: 'Duplicate lead attempt spotted',
-          description: `Attempted source: ${data.source}. Did not duplicate.`,
+          ...dto,
+          tenantId: user.tenantId,
+          lastActivityAt: new Date(),
         },
       });
-      return existing;
-    }
-    let lead;
-    try {
-      lead = await this.prisma.lead.create({
-        data: { ...data, phone, tenantId: user.tenantId },
-        include: { project: true },
+      // Queue AI scoring job after creation
+      await this.aiScoringQueue.add('score-lead', {
+        leadId: lead.id,
+        tenantId: user.tenantId,
       });
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new ConflictException('Lead with this phone number already exists');
+      return lead;
+    } catch (e: any) {
+      if (e.code === 'P2002') {
+        throw new ConflictException(
+          'A lead with this phone number already exists. Check the existing lead or use a different number.'
+        );
       }
       throw e;
     }
-    
-    // NEW_LEAD trigger: auto-assign agent (round-robin) + welcome email
-    const assignedToId = await this.autoAssign(user.tenantId);
-    if (assignedToId) {
-      await this.prisma.lead.update({
-        where: { id: lead.id },
-        data: { assignedToId },
-      });
-      await this.notificationsService.create({
-        tenantId: user.tenantId,
-        userId: assignedToId,
-        title: 'New Lead Assigned',
-        message: `You have been assigned a new lead: ${lead.name}`,
-        type: 'NEW_LEAD',
-        leadId: lead.id,
-      });
-    }
-
-    if (lead.email && !lead.emailOptOut) {
-      await this.emailQueue.add('send', {
-        to: lead.email,
-        subject: `Welcome to ${lead.project?.name || 'Waterting CRM'}`,
-        html: `Hi ${lead.name}, thanks for your interest. Our representative will contact you soon.`,
-      });
-    }
-
-    await this.aiScoringQueue.add('score-lead', { leadId: lead.id, tenantId: user.tenantId });
-    return lead;
   }
 
   async findAll(user: JwtPayload, page = 1, limit = 50) {

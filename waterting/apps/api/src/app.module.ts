@@ -69,10 +69,10 @@ import { WorkersModule } from './workers/workers.module';
     NotificationsModule,
     ListingsModule,
     WorkersModule,
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 10,
-    }]),
+    ThrottlerModule.forRoot([
+      { name: 'short', ttl: 60000, limit: 10 },
+      { name: 'login', ttl: 60000, limit: 5 },
+    ]),
   ],
   controllers: [AppController],
   providers: [

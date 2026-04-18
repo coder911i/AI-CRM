@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Res, Query, NotFoundException } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/user.decorator';
-import { JwtPayload } from '@waterting/shared';
+import { JwtPayload, UserRole } from '@waterting/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 @Controller('bookings')
@@ -52,7 +53,19 @@ export class BookingsController {
   }
 
   @Post(':id/refunds')
-  createRefund(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() data: any) {
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.TENANT_ADMIN, UserRole.ACCOUNTS)
+  createRefund(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() data: { amount: number; reason?: string }) {
     return this.bookingsService.createRefund(user, id, data);
+  }
+
+  @Get(':id/refunds')
+  async getRefunds(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, lead: { tenantId: user.tenantId } },
+      include: { refunds: { orderBy: { createdAt: 'desc' } } },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+    return booking.refunds;
   }
 }

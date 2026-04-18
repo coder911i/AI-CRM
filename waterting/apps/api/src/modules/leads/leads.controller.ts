@@ -129,20 +129,24 @@ export class LeadsController {
 
     if (!lead) throw new NotFoundException('Lead not found');
 
-    const prompt = `
-Generate a 5-point pre-call sales brief for this real estate lead.
-Lead: ${lead.name}, Budget: ₹${lead.budgetMax ?? 'unknown'}
-AI Score: ${lead.score ?? 'not scored'}/100 (${lead.scoreLabel ?? 'unknown'})
-Project: ${lead.project?.name ?? 'unknown'}
-Recent activity: ${lead.activities.map(a => a.description).join('; ') || 'none'}
+    const prompt = `You are a real estate sales coach AI. Generate a pre-call brief for this lead.
 
-Return ONLY valid JSON:
+LEAD DATA:
+- Name: ${lead.name}
+- Budget: up to ₹${lead.budgetMax ?? 'unknown'}
+- AI Score: ${lead.score ?? 'not scored'}/100 (${lead.scoreLabel ?? 'unscored'})
+- Project Interest: ${lead.project?.name ?? 'not specified'}
+- Timeline: ${(lead as any).timeline ?? 'unknown'}
+- Source: ${lead.source}
+- Recent activity: ${lead.activities.map(a => a.description ?? (a as any).title).join('; ') || 'none'}
+
+Return this exact JSON structure:
 {
-  "background": "1 sentence",
-  "scoreExplanation": "why this score",
-  "likelyObjections": ["objection 1", "objection 2"],
-  "recommendedUnit": "best unit based on budget",
-  "suggestedOpener": "exact opening line for the call"
+  "background": "one sentence about who this lead is",
+  "scoreExplanation": "why they got this score",
+  "likelyObjections": ["objection 1", "objection 2", "objection 3"],
+  "recommendedUnit": "best unit type based on budget",
+  "suggestedOpener": "exact first sentence to say on the call"
 }`;
 
     return this.ai.generateJSON(prompt);

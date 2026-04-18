@@ -14,6 +14,7 @@ const navItems = [
   { label: 'Site Visits', href: '/site-visits', icon: '📍' },
   { label: 'Brokers', href: '/brokers', icon: '🤝' },
   { label: 'Bookings', href: '/bookings', icon: '📋' },
+  { label: 'Listings', href: '/listings', icon: '📝' },
   { label: 'Analytics', href: '/analytics', icon: '📈' },
 ];
 

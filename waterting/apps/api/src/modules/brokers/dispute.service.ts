@@ -18,15 +18,14 @@ export class BrokerDisputeService {
       },
     });
 
-    await this.audit.log(
-      user.tenantId,
-      'CREATE_DISPUTE',
-      'BrokerDispute',
-      dispute.id,
-      user.sub,
-      null,
-      dispute,
-    );
+    await this.audit.log({
+      tenantId: user.tenantId,
+      action: 'CREATE_DISPUTE',
+      entity: 'BrokerDispute',
+      entityId: dispute.id,
+      userId: user.sub,
+      newData: dispute,
+    });
 
     return dispute;
   }
@@ -44,15 +43,15 @@ export class BrokerDisputeService {
       },
     });
 
-    await this.audit.log(
-      user.tenantId,
-      'RESOLVE_DISPUTE',
-      'BrokerDispute',
-      id,
-      user.sub,
-      dispute,
-      updated,
-    );
+    await this.audit.log({
+      tenantId: user.tenantId,
+      action: 'RESOLVE_DISPUTE',
+      entity: 'BrokerDispute',
+      entityId: id,
+      userId: user.sub,
+      oldData: dispute,
+      newData: updated,
+    });
 
     return updated;
   }

@@ -1,96 +1,112 @@
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @Injectable()
 export class AIService {
   private readonly logger = new Logger(AIService.name);
-  private gemini: GoogleGenerativeAI;
+  private readonly groqBase = 'https://api.groq.com/openai/v1';
+  private readonly groqKey = process.env.GROQ_API_KEY;
 
-  constructor(private prisma: PrismaService) {
-    this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-  }
+  constructor(private prisma: PrismaService) {}
 
-  private async callOpenAI(endpoint: string, body: any) {
-    const res = await fetch(`https://api.openai.com/v1/${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      const error = await res.json();
-      this.logger.error(`OpenAI error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException('AI Service Error');
+  private async callGroq(messages: any[], jsonMode = false, model = 'llama3-70b-8192'): Promise<string> {
+    if (!this.groqKey) {
+      throw new InternalServerErrorException('GROQ_API_KEY not set');
     }
-    return res.json();
+
+    const body: any = {
+      model,
+      messages,
+      temperature: 0.3,
+      max_tokens: 1024,
+    };
+
+    if (jsonMode) {
+      body.response_format = { type: 'json_object' };
+    }
+
+    let lastError: any;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const res = await fetch(`${this.groqBase}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.groqKey}`,
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (res.status === 429) {
+          // Rate limited — wait and retry
+          await new Promise(r => setTimeout(r, attempt * 1000));
+          continue;
+        }
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          this.logger.error(`Groq API error (attempt ${attempt}): ${JSON.stringify(err)}`);
+          lastError = err;
+          continue;
+        }
+
+        const data = await res.json();
+        return data.choices[0]?.message?.content ?? '';
+      } catch (err) {
+        this.logger.error(`Groq fetch error (attempt ${attempt})`, err);
+        lastError = err;
+        await new Promise(r => setTimeout(r, attempt * 500));
+      }
+    }
+
+    this.logger.error('All Groq attempts failed', lastError);
+    throw new InternalServerErrorException('AI service temporarily unavailable. Please try again.');
   }
 
   async generateJSON<T>(prompt: string): Promise<T> {
-    if (process.env.GEMINI_API_KEY) {
-      try {
-        const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt + '\nReturn ONLY a valid JSON object.');
-        const text = result.response.text();
-        const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-        return JSON.parse(jsonStr) as T;
-      } catch (error) {
-        this.logger.warn('Gemini generateJSON failed, falling back to OpenAI', error);
-      }
-    }
+    const content = await this.callGroq(
+      [{ role: 'user', content: prompt + '\n\nIMPORTANT: Return ONLY a valid JSON object. No markdown, no explanation, no backticks.' }],
+      true,
+      'llama3-70b-8192',
+    );
 
-    const data = await this.callOpenAI('chat/completions', {
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    });
-    return JSON.parse(data.choices[0].message.content) as T;
+    // Strip any accidental markdown fences
+    const cleaned = content
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
+    try {
+      // Find the JSON object in the response
+      const start = cleaned.indexOf('{');
+      const end = cleaned.lastIndexOf('}');
+      if (start === -1 || end === -1) throw new Error('No JSON object found');
+      return JSON.parse(cleaned.substring(start, end + 1)) as T;
+    } catch (parseErr) {
+      this.logger.error(`JSON parse failed. Raw content: ${content}`);
+      throw new InternalServerErrorException('AI returned invalid JSON. Please retry.');
+    }
   }
 
   async generateText(prompt: string): Promise<string> {
-    if (process.env.GEMINI_API_KEY) {
-      try {
-        const model = this.gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        return result.response.text();
-      } catch (error) {
-        this.logger.warn('Gemini generateText failed, falling back to OpenAI', error);
-      }
-    }
-
-    const data = await this.callOpenAI('chat/completions', {
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-    });
-    return data.choices[0].message.content;
+    return this.callGroq(
+      [{ role: 'user', content: prompt }],
+      false,
+      'llama3-8b-8192', // Faster model for text
+    );
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
-    if (process.env.GEMINI_API_KEY) {
-      const model = this.gemini.getGenerativeModel({ model: 'text-embedding-004' });
-      const result = await model.embedContent(text);
-      return result.embedding.values;
-    }
-
-    const data = await this.callOpenAI('embeddings', {
-      model: 'text-embedding-3-small',
-      input: text,
-      dimensions: 1536,
-    });
-    return data.data[0].embedding;
+    // Groq does not support embeddings yet.
+    // When Groq adds embedding support, swap this out.
+    this.logger.warn('Groq does not support embeddings. Returning zero vector as placeholder.');
+    return new Array(1536).fill(0);
   }
 
   async upsertVector(id: string, tenantId: string, values: number[], metadata: any, leadId?: string, unitId?: string) {
     try {
       const vector = `[${values.join(',')}]`;
-      // Check if it exists
-      const existing = await this.prisma.embedding.findFirst({
-        where: { id },
-      });
-
+      const existing = await this.prisma.embedding.findFirst({ where: { id } });
       if (existing) {
         await this.prisma.$executeRaw`
           UPDATE "Embedding"
@@ -104,26 +120,24 @@ export class AIService {
         `;
       }
     } catch (error) {
-      this.logger.error(`pgvector upsert failed for tenant ${tenantId}`, error);
-      throw new InternalServerErrorException('Vector storage failed');
+      this.logger.error(`pgvector upsert failed`, error);
+      // Non-fatal — embeddings are optional enhancement
     }
   }
 
   async queryVector(tenantId: string, values: number[], topK = 5) {
     try {
       const vector = `[${values.join(',')}]`;
-      // Use pgvector cosine similarity (<=> is distance, so lower is closer)
-      const results = await this.prisma.$queryRaw<any[]>`
+      return await this.prisma.$queryRaw<any[]>`
         SELECT "id", "leadId", "unitId", "metadata", "embedding" <=> ${vector}::vector AS distance
         FROM "Embedding"
         WHERE "tenantId" = ${tenantId}
         ORDER BY distance ASC
         LIMIT ${topK}
       `;
-      return results;
     } catch (error) {
-      this.logger.error(`pgvector query failed for tenant ${tenantId}`, error);
-      throw new InternalServerErrorException('Vector search failed');
+      this.logger.error(`pgvector query failed`, error);
+      return [];
     }
   }
 }

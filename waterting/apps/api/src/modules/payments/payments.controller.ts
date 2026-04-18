@@ -32,9 +32,13 @@ export class PaymentsController {
   }
 
   @Patch(':id/verify')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ACCOUNTS, UserRole.TENANT_ADMIN)
-  verifyPayment(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() data: { isVerified: boolean }) {
-    return this.paymentsService.verifyPayment(user, id, data.isVerified);
+  async verifyPayment(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.paymentsService.verify(user, id);
   }
 
   @Get('export/csv')

@@ -39,15 +39,19 @@ export class BookingsService {
       });
 
       // Audit Log for Booking Creation
-      await this.audit.log(
-        user.tenantId,
-        'CREATE_BOOKING',
-        'Booking',
-        booking.id,
-        user.sub,
-        null,
-        booking,
-      );
+      await this.audit.log({
+        tenantId: user.tenantId,
+        userId: user.sub,
+        action: 'CREATE',
+        entity: 'Booking',
+        entityId: booking.id,
+        newData: {
+          unitId: data.unitId,
+          leadId: data.leadId,
+          bookingAmount: data.bookingAmount,
+          buyerName: data.buyerName,
+        },
+      });
 
       // Auto-calculate commission if broker referred this lead
       const lead = await prisma.lead.findUnique({ where: { id: data.leadId } });
@@ -135,28 +139,32 @@ export class BookingsService {
     });
   }
 
-  async createRefund(user: JwtPayload, id: string, data: any) {
+  async createRefund(user: JwtPayload, id: string, data: { amount: number; reason?: string }) {
     const booking = await this.prisma.booking.findFirst({
       where: { id, lead: { tenantId: user.tenantId } },
     });
     if (!booking) throw new NotFoundException('Booking not found');
+    if (data.amount > booking.bookingAmount) {
+      throw new BadRequestException('Refund amount cannot exceed booking amount');
+    }
 
     const refund = await this.prisma.refund.create({
       data: {
-        ...data,
         bookingId: id,
+        amount: data.amount,
+        reason: data.reason,
+        status: 'PENDING',
       },
     });
 
-    await this.audit.log(
-      user.tenantId,
-      'CREATE_REFUND',
-      'Refund',
-      refund.id,
-      user.sub,
-      null,
-      refund,
-    );
+    await this.audit.log({
+      tenantId: user.tenantId,
+      userId: user.sub,
+      action: 'CREATE_REFUND',
+      entity: 'Refund',
+      entityId: refund.id,
+      newData: refund,
+    });
 
     return refund;
   }

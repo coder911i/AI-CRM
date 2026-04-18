@@ -6,20 +6,35 @@ import { JwtPayload } from '@waterting/shared';
 export class ListingsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(user: JwtPayload, data: any) {
-    return this.prisma.listing.create({
-      data: {
-        ...data,
+  async findAll(user: JwtPayload, query?: any) {
+    return this.prisma.listing.findMany({
+      where: {
         tenantId: user.tenantId,
+        ...(query?.platform && { platform: query.platform }),
+        ...(query?.status && { status: query.status }),
+        ...(query?.projectId && { projectId: query.projectId }),
       },
+      include: { project: { select: { id: true, name: true, location: true } } },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findAll(user: JwtPayload) {
-    return this.prisma.listing.findMany({
-      where: { tenantId: user.tenantId },
-      include: { project: true },
+  async create(user: JwtPayload, dto: any) {
+    return this.prisma.listing.create({
+      data: { ...dto, tenantId: user.tenantId },
     });
+  }
+
+  async update(user: JwtPayload, id: string, dto: any) {
+    const listing = await this.prisma.listing.findFirst({ where: { id, tenantId: user.tenantId } });
+    if (!listing) throw new NotFoundException('Listing not found');
+    return this.prisma.listing.update({ where: { id }, data: dto });
+  }
+
+  async remove(user: JwtPayload, id: string) {
+    const listing = await this.prisma.listing.findFirst({ where: { id, tenantId: user.tenantId } });
+    if (!listing) throw new NotFoundException('Listing not found');
+    return this.prisma.listing.delete({ where: { id } });
   }
 
   async syncToPlatform(listingId: string) {
@@ -39,8 +54,6 @@ export class ListingsService {
   }
 
   async handleWebhook(tenantId: string, platform: string, payload: any) {
-    // Lead auto-import from platforms
-    // Standardize payload to Lead format
     const leadData = {
       tenantId,
       name: payload.name || 'Platform Lead',
@@ -62,7 +75,6 @@ export class ListingsService {
   async bulkUpdatePrices(tenantId: string, projectId: string, increasePct: number) {
     const factor = 1 + (increasePct / 100);
     
-    // Update Units
     await this.prisma.unit.updateMany({
       where: { tower: { projectId }, status: 'AVAILABLE' },
       data: {
@@ -71,7 +83,6 @@ export class ListingsService {
       },
     });
 
-    // Update Listings
     return this.prisma.listing.updateMany({
       where: { tenantId, projectId },
       data: {
