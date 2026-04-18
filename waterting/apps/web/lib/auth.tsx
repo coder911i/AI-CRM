@@ -10,6 +10,9 @@ interface User {
   role: string;
   email: string;
   name: string;
+  tenant?: {
+    name: string;
+  };
 }
 
 interface AuthContextType {
