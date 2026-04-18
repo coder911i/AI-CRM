@@ -12,7 +12,9 @@
     "typescript": "^5.7.3",
     "tsc-alias": "^1.8.10",
     "ts-loader": "^9.5.2",
-    "@types/node": "^22.19.15"
+    "@types/node": "^22.19.15",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^2.1.0"
   },
   "devDependencies": {
     "prisma": "^5.22.0"
