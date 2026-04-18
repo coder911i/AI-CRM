@@ -4,6 +4,9 @@ import CRMLayout from '@/components/CRMLayout';
 import { api } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell, PieChart, Pie, Legend } from 'recharts';
 
 const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
@@ -14,6 +17,29 @@ export default function AnalyticsPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const exportPDF = async () => {
+    const element = document.getElementById('analytics-report');
+    if (!element) return;
+    
+    const btn = document.getElementById('export-pdf-btn');
+    if (btn) btn.innerText = 'PREPARING...';
+
+    try {
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`CRM-Report-${new Date().toLocaleDateString()}.pdf`);
+    } catch (e) {
+      console.error('PDF Export failed', e);
+    } finally {
+      if (btn) btn.innerText = 'Export PDF';
+    }
+  };
+
   useEffect(() => {
     if (!authLoading && !user) { router.push('/login'); return; }
     if (user) {
@@ -21,30 +47,40 @@ export default function AnalyticsPage() {
     }
   }, [user, authLoading]);
 
-  if (authLoading || loading) return <div className="loading-page"><div className="spinner" /></div>;
+  if (authLoading || loading) return (
+    <div className="fixed inset-0 flex items-center justify-center bg-[#020617]">
+      <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-500/20 rounded-full animate-spin"></div>
+    </div>
+  );
 
   const stats = data?.overview || {
-    totalLeads: 0,
-    converted: 0,
-    conversionRate: 0,
-    totalRevenue: 0,
-    avgDealSize: 0,
-    avgDaysToClose: 0
+    totalLeads: 0, converted: 0, conversionRate: 0, totalRevenue: 0, avgDealSize: 0, avgDaysToClose: 0
   };
 
   return (
     <CRMLayout>
-      <div className="page-header">
-        <div><h2>Analytics & ROI</h2><p className="subtitle">Performance tracking and lead conversion insights</p></div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <select className="form-select" style={{ width: 150 }} defaultValue="30">
-            <option value="7">Last 7 Days</option>
-            <option value="30">Last 30 Days</option>
-            <option value="90">Last 90 Days</option>
-          </select>
-          <button className="btn btn-secondary btn-sm">⬇ Export PDF</button>
+      <div id="analytics-report" className="p-1 sm:p-4 md:p-6 lg:p-8 space-y-8 bg-white font-sans min-h-screen">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
+          <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight italic">Analytics Studio</h1>
+            <p className="text-slate-500">{user?.tenant?.name || 'Skyline Developers'} Performance Review</p>
+          </motion.div>
+          <div className="flex items-center gap-3">
+            <select className="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold">
+              <option value="30">Last 30 Days</option>
+              <option value="90">Last 90 Days</option>
+            </select>
+            <motion.button 
+              id="export-pdf-btn"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={exportPDF}
+              className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold shadow-xl hover:bg-slate-800 transition-all border-b-4 border-slate-950 active:border-b-0 uppercase tracking-widest text-xs"
+            >
+              Export PDF
+            </motion.button>
+          </div>
         </div>
-      </div>
 
       {/* Section 1: Overview Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
