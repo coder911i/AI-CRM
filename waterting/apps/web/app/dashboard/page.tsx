@@ -59,7 +59,7 @@ export default function DashboardPage() {
     <CRMLayout>
       <div className="p-1 sm:p-4 md:p-6 lg:p-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
+          <motion.div initial={{ filter: 'blur(10px)', opacity: 0 }} animate={{ filter: 'blur(0px)', opacity: 1 }}>
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
             <p className="text-slate-500 mt-1">Welcome back, {user?.name?.split(' ')[0] || 'User'}! Here&apos;s your daily overview.</p>
           </motion.div>
@@ -74,16 +74,18 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <motion.div 
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6"
-        >
+        <AnimatePresence mode='wait'>
           {loading ? (
-            Array(6).fill(0).map((_, i) => <Skeleton key={i} className="h-32" />)
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+               {/* Minimalist waiting state */}
+            </div>
           ) : (
-            <>
+            <motion.div 
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6"
+            >
               {[
                 { label: 'Total Leads', value: stats?.totalLeads, icon: '👥', color: 'bg-blue-50 text-blue-600' },
                 { label: 'New Leads', value: stats?.newLeads, icon: '✨', color: 'bg-emerald-50 text-emerald-600' },
@@ -100,70 +102,62 @@ export default function DashboardPage() {
                   <div className="text-2xl font-bold text-slate-900 mt-1">{stat.value ?? 0}</div>
                 </motion.div>
               ))}
-            </>
+            </motion.div>
           )}
-        </motion.div>
+        </AnimatePresence>
 
         {/* Charts and Tables */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="px-8 py-6 border-bottom flex items-center justify-between border-b border-slate-50">
-                <h3 className="font-bold text-slate-900">Recent Prospects</h3>
-                <button onClick={() => router.push('/leads')} className="text-blue-600 text-sm font-semibold hover:underline">View All</button>
-              </div>
-              <div className="overflow-x-auto">
-                {loading ? (
-                  <div className="p-8 space-y-4">
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                  </div>
-                ) : (
+          <div className="lg:col-span-2">
+            {!loading && (
+              <motion.div initial={{ y: 20, filter: 'blur(10px)', opacity: 0 }} animate={{ y: 0, filter: 'blur(0px)', opacity: 1 }} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-bottom flex items-center justify-between border-b border-slate-50">
+                  <h3 className="font-bold text-slate-900">Recent Prospects</h3>
+                  <button onClick={() => router.push('/leads')} className="text-blue-600 text-sm font-semibold hover:underline">View All</button>
+                </div>
+                <div className="overflow-x-auto">
                   <table className="w-full text-left">
-                    <thead>
-                      <tr className="text-slate-400 text-xs font-semibold uppercase tracking-wider bg-slate-50/50">
-                        <th className="px-8 py-4">Name</th>
-                        <th className="px-8 py-4">Source</th>
-                        <th className="px-8 py-4">Status</th>
-                        <th className="px-8 py-4">Agent</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {stats?.recentLeads?.map((lead: any) => (
-                        <tr key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} className="hover:bg-slate-50/50 cursor-pointer transition-colors group">
-                          <td className="px-8 py-4">
-                            <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">{lead.name}</div>
-                            <div className="text-xs text-slate-400">{lead.phone}</div>
-                          </td>
-                          <td className="px-8 py-4">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                              {lead.source}
-                            </span>
-                          </td>
-                          <td className="px-8 py-4">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                              {stageLabels[lead.stage] || lead.stage}
-                            </span>
-                          </td>
-                          <td className="px-8 py-4 text-slate-600 text-sm">{lead.assignedTo?.name || 'Unassigned'}</td>
+                      <thead>
+                        <tr className="text-slate-400 text-xs font-semibold uppercase tracking-wider bg-slate-50/50">
+                          <th className="px-8 py-4">Name</th>
+                          <th className="px-8 py-4">Source</th>
+                          <th className="px-8 py-4">Status</th>
+                          <th className="px-8 py-4">Agent</th>
                         </tr>
-                      ))}
-                    </tbody>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {stats?.recentLeads?.map((lead: any) => (
+                          <tr key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} className="hover:bg-slate-50/50 cursor-pointer transition-colors group">
+                            <td className="px-8 py-4">
+                              <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">{lead.name}</div>
+                              <div className="text-xs text-slate-400">{lead.phone}</div>
+                            </td>
+                            <td className="px-8 py-4">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                                {lead.source}
+                              </span>
+                            </td>
+                            <td className="px-8 py-4">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                                {stageLabels[lead.stage] || lead.stage}
+                              </span>
+                            </td>
+                            <td className="px-8 py-4 text-slate-600 text-sm">{lead.assignedTo?.name || 'Unassigned'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
                   </table>
-                ) }
-              </div>
-            </motion.div>
+                </div>
+              </motion.div>
+            )}
           </div>
 
           <div className="space-y-6">
-            <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="bg-[#020617] text-white rounded-3xl p-8 shadow-xl shadow-slate-900/20">
-              <h3 className="text-lg font-bold mb-6">Pipeline Health</h3>
-              <div className="space-y-6">
-                {loading ? (
-                  Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-4 bg-slate-800" />)
-                ) : (
-                  stats?.stageDistribution?.map((s) => (
+            {!loading && (
+              <motion.div initial={{ x: 20, filter: 'blur(10px)', opacity: 0 }} animate={{ x: 0, filter: 'blur(0px)', opacity: 1 }} className="bg-[#020617] text-white rounded-3xl p-8 shadow-xl shadow-slate-900/20">
+                <h3 className="text-lg font-bold mb-6">Pipeline Health</h3>
+                <div className="space-y-6">
+                  {stats?.stageDistribution?.map((s) => (
                     <div key={s.stage} className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-400">{stageLabels[s.stage] || s.stage}</span>
@@ -173,14 +167,15 @@ export default function DashboardPage() {
                         <motion.div 
                           initial={{ width: 0 }} 
                           animate={{ width: `${(s.count / (stats.totalLeads || 1)) * 100}%` }}
+                          transition={{ duration: 1, ease: 'easeOut' }}
                           className="h-full bg-blue-500 rounded-full"
                         />
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
