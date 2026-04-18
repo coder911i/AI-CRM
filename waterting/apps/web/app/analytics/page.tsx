@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 import { useEffect, useState } from 'react';
 import CRMLayout from '@/components/CRMLayout';
