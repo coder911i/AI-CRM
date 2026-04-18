@@ -184,6 +184,7 @@ export default function AnalyticsPage() {
             </table>
           </div>
         </div>
+        </div>
       </div>
     </CRMLayout>
   );
