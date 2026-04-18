@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: waterting-api
+    runtime: node
+    plan: free
+    rootDir: waterting/apps/api
+    buildCommand: npm install && npm run build
+    startCommand: node dist/apps/api/src/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: GROQ_API_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        value: waterting-assets
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: Waterting CRM
+      - key: FRONTEND_URL
+        sync: false

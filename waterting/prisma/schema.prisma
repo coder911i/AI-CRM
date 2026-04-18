@@ -476,12 +476,11 @@ model Automation {
 }
 
 model Embedding {
-  // ... existing fields ...
   id          String   @id @default(cuid())
   tenantId    String
   leadId      String?
   unitId      String?
-  embedding   Unsupported("vector(1536)")?
+  embedding   String?  // stored as JSON array — pgvector not required
   metadata    Json     @default("{}")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
