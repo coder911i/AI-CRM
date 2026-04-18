@@ -40,12 +40,21 @@ export class UnitsController {
   }
 
   @Patch('units/:id/hold')
-  async holdUnit(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: { holdHours: 48 | 72 }) {
-    const holdUntil = new Date(Date.now() + (dto.holdHours || 48) * 3600000);
-    return this.prisma.unit.update({
-      where: { id, tower: { project: { tenantId: user.tenantId } } },
-      data: { status: UnitStatus.RESERVED, holdUntil },
-    });
+  @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER, UserRole.SALES_AGENT)
+  async holdUnit(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() dto: { leadId: string; durationHours: number }) {
+    return this.unitsService.placeHold(user, id, dto);
+  }
+
+  @Patch('units/:id/release')
+  @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
+  async releaseHold(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.unitsService.releaseHold(user, id);
+  }
+
+  @Patch('units/:id/extend-hold')
+  @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
+  async extendHold(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body('additionalHours') hours: number) {
+    return this.unitsService.extendHold(user, id, hours);
   }
 
   @Patch('units/:id/status')

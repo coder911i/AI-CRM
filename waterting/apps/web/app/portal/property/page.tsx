@@ -1,6 +1,5 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 
@@ -8,102 +7,50 @@ export default function PortalPropertyPage() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const email = typeof window !== 'undefined' ? localStorage.getItem('waterting_portal_email') : null;
 
   useEffect(() => {
-    api.get<any>('/portal/property')
-      .then(setData)
-      .catch(() => router.push('/portal/login'))
-      .finally(() => setLoading(false));
+    if (!email) { router.push('/portal/login'); return; }
+    api.get<any>('/portal/dashboard').then(setData).catch(() => router.push('/portal/login')).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="loading-page"><div className="spinner" /></div>;
-  if (!data) return <div className="empty-state">No property details found.</div>;
-
-  const { unit, project } = data;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 40 }}>
-      <div className="page-header">
-        <div>
-          <h2>Unit {unit.unitNumber}</h2>
-          <p className="subtitle">{project.name} • {unit.type?.replace(/_/g, ' ')}</p>
-        </div>
-      </div>
+    <div style={{maxWidth: 800, margin: '40px auto', padding: '0 20px'}}>
+      <h2 style={{fontSize: 20, fontWeight: 700, marginBottom: 24}}>Property Details</h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, alignItems: 'start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div className="card">
-            <div className="card-header">Unit Specifications</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 16 }}>
-              <div>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Floor</span>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>{unit.floor}</div>
-              </div>
-              <div>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Facing</span>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>{unit.facing || 'East'}</div>
-              </div>
-              <div>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Type</span>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>{unit.type?.replace(/_/g, ' ')}</div>
-              </div>
-              <div>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Carpet Area</span>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>{unit.carpetArea} sqft</div>
-              </div>
-              <div>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Super Area</span>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>{unit.superArea || (unit.carpetArea * 1.5).toFixed(0)} sqft</div>
-              </div>
-              <div>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tower</span>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>Tower A</div>
-              </div>
+      {data?.bookings?.map((booking: any) => (
+        <div key={booking.id} style={{display: 'flex', flexDirection: 'column', gap: 24}}>
+          <div className="card shadow-sm" style={{padding: 24}}>
+            <h3 style={{fontSize: 22, fontWeight: 800, color: 'var(--primary)'}}>{booking.unit?.tower?.project?.name}</h3>
+            <p style={{fontSize: 14, color: 'var(--text-muted)', marginTop: 4}}>📍 {booking.unit?.tower?.project?.location}</p>
+            
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 20, marginTop: 24}}>
+               <div><label style={{fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase'}}>Unit Number</label><div style={{fontSize: 16, fontWeight: 700}}>{booking.unit?.unitNumber}</div></div>
+               <div><label style={{fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase'}}>Tower / Floor</label><div style={{fontSize: 16, fontWeight: 700}}>{booking.unit?.tower?.name} / {booking.unit?.floor}th</div></div>
+               <div><label style={{fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase'}}>Type</label><div style={{fontSize: 16, fontWeight: 700}}>{booking.unit?.type.replace(/_/g, ' ')}</div></div>
+               <div><label style={{fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase'}}>Carpet Area</label><div style={{fontSize: 16, fontWeight: 700}}>{booking.unit?.carpetArea} sq.ft.</div></div>
             </div>
           </div>
 
-          <div className="card">
-            <div className="card-header">Floor Plan</div>
-            <div style={{ marginTop: 16, background: 'var(--bg)', borderRadius: 8, padding: 20, textAlign: 'center' }}>
-              {unit.floorPlanUrl ? (
-                <img src={unit.floorPlanUrl} alt="Floor Plan" style={{ maxWidth: '100%', borderRadius: 4 }} />
-              ) : (
-                <div style={{ padding: 60, color: 'var(--text-muted)', border: '2px dashed var(--border)', borderRadius: 8 }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>🖼️</div>
-                  <p>Large Scale Floor Plan Currently Unavailable</p>
-                  <p style={{ fontSize: 12 }}>Please contact our office for a physical copy.</p>
-                </div>
-              )}
+          <div className="card shadow-sm">
+            <div className="card-header">Amenities & Features</div>
+            <div style={{padding: 20, display: 'flex', flexWrap: 'wrap', gap: 10}}>
+               {['Swimming Pool', 'Gymnasium', '24/7 Security', 'Clubhouse', 'Yoga Deck', 'Kids Play Area'].map(a => (
+                  <span key={a} className="badge badge-info" style={{padding: '8px 12px'}}>{a}</span>
+               ))}
             </div>
+          </div>
+
+          <div className="card shadow-sm" style={{padding: 0, overflow: 'hidden'}}>
+             <div className="card-header" style={{border: 'none'}}>Location Map</div>
+             <div style={{height: 300, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)'}}>
+                [ Google Maps Embed for Noida Sector 62 ]
+             </div>
           </div>
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div className="card">
-            <div className="card-header">Project Information</div>
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>{project.name}</div>
-              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>📍 {project.location}</p>
-              
-              <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(var(--primary-rgb), 0.05)', borderRadius: 6, borderLeft: '4px solid var(--primary)' }}>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase' }}>RERA Registration</div>
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{project.reraNumber || 'P1234567890'}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header">Amenities & Services</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
-              {project.amenities?.map((a: string) => (
-                <span key={a} className="badge badge-info" style={{ padding: '4px 10px', fontSize: 11 }}>{a}</span>
-              )) || ['Pool', 'Gym', 'Clubhouse', 'Security', 'Parking'].map(a => (
-                <span key={a} className="badge badge-secondary" style={{ padding: '4px 10px', fontSize: 11 }}>{a}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      ))}
     </div>
   );
 }

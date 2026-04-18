@@ -84,4 +84,15 @@ export class BrokersService {
       })),
     };
   }
+  async markCommissionPaid(user: JwtPayload, id: string) {
+    const commission = await this.prisma.commission.findFirst({
+      where: { id, broker: { tenantId: user.tenantId } },
+    });
+    if (!commission) throw new NotFoundException('Commission record not found');
+
+    return this.prisma.commission.update({
+      where: { id },
+      data: { isPaid: true, paidAt: new Date() },
+    });
+  }
 }

@@ -24,6 +24,11 @@ export class LeadsService {
 
   async create(user: JwtPayload, dto: any) {
     try {
+      // Auto-assign agent if none specified
+      if (!dto.assignedToId) {
+        dto.assignedToId = await this.autoAssignAgent(user.tenantId);
+      }
+
       const lead = await this.prisma.lead.create({
         data: {
           ...dto,
@@ -273,13 +278,37 @@ export class LeadsService {
     }
   }
 
-  async autoAssign(tenantId: string): Promise<string | null> {
+  async autoAssignAgent(tenantId: string): Promise<string | null> {
+    // Get all active sales agents for this tenant
     const agents = await this.prisma.user.findMany({
-      where: { tenantId, role: 'SALES_AGENT', isActive: true },
-      include: { _count: { select: { leads: true } } },
-      orderBy: { leads: { _count: 'asc' } },
+      where: { tenantId, isActive: true, role: { in: ['SALES_AGENT', 'SALES_MANAGER'] } },
     });
-    return agents[0]?.id ?? null;
+    if (!agents.length) return null;
+
+    // Count active (non-closed) leads per agent
+    const leadCounts = await this.prisma.lead.groupBy({
+      by: ['assignedToId'],
+      where: {
+        tenantId,
+        assignedToId: { not: null },
+        stage: { notIn: ['BOOKING_DONE', 'LOST'] },
+      },
+      _count: { id: true },
+    });
+
+    const countMap = new Map(leadCounts.map(lc => [lc.assignedToId, lc._count.id]));
+
+    // Find agent with fewest active leads (least-loaded)
+    let minLoad = Infinity;
+    let selectedAgent: string | null = null;
+    for (const agent of agents) {
+      const load = countMap.get(agent.id) ?? 0;
+      if (load < minLoad) {
+        minLoad = load;
+        selectedAgent = agent.id;
+      }
+    }
+    return selectedAgent;
   }
 
   async createFromWebhook(data: any) {

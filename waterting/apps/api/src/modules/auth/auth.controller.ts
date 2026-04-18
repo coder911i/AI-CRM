@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Get, Request, Res, Query } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, Res, Query, Patch, Param, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -77,14 +77,34 @@ export class AuthController {
         isActive: true,
         role: { in: ['SALES_AGENT', 'SALES_MANAGER'] },
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        phone: true,
-      },
+      select: { id: true, name: true, email: true, role: true, agentCode: true, phone: true },
       orderBy: { name: 'asc' },
+    });
+  }
+
+  @Get('users')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
+  async getAllUsers(@Request() req: any) {
+    return this.prisma.user.findMany({
+      where: { tenantId: req.user.tenantId },
+      select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true, agentCode: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Patch('users/:id/toggle-status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TENANT_ADMIN)
+  async toggleUserStatus(@Param('id') id: string, @Request() req: any) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, tenantId: req.user.tenantId },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return this.prisma.user.update({
+      where: { id },
+      data: { isActive: !user.isActive },
+      select: { id: true, name: true, isActive: true },
     });
   }
 }

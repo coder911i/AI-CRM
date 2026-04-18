@@ -11,6 +11,7 @@ import { EventsGateway } from '../gateways/events.gateway';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { AIService } from '../common/ai/ai.service';
 import { AiFollowUpWorker } from './ai-follow-up.worker';
+import { DailyBriefingWorker } from './daily-briefing.worker';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AiFollowUpWorker } from './ai-follow-up.worker';
     StaleLeadWorker,
     PdfGeneratorWorker,
     AiFollowUpWorker,
+    DailyBriefingWorker,
   ],
   exports: [EventsGateway, AiFollowUpWorker]
 })

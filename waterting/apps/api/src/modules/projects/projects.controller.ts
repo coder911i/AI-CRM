@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Res, Query, NotFoundException } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -57,5 +57,39 @@ export class ProjectsController {
   @Roles(UserRole.TENANT_ADMIN)
   remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return this.projectsService.remove(user, id);
+  }
+  @Get(':id/availability-matrix')
+  async getAvailabilityMatrix(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id, tenantId: user.tenantId },
+      include: {
+        towers: {
+          include: {
+            units: {
+              orderBy: [{ floor: 'desc' }, { unitNumber: 'asc' }]
+            }
+          }
+        }
+      }
+    });
+    if (!project) throw new NotFoundException('Project not found');
+
+    const units = project.towers.flatMap(t => t.units);
+    
+    return {
+      project: { name: project.name, location: project.location },
+      summary: {
+        total: units.length,
+        available: units.filter(u => u.status === 'AVAILABLE').length,
+        reserved: units.filter(u => u.status === 'RESERVED').length,
+        booked: units.filter(u => u.status === 'BOOKED').length,
+        sold: units.filter(u => u.status === 'SOLD').length,
+      },
+      towers: project.towers.map(t => ({
+        id: t.id,
+        name: t.name,
+        units: t.units
+      }))
+    };
   }
 }

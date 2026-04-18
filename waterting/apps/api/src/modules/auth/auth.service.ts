@@ -26,10 +26,12 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const user = await this.prisma.user.findFirst({ where: { email: loginDto.email } });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
-    if (!user.isActive) throw new UnauthorizedException('Account suspended. Contact your administrator.');
-    const passwordValid = await bcrypt.compare(loginDto.password, user.password);
-    if (!passwordValid) throw new UnauthorizedException('Invalid credentials');
+    if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+    if (!user.isActive) {
+      throw new UnauthorizedException('Your account has been suspended. Please contact your administrator.');
+    }
 
     const payload: JwtPayload = { sub: user.id, tenantId: user.tenantId, role: user.role as UserRole, email: user.email };
 

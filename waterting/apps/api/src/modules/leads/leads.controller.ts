@@ -27,6 +27,29 @@ export class LeadsController {
     return this.leadsService.findAll(user, Number(page || 1), Number(limit || 50));
   }
 
+  @Get('assignment-stats')
+  @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
+  async getAssignmentStats(@CurrentUser() user: JwtPayload) {
+    const agents = await this.prisma.user.findMany({
+      where: {
+        tenantId: user.tenantId,
+        role: { in: ['SALES_AGENT', 'SALES_MANAGER'] },
+        isActive: true,
+      },
+    });
+
+    const stats = await Promise.all(
+      agents.map(async (a) => {
+        const activeLeads = await this.prisma.lead.count({
+          where: { assignedToId: a.id, stage: { notIn: ['BOOKING_DONE', 'LOST'] } },
+        });
+        return { id: a.id, name: a.name, activeLeads };
+      }),
+    );
+
+    return stats;
+  }
+
   @Get(':id')
   findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return this.leadsService.findOne(user, id);
@@ -57,66 +80,6 @@ export class LeadsController {
     return this.leadsService.updateStage(user, id, stage);
   }
 
-  @Patch(':id/unsubscribe')
-  async unsubscribe(@Param('id') id: string, @Request() req: any) {
-    await this.prisma.lead.update({
-      where: { id, tenantId: req.user.tenantId },
-      data: { emailOptOut: true },
-    });
-    return { message: 'Unsubscribed' };
-  }
-
-  // GET /leads/unsubscribe/:leadId — public endpoint (no auth)
-  @Get('unsubscribe/:leadId')
-  async publicUnsubscribe(@Param('leadId') leadId: string, @Res() res: any) {
-    await this.prisma.lead.update({
-      where: { id: leadId },
-      data: { emailOptOut: true },
-    });
-    res.send('<h2>You have been unsubscribed.</h2><p>You will no longer receive emails from us.</p>');
-  }
-
-  @Post('bulk')
-  @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
-  async bulkAction(@Body() dto: any, @Request() req: any) {
-    const { action, leadIds, payload } = dto;
-    switch (action) {
-      case 'reassign':
-        await this.prisma.lead.updateMany({
-          where: { id: { in: leadIds }, tenantId: req.user.tenantId },
-          data: { assignedToId: payload.assignedToId },
-        });
-        break;
-      case 'stage':
-        for (const id of leadIds) {
-          await this.leadsService.updateStage(req.user, id, payload.stage);
-        }
-        break;
-    }
-    return { updated: leadIds.length };
-  }
-
-  @Get('export/csv')
-  async exportCSV(@Query() query: any, @Request() req: any, @Res() res: any) {
-    // Basic export (limit 10000)
-    const leads = await this.prisma.lead.findMany({
-      where: { tenantId: req.user.tenantId },
-      take: 10000,
-      include: {
-        project: true,
-        assignedTo: true,
-      }
-    });
-
-    const header = 'Name,Phone,Email,Source,Stage,Score,Project,Assigned To,Created\n';
-    const rows = leads.map((l: any) =>
-      `"${l.name}","${l.phone}","${l.email ?? ''}","${l.source}","${l.stage}","${l.score ?? ''}","${l.project?.name ?? ''}","${l.assignedTo?.name ?? ''}","${l.createdAt}"`
-    ).join('\n');
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
-    res.send(header + rows);
-  }
-
   @Get(':id/ai-brief')
   async getAIBrief(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     const lead = await this.prisma.lead.findUnique({
@@ -129,46 +92,60 @@ export class LeadsController {
 
     if (!lead) throw new NotFoundException('Lead not found');
 
-    const prompt = `You are a real estate sales coach AI. Generate a pre-call brief for this lead.
+    const prompt = `You are a real estate sales coach AI. The agent is about to call this lead RIGHT NOW.
+Generate a sharp, actionable pre-call brief in under 60 seconds of reading time.
 
-LEAD DATA:
-- Name: ${lead.name}
-- Budget: up to ₹${lead.budgetMax ?? 'unknown'}
-- AI Score: ${lead.score ?? 'not scored'}/100 (${lead.scoreLabel ?? 'unscored'})
-- Project Interest: ${lead.project?.name ?? 'not specified'}
-- Timeline: ${(lead as any).timeline ?? 'unknown'}
-- Source: ${lead.source}
-- Recent activity: ${lead.activities.map(a => a.description ?? (a as any).title).join('; ') || 'none'}
+LEAD: ${lead.name} | Budget: ₹${lead.budgetMin ?? 0}L - ₹${lead.budgetMax ?? 0}L
+SCORE: ${lead.score}/100 (${lead.scoreLabel}) | Stage: ${lead.stage}
+PROJECT: ${lead.project?.name ?? 'Not specified'} | Source: ${lead.source}
+TIMELINE: ${(lead as any).timeline ?? 'Not stated'}
+LAST ${lead.activities.length} ACTIVITIES:
+${lead.activities.map((a, i) => `${i + 1}. [${a.type}] ${a.title}: ${a.description ?? ''}`).join('\n')}
 
-Return this exact JSON structure:
+Return this exact JSON:
 {
-  "background": "one sentence about who this lead is",
-  "scoreExplanation": "why they got this score",
-  "likelyObjections": ["objection 1", "objection 2", "objection 3"],
-  "recommendedUnit": "best unit type based on budget",
-  "suggestedOpener": "exact first sentence to say on the call"
+  "callObjective": "What should the agent try to achieve on THIS call (one sentence)",
+  "contextSummary": "What happened last time and current situation (2 sentences max)",
+  "likelyObjections": ["3 specific objections this lead might raise"],
+  "responses": ["Suggested response to each objection above"],
+  "recommendedUnit": "Specific unit type/floor/facing to pitch based on budget",
+  "suggestedOpener": "Exact first sentence to say when they pick up",
+  "redFlags": ["Any warning signs in this lead's behavior"],
+  "urgencyScore": "1-10 how urgently agent should close this lead",
+  "nextActionIfNoAnswer": "What to do if call goes to voicemail"
 }`;
 
     return this.ai.generateJSON(prompt);
   }
 
-  @Get(':id/recommendations')
-  async getRecommendations(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
-    const lead = await this.prisma.lead.findUnique({ where: { id, tenantId: user.tenantId } });
+  @Get(':id/whatsapp-message')
+  async getWhatsAppMessage(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    const lead = await this.prisma.lead.findUnique({
+      where: { id, tenantId: user.tenantId },
+      include: { project: true, assignedTo: true },
+    });
     if (!lead) throw new NotFoundException('Lead not found');
 
-    // Vector search stub - returning top 3 units by budget/bhk match for now
-    // In production this would use pgvector
-    return this.prisma.unit.findMany({
-      where: { 
-        status: 'AVAILABLE',
-        tower: { project: { tenantId: user.tenantId } },
-        type: lead.preferredBHK ? (lead.preferredBHK as any) : undefined,
-        totalPrice: { lte: lead.budgetMax || 100000000 }
-      },
-      take: 3,
-      orderBy: { totalPrice: 'desc' }
-    });
+    const agentName = lead.assignedTo?.name ?? 'your agent';
+    const projectName = lead.project?.name ?? 'our property';
+    const location = lead.project?.location ?? 'the site';
+    const budget = lead.budgetMax ? `₹${lead.budgetMax}L` : 'the budget we discussed';
+    const bhk = lead.preferredBHK ?? 'the model';
+
+    const text = `Hi ${lead.name}, I'm ${agentName} from Waterting CRM.
+
+As discussed, here's the property you were interested in:
+📍 ${projectName}, ${location}
+💰 Price: ${budget}
+🏠 Type: ${bhk}
+
+Would you like to schedule a site visit? Reply YES and I'll confirm a slot.`;
+
+    return {
+      phone: lead.phone,
+      text,
+      url: `https://wa.me/${lead.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`,
+    };
   }
 
   @Get(':id/ai-summary')
@@ -192,5 +169,25 @@ Return this exact JSON structure:
     const summary = await this.ai.generateText(prompt);
 
     return { summary };
+  }
+
+  @Get('export/csv')
+  async exportCSV(@Query() query: any, @Request() req: any, @Res() res: any) {
+    const leads = await this.prisma.lead.findMany({
+      where: { tenantId: req.user.tenantId },
+      take: 10000,
+      include: { project: true, assignedTo: true },
+    });
+
+    const header = 'Name,Phone,Email,Source,Stage,Score,Project,Assigned To,Created\n';
+    const rows = leads
+      .map(
+        (l: any) =>
+          `"${l.name}","${l.phone}","${l.email ?? ''}","${l.source}","${l.stage}","${l.score ?? ''}","${l.project?.name ?? ''}","${l.assignedTo?.name ?? ''}","${l.createdAt}"`,
+      )
+      .join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
+    res.send(header + rows);
   }
 }

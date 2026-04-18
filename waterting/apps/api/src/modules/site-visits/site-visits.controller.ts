@@ -21,12 +21,7 @@ export class SiteVisitsController {
   }
 
   @Patch(':id/outcome')
-  recordOutcome(
-    @CurrentUser() user: JwtPayload,
-    @Param('id') id: string,
-    @Body('outcome') outcome: VisitOutcome,
-    @Body('notes') notes?: string,
-  ) {
-    return this.siteVisitsService.recordOutcome(user, id, outcome, notes);
+  recordOutcome(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() data: { outcome: VisitOutcome; notes?: string; followUpDate?: Date }) {
+    return this.siteVisitsService.recordOutcome(user, id, data);
   }
 }

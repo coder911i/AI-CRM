@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Res, Query, Patch } from '@nestjs/common';
 import { Response } from 'express';
 import * as QRCode from 'qrcode';
 import { BrokersService } from './brokers.service';
@@ -58,5 +58,11 @@ export class BrokersController {
   @Get(':id/statement')
   getStatement(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return this.brokersService.getStatement(user, id);
+  }
+
+  @Patch('commissions/:id/mark-paid')
+  @Roles(UserRole.ACCOUNTS, UserRole.TENANT_ADMIN)
+  markPaid(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.brokersService.markCommissionPaid(user, id);
   }
 }

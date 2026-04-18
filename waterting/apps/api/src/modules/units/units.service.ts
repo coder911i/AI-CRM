@@ -77,4 +77,25 @@ export class UnitsService {
 
     return updated;
   }
+  async placeHold(user: JwtPayload, id: string, data: { leadId: string; durationHours: number }) {
+    const holdUntil = new Date(Date.now() + data.durationHours * 60 * 60 * 1000);
+    return this.updateStatus(user, id, UnitStatus.RESERVED, holdUntil);
+  }
+
+  async releaseHold(user: JwtPayload, id: string) {
+    return this.updateStatus(user, id, UnitStatus.AVAILABLE);
+  }
+
+  async extendHold(user: JwtPayload, id: string, additionalHours: number) {
+    const unit = await this.prisma.unit.findFirst({
+      where: { id, tower: { project: { tenantId: user.tenantId } } },
+    });
+    if (!unit || !unit.holdUntil) throw new NotFoundException('No active hold found');
+
+    const newHoldUntil = new Date(unit.holdUntil.getTime() + additionalHours * 60 * 60 * 1000);
+    return this.prisma.unit.update({
+      where: { id },
+      data: { holdUntil: newHoldUntil },
+    });
+  }
 }

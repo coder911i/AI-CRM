@@ -1,64 +1,53 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../common/prisma/prisma.service';
-// import { NotificationsService } from '../modules/notifications/notifications.service';  // Assuming we have one, or just emitting WS for now. Let's create an activity log and WS emit.
 import { EventsGateway } from '../gateways/events.gateway';
 
 @Injectable()
 export class StaleLeadWorker {
+  private readonly logger = new Logger(StaleLeadWorker.name);
+
   constructor(
     private prisma: PrismaService,
     private events: EventsGateway
   ) {}
 
-  @Cron('*/5 * * * *') // Every 5 minutes
+  @Cron('0 9 * * *') // 9 AM Daily
   async checkStaleLeads() {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
-    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
 
-    const stale = await this.prisma.lead.findMany({
+    const staleLeads = await this.prisma.lead.findMany({
       where: {
         stage: { notIn: ['BOOKING_DONE', 'LOST'] },
-        lastActivityAt: { lt: sevenDaysAgo },
+        lastActivityAt: { lt: fiveDaysAgo },
       },
       include: { assignedTo: true },
     });
 
-    // P0 hot leads — 3 day threshold
-    const hotStale = await this.prisma.lead.findMany({
-      where: {
-        stage: { notIn: ['BOOKING_DONE', 'LOST'] },
-        score: { gte: 61 },
-        lastActivityAt: { lt: threeDaysAgo },
-      },
-    });
+    this.logger.log(`Found ${staleLeads.length} stale leads.`);
 
-    // Contacted leads — 2 day threshold
-    const contactedStale = await this.prisma.lead.findMany({
-      where: {
-        stage: 'CONTACTED',
-        lastActivityAt: { lt: twoDaysAgo },
-      },
-    });
-
-    // Merge Unique
-    const staleMap = new Map();
-    [...stale, ...hotStale, ...contactedStale].forEach(lead => staleMap.set(lead.id, lead));
-    const allStale = Array.from(staleMap.values());
-
-    for (const lead of allStale) {
-      const daysSince = Math.floor(
-        (Date.now() - (lead.lastActivityAt?.getTime() ?? lead.createdAt.getTime())) / 86400000
-      );
+    for (const lead of staleLeads) {
+      const lastActivity = lead.lastActivityAt || lead.createdAt;
+      const daysSince = Math.floor((Date.now() - lastActivity.getTime()) / 86400000);
       
-      // In-app notification for Sales Manager (just a mock or send to tenant room)
-      this.events.emitToTenant(lead.tenantId, 'notification', {
-        title: `Stale Lead: ${lead.name}`,
-        message: `No activity for ${daysSince} days — currently in ${lead.stage}`,
-        type: 'STALE_LEAD',
-        leadId: lead.id,
+      // Log activity
+      await this.prisma.activity.create({
+        data: {
+          leadId: lead.id,
+          type: 'AI_ACTION' as any,
+          title: 'Stale Lead Alert',
+          description: `No activity for ${daysSince} days. Flagged for immediate follow-up.`,
+        },
       });
+
+      // Emit real-time notification
+      this.events.emitToTenant(lead.tenantId, 'lead:stale', {
+        leadId: lead.id,
+        name: lead.name,
+        daysSince,
+      });
+
+      this.logger.warn(`Stale Lead Alert: ${lead.name} (${daysSince} days)`);
     }
   }
 }
