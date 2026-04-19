@@ -105,10 +105,30 @@ export default function ListingsPage() {
                 <td style={{ padding: '10px 12px', fontSize: 13 }}>₹{(l.price / 100000).toFixed(1)}L</td>
                 <td style={{ padding: '10px 12px' }}><span className="badge">{l.platform}</span></td>
                 <td style={{ padding: '10px 12px', fontSize: 13 }}>{l.project?.name ?? '—'}</td>
-                <td style={{ padding: '10px 12px' }}><span className={`badge ${l.status === 'ACTIVE' ? 'badge-success' : 'badge-cold'}`}>{l.status}</span></td>
+                <td style={{ padding: '10px 12px' }}>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span className={`badge ${l.status === 'ACTIVE' ? 'badge-success' : 'badge-cold'}`}>{l.status}</span>
+                      {l.syncStatus?.length > 0 && <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>Synced: {new Date(l.syncStatus[0].timestamp).toLocaleTimeString()}</span>}
+                   </div>
+                </td>
                 <td style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-muted)' }}>{new Date(l.createdAt).toLocaleDateString('en-IN')}</td>
                 <td style={{ padding: '10px 12px' }}>
-                  <button className="btn btn-secondary btn-sm" style={{ fontSize: 11 }} onClick={() => handleDelete(l.id)}>Delete</button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button 
+                      className="btn btn-secondary btn-sm" 
+                      style={{ fontSize: 11, background: '#F5F3FF', color: 'var(--purple)', border: '1px solid var(--purple)' }} 
+                      onClick={async () => {
+                        try {
+                          await api.post(`/listings/${l.id}/sync`, { portals: [l.platform] });
+                          alert('Sync triggered successfully');
+                          api.get<any[]>('/listings').then(setListings);
+                        } catch (e) { alert('Sync failed'); }
+                      }}
+                    >
+                      🔄 Sync
+                    </button>
+                    <button className="btn btn-secondary btn-sm" style={{ fontSize: 11 }} onClick={() => handleDelete(l.id)}>Delete</button>
+                  </div>
                 </td>
               </tr>
             ))}

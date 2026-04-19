@@ -11,6 +11,8 @@ export default function SiteVisitsPage() {
   const router = useRouter();
   const [visits, setVisits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrToken, setQrToken] = useState('');
   const [showCheckout, setShowCheckout] = useState<any>(null);
   const [feedback, setFeedback] = useState({ outcome: 'INTERESTED', notes: '', followUpDate: '', rating: 5 });
 
@@ -57,6 +59,18 @@ export default function SiteVisitsPage() {
     } catch (err: any) { alert(err.message); }
   };
 
+  const handleQrCheckIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!qrToken) return;
+    try {
+      await api.patch('/site-visits/qr-checkin', { token: qrToken });
+      setShowQrModal(false);
+      setQrToken('');
+      fetchVisits();
+      alert('QR Check-in successful!');
+    } catch (err: any) { alert(err.message || 'Invalid token'); }
+  };
+
   if (authLoading || loading) return <div className="loading-page"><div className="spinner" /></div>;
 
   const getStatusBadge = (v: any) => {
@@ -73,6 +87,9 @@ export default function SiteVisitsPage() {
           <h2>Site Visits</h2>
           <p className="subtitle">{visits.length} tracked visits</p>
         </div>
+        <button className="btn btn-primary" style={{ background: 'var(--navy)', color: 'white' }} onClick={() => setShowQrModal(true)}>
+           📷 Scan Visitor QR
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -101,7 +118,7 @@ export default function SiteVisitsPage() {
             <div className="flex gap-2">
                {!v.checkInTime && !v.outcome && (
                  <>
-                   <button className="btn btn-primary btn-sm flex-1" onClick={() => handleCheckIn(v.id)}>Check In</button>
+                   <button className="btn btn-primary btn-sm flex-1" onClick={() => handleCheckIn(v.id)}>Manual Check In</button>
                    <button className="btn btn-secondary btn-sm" onClick={() => handleNoShow(v.id)}>No Show</button>
                  </>
                )}
@@ -121,6 +138,25 @@ export default function SiteVisitsPage() {
           <div className="col-span-full py-12 text-center text-slate-400 italic">No site visits scheduled.</div>
         )}
       </div>
+
+      {showQrModal && (
+        <div className="modal-overlay" onClick={() => setShowQrModal(false)}>
+           <div className="modal-content" style={{maxWidth: 400}} onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                 <h3>Scan Visitor QR</h3>
+                 <button className="modal-close" onClick={() => setShowQrModal(false)}>&times;</button>
+              </div>
+              <form onSubmit={handleQrCheckIn} style={{marginTop: 20}}>
+                 <p className="text-sm text-slate-500 mb-4">Input the verification token from the client's portal or scan it with your handheld device.</p>
+                 <div className="form-group">
+                    <label className="form-label">Verification Token</label>
+                    <input autoFocus className="form-input" value={qrToken} onChange={e => setQrToken(e.target.value)} placeholder="000-XXX-000" />
+                 </div>
+                 <button type="submit" className="btn btn-primary w-full mt-4">Confirm Entry</button>
+              </form>
+           </div>
+        </div>
+      )}
 
       {showCheckout && (
         <div className="modal-overlay">
