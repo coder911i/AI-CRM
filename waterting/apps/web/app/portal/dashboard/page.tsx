@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function PortalDashboardPage() {
   const router = useRouter();
