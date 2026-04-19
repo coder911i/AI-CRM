@@ -83,7 +83,9 @@ export class DashboardService {
         where: { tenantId },
         include: {
           towers: { include: { units: true } },
-          leads: { _count: true },
+          _count: {
+            select: { leads: true }
+          }
         },
       }),
       this.prisma.lead.count({ where: { tenantId } }),
@@ -113,7 +115,7 @@ export class DashboardService {
         name: p.name,
         total: units.length,
         sold,
-        leads: (p as any).leads?.length || 0,
+        leads: p._count.leads,
         revenue: 0, 
       };
     });

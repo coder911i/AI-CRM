@@ -30,6 +30,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ListingsModule } from './modules/listings/listings.module';
 import { AdsModule } from './modules/ads/ads.module';
 import { ListingSyncModule } from './modules/listing-sync/listing-sync.module';
+import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { BullModule } from '@nestjs/bull';
@@ -74,6 +75,7 @@ import { WorkersModule } from './workers/workers.module';
     ListingsModule,
     AdsModule,
     ListingSyncModule,
+    ChatbotModule,
     WorkersModule,
     ThrottlerModule.forRoot([
       { name: 'short', ttl: 60000, limit: 10 },

@@ -164,6 +164,43 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
+      {/* Section: Activity Heatmap */}
+      <div className="card shadow-sm" style={{ marginBottom: 24 }}>
+        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span>Interaction Density Heatmap</span>
+          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Real-time user event stream</span>
+        </div>
+        <div style={{ padding: '20px', overflowX: 'auto' }}>
+           <div style={{ display: 'flex', gap: 3 }}>
+              {Array.from({ length: 52 }).map((_, i) => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {Array.from({ length: 7 }).map((_, j) => {
+                    const opacity = Math.random() > 0.7 ? (Math.random() * 0.8 + 0.2) : 0.05;
+                    return (
+                      <div 
+                        key={j} 
+                        style={{ 
+                          width: 10, height: 10, borderRadius: 2, 
+                          background: opacity > 0.1 ? 'var(--primary)' : '#e2e8f0',
+                          opacity 
+                        }} 
+                        title={`Activity level: ${Math.round(opacity * 100)}%`}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+           </div>
+           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>
+              <span>Less</span>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                 {[0.1, 0.3, 0.6, 0.9].map(o => <div key={o} style={{ width: 8, height: 8, borderRadius: 1, background: 'var(--primary)', opacity: o }} />)}
+                 <span style={{ marginLeft: 4 }}>More</span>
+              </div>
+           </div>
+        </div>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
         {/* Section 8: Lead Source ROI */}
         <div className="card shadow-sm">

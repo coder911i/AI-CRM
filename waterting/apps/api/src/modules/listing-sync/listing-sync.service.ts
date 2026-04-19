@@ -10,8 +10,8 @@ export class ListingSyncService {
 
   async syncListing(user: JwtPayload, listingId: string, portals: string[]) {
     const listing = await this.prisma.listing.findFirst({
-      where: { id: listingId, property: { tenantId: user.tenantId } },
-      include: { property: true },
+      where: { id: listingId, project: { tenantId: user.tenantId } },
+      include: { project: true },
     });
     if (!listing) throw new Error('Listing not found');
 

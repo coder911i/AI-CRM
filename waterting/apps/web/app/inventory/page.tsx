@@ -183,26 +183,45 @@ export default function InventoryPage() {
       {isRefreshing ? (
          <div style={{textAlign:'center', padding: 40}}><div className="spinner" style={{margin:'0 auto'}} /></div>
       ) : (
-        <div style={{display:'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16}}>
-          {filteredUnits.map(unit => (
-            <div key={unit.id} className="card shadow-sm hover-card" style={{cursor:'pointer'}} onClick={() => setSelectedUnit(unit)}>
-              <div style={{display:'flex', justifyContent:'space-between', marginBottom: 12}}>
-                <span style={{fontWeight: 700, fontSize: 16}}>{unit.unitNumber}</span>
-                <span className={`badge unit-${unit.status.toLowerCase()}`}>{unit.status}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          {/* Group units by Tower */}
+          {Array.from(new Set(filteredUnits.map(u => (u as any).tower?.name || 'Main'))).map(towerName => {
+            const towerUnits = filteredUnits.filter(u => (u as any).tower?.name === towerName || (!towerName && !(u as any).tower));
+            const floors = Array.from(new Set(towerUnits.map(u => u.floor))).sort((a, b) => b - a);
+
+            return (
+              <div key={towerName} className="card" style={{ padding: 24 }}>
+                <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20, color: 'var(--navy)' }}>{towerName}</h3>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {floors.map(floor => (
+                    <div key={floor} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <div style={{ width: 60, fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>Floor {floor}</div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1 }}>
+                        {towerUnits.filter(u => u.floor === floor).sort((a,b) => a.unitNumber.localeCompare(b.unitNumber)).map(unit => (
+                          <div 
+                            key={unit.id} 
+                            onClick={() => setSelectedUnit(unit)}
+                            className={`unit-matrix-cell unit-${unit.status.toLowerCase()}`}
+                            style={{ 
+                              width: 80, height: 40, borderRadius: 8, display: 'flex', alignItems: 'center', 
+                              justifyContent: 'center', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                              border: '1px solid rgba(0,0,0,0.1)', transition: 'all 0.2s',
+                              position: 'relative'
+                            }}
+                            title={`₹${unit.totalPrice.toLocaleString()}`}
+                          >
+                            {unit.unitNumber.split('-').pop()}
+                            {unit.status === 'RESERVED' && <div style={{ position:'absolute', top: -4, right: -4, fontSize: 10 }}>⏳</div>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div style={{fontSize: 13, color: 'var(--text-muted)'}}>
-                <div style={{display:'flex', justifyContent:'space-between', marginBottom: 4}}>
-                  <span>Type</span><span>{unit.type.replace('_', ' ')}</span>
-                </div>
-                <div style={{display:'flex', justifyContent:'space-between', marginBottom: 4}}>
-                  <span>Area</span><span>{unit.carpetArea} sqft</span>
-                </div>
-                <div style={{display:'flex', justifyContent:'space-between', fontWeight: 600, color: 'var(--text)', marginTop: 8}}>
-                  <span>Price</span><span>₹{unit.totalPrice.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

@@ -292,12 +292,14 @@ body {
 .source-portal { background: #D1FAE5; color: #10B981; }
 .source-manual { background: #F3F4F6; color: #6B7280; }
 
-/* Unit status */
-.unit-available { background: var(--success); color: #fff; }
-.unit-reserved { background: var(--warning); color: #fff; }
-.unit-booked { background: #3B82F6; color: #fff; }
-.unit-sold { background: var(--danger); color: #fff; }
-.unit-blocked { background: #6B7280; color: #fff; }
+/* Unit Matrix View */
+.unit-matrix-cell { opacity: 0.9; }
+.unit-matrix-cell:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); opacity: 1; z-index: 10; }
+.unit-matrix-cell.unit-available { background: var(--success); color: #fff; }
+.unit-matrix-cell.unit-reserved { background: var(--warning); color: #fff; }
+.unit-matrix-cell.unit-booked { background: #3B82F6; color: #fff; }
+.unit-matrix-cell.unit-sold { background: var(--danger); color: #fff; }
+.unit-matrix-cell.unit-blocked { background: #6B7280; color: #fff; }
 
 /* ── Buttons ─────────────────────────────────────── */
 .btn {

@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Chatbot } from '@/components/portal/Chatbot';
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -61,6 +62,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <main style={{ maxWidth: 1200, margin: '24px auto', padding: '0 20px' }}>
         {children}
       </main>
+      <Chatbot />
     </div>
   );
 }

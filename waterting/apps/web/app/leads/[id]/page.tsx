@@ -260,16 +260,58 @@ function AIPanels({ leadId }: { leadId: string }) {
 
   return (
     <div style={{display:'flex', flexDirection:'column', gap: 24}}>
-      <div className="card" style={{borderLeft: '4px solid var(--purple)', background: '#F5F3FF'}}>
-        <div className="card-header" style={{color: 'var(--purple)', display:'flex', justifyContent:'space-between'}}>
-          <span>✨ AI Pre-Call Brief</span>
+      <div className="card" style={{ border: 'none', background: 'white', overflow: 'hidden', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'linear-gradient(135deg, var(--purple) 0%, #4F46E5 100%)', padding: '24px', color: 'white' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 800, letterSpacing: '0.025em' }}>✨ AI OPERATING SYSTEM</h3>
+              <p style={{ opacity: 0.8, fontSize: 12, fontWeight: 500 }}>Intent & Lead Scoring Analysis</p>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700 }}>
+              v2.4 Engine
+            </div>
+          </div>
+
+          <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 24 }}>
+            <div style={{ position: 'relative', width: 100, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               {/* Circular Progress (Simplified) */}
+               <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '4px solid rgba(255,255,255,0.1)', position: 'absolute' }} />
+               <div style={{ fontSize: 32, fontWeight: 800 }}>{brief?.score || '—'}</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 24, fontWeight: 800 }}>{brief?.label || 'ANALYZING...'}</div>
+              <div style={{ width: '100%', height: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 3, marginTop: 12, overflow: 'hidden' }}>
+                <div style={{ width: `${brief?.score || 0}%`, height: '100%', background: '#fff', borderRadius: 3 }} />
+              </div>
+              <p style={{ marginTop: 12, fontSize: 12, opacity: 0.9, fontWeight: 500, fontStyle: 'italic' }}>
+                "Confidence: {brief?.confidence || 'High'} • Updated {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}"
+              </p>
+            </div>
+          </div>
         </div>
-        <div style={{fontSize: 13, marginTop: 12}}>
-          <p><strong>Context:</strong> {brief?.background}</p>
-          <p style={{marginTop: 8}}><strong>Why this score:</strong> {brief?.scoreExplanation}</p>
-          <div style={{marginTop: 12, padding: 12, background: 'white', borderRadius: 8, border: '1px solid #DDD'}}>
-            <p style={{fontSize: 11, color:'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase'}}>Suggested Opener</p>
-            <p style={{fontWeight: 600, fontStyle: 'italic'}}>"{brief?.suggestedOpener}"</p>
+
+        <div style={{ padding: 24 }}>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>AI Reasoning</div>
+            <p style={{ fontSize: 13, lineHeight: 1.6, color: '#374151' }}>{brief?.scoreExplanation}</p>
+          </div>
+
+          <div style={{ padding: 16, background: '#F9FAFB', borderRadius: 12, border: '1px solid #E5E7EB' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--purple)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Recommended Next Action</div>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>🚀</div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Schedule callback within 15 minutes</p>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 24, padding: 20, background: '#F5F3FF', borderRadius: 16, border: '1px dashed var(--purple)' }}>
+            <p style={{ fontSize: 11, color: 'var(--purple)', fontWeight: 800, marginBottom: 8, textTransform: 'uppercase' }}>AI-Suggested Phone Opener</p>
+            <p style={{ fontWeight: 600, fontSize: 14, color: '#111827', fontStyle: 'italic', lineHeight: 1.5 }}>
+              "{brief?.suggestedOpener}"
+            </p>
+            <button className="btn btn-primary btn-sm" style={{ marginTop: 16, width: '100%', background: 'var(--purple)', border: 'none' }} onClick={() => (window.location.href = `tel:${brief?.phone}`)}>
+              Click to Call Now
+            </button>
           </div>
         </div>
       </div>
