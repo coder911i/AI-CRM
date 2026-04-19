@@ -8,6 +8,8 @@ import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { formatCurrency, formatCompactCurrency, formatDate } from '@/lib/utils';
+
 interface DashboardStats {
   totalLeads: number;
   newLeads: number;
@@ -16,6 +18,7 @@ interface DashboardStats {
   totalRevenue: number;
   todaySiteVisits: number;
   recentLeads: any[];
+  hotLeads: any[];
   staleLeadsCount: number;
   upcomingPayments: any[];
   stageDistribution: { stage: string; count: number }[];
@@ -37,7 +40,6 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, router]);
 
-  const formatCurrency = (n: number) => `₹${(n / 100000).toFixed(1)}L`;
   const stageLabels: Record<string, string> = {
     NEW_LEAD: 'New', CONTACTED: 'Contacted', INTERESTED: 'Interested',
     VISIT_SCHEDULED: 'Visit Sched.', VISIT_DONE: 'Visit Done',
@@ -107,8 +109,8 @@ export default function DashboardPage() {
                 { label: 'New Leads', value: stats?.newLeads, icon: '✨', color: 'bg-emerald-50 text-emerald-600' },
                 { label: 'Active Pipeline', value: stats?.activeLeads, icon: '📋', color: 'bg-amber-50 text-amber-600' },
                 { label: 'Bookings', value: stats?.totalBookings, icon: '📊', color: 'bg-indigo-50 text-indigo-600' },
-                { label: 'Revenue', value: formatCurrency(stats?.totalRevenue ?? 0), icon: '💰', color: 'bg-rose-50 text-rose-600' },
                 { label: 'Today Visits', value: stats?.todaySiteVisits, icon: '📍', color: 'bg-sky-50 text-sky-600' },
+                { label: 'Revenue', value: formatCompactCurrency(stats?.totalRevenue ?? 0), icon: '💰', color: 'bg-rose-50 text-rose-600' },
               ].map((stat, idx) => (
                 <motion.div key={idx} variants={item} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
                   <div className={`w-10 h-10 rounded-xl ${stat.color} flex items-center justify-center text-xl mb-4`}>
@@ -124,7 +126,43 @@ export default function DashboardPage() {
 
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-8">
+            {/* AI Hot Leads Section */}
+            {!loading && (stats?.hotLeads?.length ?? 0) > 0 && (
+              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-gradient-to-br from-orange-500 to-rose-600 rounded-3xl p-6 text-white shadow-xl shadow-orange-500/20">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-xl font-bold">🔥 AI Hot Leads</h3>
+                    <p className="text-orange-100 text-sm">Priority prospects with high engagement score</p>
+                  </div>
+                  <div className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold border border-white/30">Top {stats?.hotLeads?.length}</div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {stats?.hotLeads?.map((lead: any) => (
+                    <div 
+                      key={lead.id} 
+                      onClick={() => router.push(`/leads/${lead.id}`)}
+                      className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold text-lg">{lead.name}</div>
+                          <div className="text-xs text-orange-100">{lead.phone}</div>
+                        </div>
+                        <div className="bg-white text-orange-600 px-2 py-1 rounded-lg text-xs font-black shadow-lg">
+                          {lead.score}%
+                        </div>
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded uppercase font-bold tracking-wider">{lead.source}</span>
+                        <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded uppercase font-bold tracking-wider text-green-300">Ready to Book</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
             {!loading && (
               <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 <div className="px-8 py-6 flex items-center justify-between border-b border-slate-50">

@@ -14,7 +14,7 @@ export class DashboardService {
     const sevenDaysHence = new Date();
     sevenDaysHence.setDate(sevenDaysHence.getDate() + 7);
 
-    const [totalLeads, newLeads, activeLeads, bookings, revenue, siteVisits, recentLeads, stageDistribution, staleLeadsCount, upcomingPayments] =
+    const [totalLeads, newLeads, activeLeads, bookings, revenue, siteVisits, recentLeads, stageDistribution, staleLeadsCount, upcomingPayments, hotLeads] =
       await Promise.all([
         this.prisma.lead.count({ where: { tenantId } }),
         this.prisma.lead.count({ where: { tenantId, stage: 'NEW_LEAD' } }),
@@ -55,6 +55,11 @@ export class DashboardService {
           include: { booking: { include: { unit: true } } },
           orderBy: { dueDate: 'asc' },
           take: 5
+        }),
+        this.prisma.lead.findMany({
+          where: { tenantId, score: { gte: 80 }, stage: { notIn: ['LOST', 'BOOKING_DONE'] } },
+          take: 4,
+          orderBy: { score: 'desc' }
         })
       ]);
 
@@ -66,6 +71,7 @@ export class DashboardService {
       totalRevenue: revenue._sum.amount || 0,
       todaySiteVisits: siteVisits,
       recentLeads,
+      hotLeads,
       staleLeadsCount,
       upcomingPayments,
       stageDistribution: stageDistribution.map((s) => ({
