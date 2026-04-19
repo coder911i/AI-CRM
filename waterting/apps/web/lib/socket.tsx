@@ -30,6 +30,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const newSocket = io(apiUrl, {
       auth: { token: localStorage.getItem('waterting_token') },
+      query: { tenantId: user.tenantId },
       transports: ['websocket'],
     });
 

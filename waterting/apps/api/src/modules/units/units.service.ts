@@ -3,14 +3,14 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload, UnitStatus } from '@waterting/shared';
 import { AiFollowUpWorker } from '../../workers/ai-follow-up.worker';
 
-import { SyncGateway } from '../../common/realtime/sync.gateway';
+import { EventsGateway } from '../../gateways/events.gateway';
 
 @Injectable()
 export class UnitsService {
   constructor(
     private prisma: PrismaService,
     private aiFollowUp: AiFollowUpWorker,
-    private sync: SyncGateway,
+    private gateway: EventsGateway,
   ) {}
 
   async create(user: JwtPayload, towerId: string, data: any) {
@@ -58,7 +58,7 @@ export class UnitsService {
         await this.aiFollowUp.sendInventoryUrgency(unit.tower.projectId, availableCount);
     }
 
-    this.sync.emitUnitUpdate(user.tenantId, id, status);
+    this.gateway.emitUnitUpdate(user.tenantId, id, status);
 
     return updated;
   }

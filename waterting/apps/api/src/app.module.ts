@@ -31,6 +31,7 @@ import { ListingsModule } from './modules/listings/listings.module';
 import { AdsModule } from './modules/ads/ads.module';
 import { ListingSyncModule } from './modules/listing-sync/listing-sync.module';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
+import { GatewaysModule } from './gateways/gateways.module';
 import { RefundsModule } from './modules/refunds/refunds.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
@@ -53,7 +54,7 @@ import { WorkersModule } from './workers/workers.module';
     PrismaModule,
     AuditModule,
     AIModule,
-    RealtimeModule,
+    GatewaysModule,
     AuthModule,
     TenantsModule,
     UsersModule,

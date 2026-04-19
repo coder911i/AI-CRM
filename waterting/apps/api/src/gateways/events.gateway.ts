@@ -1,12 +1,26 @@
 import {
   WebSocketGateway, WebSocketServer,
   SubscribeMessage, MessageBody, ConnectedSocket,
+  OnGatewayConnection,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: { origin: process.env.FRONTEND_URL, credentials: true } })
-export class EventsGateway {
+@WebSocketGateway({ cors: { origin: '*', credentials: true } })
+export class EventsGateway implements OnGatewayConnection {
   @WebSocketServer() server: Server;
+
+  handleConnection(client: Socket) {
+    const tenantId = client.handshake.query?.tenantId as string;
+    const userId = client.handshake.query?.userId as string;
+
+    if (tenantId) {
+      client.join(`tenant:${tenantId}`);
+      console.log(`Socket ${client.id} auto-joined tenant:${tenantId}`);
+    }
+    if (userId) {
+      client.join(`user:${userId}`);
+    }
+  }
 
   @SubscribeMessage('join')
   handleJoin(@MessageBody() data: { tenantId: string }, @ConnectedSocket() client: Socket) {
@@ -26,5 +40,13 @@ export class EventsGateway {
 
   emitToUser(userId: string, event: string, payload: any) {
     this.server.to(`user:${userId}`).emit(event, payload);
+  }
+
+  emitUnitUpdate(tenantId: string, unitId: string, status: string) {
+    this.server.to(`tenant:${tenantId}`).emit('unit:status', { unitId, status });
+  }
+
+  emitProjectUpdate(tenantId: string, projectId: string, data: any) {
+    this.server.to(`tenant:${tenantId}`).emit('project:updated', { projectId, ...data });
   }
 }
