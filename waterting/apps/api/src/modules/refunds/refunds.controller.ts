@@ -15,6 +15,7 @@ export class RefundsController {
   constructor(private readonly refundsService: RefundsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Request a refund for a booking' })
   @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)
   request(@CurrentUser() user: JwtPayload, @Body() data: { bookingId: string; amount: number; reason: string }) {
     return this.refundsService.requestRefund(user, data.bookingId, data.amount, data.reason);

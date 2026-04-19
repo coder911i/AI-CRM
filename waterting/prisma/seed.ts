@@ -46,6 +46,19 @@ async function main() {
     },
   });
 
+  const accounts = await prisma.user.upsert({
+    where: { email: 'accounts@skyline.com' },
+    update: {},
+    create: {
+      email: 'accounts@skyline.com',
+      password,
+      name: 'Accounts Team',
+      role: UserRole.ACCOUNTS,
+      tenantId: tenant.id,
+      isActive: true,
+    },
+  });
+
   // 3. Create Project
   const project = await prisma.project.create({
     data: {

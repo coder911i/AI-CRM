@@ -1,8 +1,11 @@
-import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request, Param } from '@nestjs/common';
 import { PortalService } from './portal.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('portal')
+@ApiBearerAuth('JWT-auth')
 @Controller('portal')
 export class PortalController {
   constructor(private readonly portalService: PortalService) {}
