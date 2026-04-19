@@ -28,11 +28,16 @@ export class ListingSyncService {
       });
     }
 
-    // Update listing with sync results or log in activity
+    // Update listing with sync results
+    await this.prisma.listing.update({
+      where: { id: listingId },
+      data: { syncStatus: results }
+    });
+
     await this.prisma.activity.create({
       data: {
-        leadId: null, // This is a property level activity, maybe add propertyId to activity
-        type: 'STAGED' as any, // Need to add a SYNC_ACTIVITY type probably
+        leadId: null,
+        type: 'AI_ACTION' as any,
         title: `Listing synced to ${portals.join(', ')}`,
         description: JSON.stringify(results),
         userId: user.sub,

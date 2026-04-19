@@ -38,15 +38,64 @@ export class PdfGeneratorWorker {
       doc.on('data', c => chunks.push(c));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
 
-      doc.fontSize(20).text('BOOKING CONFIRMATION', { align: 'center' });
-      doc.moveDown();
-      doc.fontSize(12).text(`Buyer: ${booking.buyerName}`);
-      doc.text(`Project: ${booking.unit?.tower?.project?.name || 'N/A'}`);
-      doc.text(`Unit: ${booking.unit?.unitNumber} — Floor ${booking.unit?.floor}`);
-      doc.text(`BHK: ${booking.unit?.type}`);
-      doc.text(`Area: ${booking.unit?.carpetArea} sq ft`);
-      doc.text(`Booking Amount: ₹${booking.bookingAmount?.toLocaleString('en-IN')}`);
-      doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`);
+      // Header
+      doc.fontSize(22).fillColor('#1E293B').text('BOOKING CONFIRMATION CERTIFICATE', { align: 'center' });
+      doc.moveDown(0.5);
+      doc.fontSize(10).fillColor('#64748B').text(`Certificate ID: ${booking.id.toUpperCase()}`, { align: 'center' });
+      doc.moveDown(2);
+
+      // Main Info
+      doc.fontSize(12).fillColor('#1E293B').text('CUSTOMER DETAILS', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(10).text(`Name: ${booking.buyerName}`);
+      doc.text(`Phone: ${booking.buyerPhone}`);
+      doc.text(`Email: ${booking.buyerEmail || 'N/A'}`);
+      doc.moveDown(1.5);
+
+      doc.fontSize(12).text('UNIT ALLOTMENT', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(10).text(`Project: ${booking.unit?.tower?.project?.name || 'N/A'}`);
+      doc.text(`Tower/Block: ${booking.unit?.tower?.name || 'N/A'}`);
+      doc.text(`Unit Number: ${booking.unit?.unitNumber} — Level ${booking.unit?.floor}`);
+      doc.text(`Accommodation Type: ${booking.unit?.type.replace('_', ' ')}`);
+      doc.text(`Carpet Area: ${booking.unit?.carpetArea} sq ft`);
+      doc.moveDown(1.5);
+
+      // Payment Schedule Table
+      doc.fontSize(12).text('PAYMENT SCHEDULE & STATUS', { underline: true });
+      doc.moveDown(0.5);
+      
+      const tableTop = doc.y;
+      doc.fontSize(9).fillColor('#64748B');
+      doc.text('MILESTONE', 50, tableTop);
+      doc.text('DUE DATE', 250, tableTop);
+      doc.text('AMOUNT', 350, tableTop);
+      doc.text('STATUS', 450, tableTop);
+      
+      doc.moveTo(50, tableTop + 12).lineTo(550, tableTop + 12).stroke('#E2E8F0');
+      
+      let rowY = tableTop + 20;
+      doc.fillColor('#1E293B');
+      doc.text('Booking Amount', 50, rowY);
+      doc.text(new Date(booking.createdAt).toLocaleDateString('en-IN'), 250, rowY);
+      doc.text(`₹${booking.bookingAmount?.toLocaleString('en-IN')}`, 350, rowY);
+      doc.text(booking.status, 450, rowY);
+
+      doc.moveDown(4);
+      
+      // Terms
+      doc.fontSize(10).text('TERMS & CONDITIONS', { underline: true });
+      doc.fontSize(8).fillColor('#64748B').text(
+        '1. This is a computer-generated confirmation and does not require a physical signature.\n' +
+        '2. All allotments are subject to verification of documents and clearance of payment.\n' +
+        '3. RERA rules and project-specific guidelines apply to this booking.',
+        { width: 500, align: 'justify' }
+      );
+
+      doc.moveDown(3);
+      doc.fontSize(10).fillColor('#1E293B').text('Authorised Signatory', 400, doc.y, { align: 'center' });
+      doc.text('______________________', 400, doc.y + 12, { align: 'center' });
+      
       doc.end();
     });
 

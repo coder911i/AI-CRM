@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { EventsGateway } from '../../gateways/events.gateway';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     private prisma: PrismaService,
     private gateway: EventsGateway,
+    @InjectQueue('whatsapp') private whatsappQueue: Queue,
+    @InjectQueue('email') private emailQueue: Queue,
   ) {}
 
   async create(data: {
@@ -49,5 +53,13 @@ export class NotificationsService {
       where: { userId, isRead: false },
       data: { isRead: true },
     });
+  }
+
+  async sendWhatsApp(to: string, message: string) {
+    await this.whatsappQueue.add('send', { to, message });
+  }
+
+  async sendEmail(to: string, subject: string, html: string) {
+    await this.emailQueue.add('send', { to, subject, html });
   }
 }

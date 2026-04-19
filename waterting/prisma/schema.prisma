@@ -330,9 +330,8 @@ model Lead {
 }
 
 model Activity {
-  // ... existing fields ...
   id          String       @id @default(cuid())
-  leadId      String
+  leadId      String?
   userId      String?
   type        ActivityType
   title       String
@@ -340,7 +339,7 @@ model Activity {
   metadata    Json         @default("{}")
   createdAt   DateTime     @default(now())
 
-  lead        Lead   @relation(fields: [leadId], references: [id])
+  lead        Lead?   @relation(fields: [leadId], references: [id])
   user        User?  @relation(fields: [userId], references: [id])
 
   @@index([leadId])
@@ -578,6 +577,7 @@ model Listing {
   platform      String   // 99ACRES, MAGICBRICKS, HOUSING, WEBSITE
   platformId    String?  // ID on the external platform
   status        String   @default("ACTIVE")
+  syncStatus    Json?    @default("[]")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
