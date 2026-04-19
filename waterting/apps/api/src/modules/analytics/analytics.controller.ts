@@ -6,6 +6,10 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/user.decorator';
 import { JwtPayload, UserRole } from '@waterting/shared';
 
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+
+@ApiTags('analytics')
+@ApiBearerAuth('JWT-auth')
 @Controller('analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.TENANT_ADMIN, UserRole.SALES_MANAGER)

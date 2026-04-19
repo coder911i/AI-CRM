@@ -55,6 +55,8 @@ export class BookingsService {
 
       // Auto-calculate commission if broker referred this lead
       const lead = await prisma.lead.findUnique({ where: { id: data.leadId } });
+      
+      // 1. Broker Commission
       if (lead?.brokerId) {
         const broker = await prisma.broker.findUnique({ where: { id: lead.brokerId } });
         if (broker) {
@@ -66,6 +68,17 @@ export class BookingsService {
             },
           });
         }
+      }
+
+      // 2. Sales Agent Commission (Internal - 1% flat for this demo)
+      if (lead?.assignedToId) {
+        await prisma.commission.create({
+          data: {
+            userId: lead.assignedToId,
+            bookingId: booking.id,
+            amount: booking.bookingAmount * 0.01,
+          },
+        });
       }
 
       return booking;

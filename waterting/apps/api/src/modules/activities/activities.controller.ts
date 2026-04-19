@@ -4,6 +4,10 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
 import { JwtPayload } from '@waterting/shared';
 
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+
+@ApiTags('leads')
+@ApiBearerAuth('JWT-auth')
 @Controller('leads/:leadId/activities')
 @UseGuards(JwtAuthGuard)
 export class ActivitiesController {

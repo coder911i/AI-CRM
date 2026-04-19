@@ -6,12 +6,44 @@ if (!globalThis.crypto) {
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
   const logger = new Logger('Bootstrap');
+
+  // Swagger — only in non-production OR if SWAGGER_ENABLED=true
+  if (process.env.NODE_ENV !== 'production' || process.env.SWAGGER_ENABLED === 'true') {
+    const config = new DocumentBuilder()
+      .setTitle('Waterting CRM API')
+      .setDescription('Real Estate CRM — Multi-tenant API Documentation')
+      .setVersion('1.0')
+      .addBearerAuth(
+        { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', name: 'JWT', in: 'header' },
+        'JWT-auth',
+      )
+      .addTag('auth', 'Authentication & user management')
+      .addTag('leads', 'Lead management & pipeline')
+      .addTag('bookings', 'Booking & payment flows')
+      .addTag('projects', 'Project, tower & unit management')
+      .addTag('site-visits', 'Site visit scheduling & tracking')
+      .addTag('brokers', 'Broker management & commissions')
+      .addTag('analytics', 'Reports & analytics')
+      .addTag('listings', 'External platform listings')
+      .addTag('portal', 'Buyer portal')
+      .addTag('notifications', 'Notification management')
+      .build();
+
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        tagsSorter: 'alpha',
+      },
+    });
+  }
 
   app.enableCors({
     origin: (origin, callback) => {
@@ -47,5 +79,6 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3001);
   logger.log(`API running on port ${process.env.PORT ?? 3001}`);
+  logger.log(`Swagger docs available at http://localhost:3001/api/docs`);
 }
 bootstrap();

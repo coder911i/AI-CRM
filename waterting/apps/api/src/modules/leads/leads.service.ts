@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { JwtPayload, LeadSource, ActivityType } from '@waterting/shared';
+import { JwtPayload, LeadSource, ActivityType, UserRole } from '@waterting/shared';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { EventsGateway } from '../../gateways/events.gateway';
@@ -17,6 +17,84 @@ export class LeadsService {
     @InjectQueue('email') private emailQueue: Queue,
     @InjectQueue('pdf') private pdfQueue: Queue,
   ) {}
+
+  async createFromWebhook(data: any) {
+    const tenantId = data.tenantId;
+    const phone = this.normalizePhone(String(data.phone || ''));
+    
+    // 1. Check for duplicates
+    const existing = await this.prisma.lead.findFirst({
+      where: { phone, tenantId }
+    });
+
+    if (existing) {
+      // Log interaction but don't double count
+      await this.prisma.activity.create({
+        data: {
+          leadId: existing.id,
+          type: ActivityType.NOTE,
+          title: `Duplicate lead inquiry received from ${data.source || 'Webhook'}`,
+        }
+      });
+      return existing;
+    }
+
+    // 2. Auto-allocation (Multi-party)
+    const assignedToId = await this.autoAssignAgent(tenantId);
+    let brokerId = data.brokerId;
+    if (!brokerId && (data.source === LeadSource.BROKER || data.referralCode)) {
+      brokerId = await this.autoAssignBroker(tenantId, data.referralCode);
+    }
+
+    // 3. Create
+    const lead = await this.prisma.lead.create({
+      data: {
+        ...data,
+        phone,
+        assignedToId,
+        brokerId,
+        lastActivityAt: new Date(),
+      },
+      include: { project: true }
+    });
+
+    // 4. Notify Builder / Management
+    const builders = await this.prisma.user.findMany({
+      where: { 
+        tenantId, 
+        role: { in: [UserRole.TENANT_ADMIN, UserRole.AGENCY_OWNER] },
+        isActive: true
+      }
+    });
+
+    for (const builder of builders) {
+      await this.notificationsService.create({
+        tenantId,
+        userId: builder.id,
+        title: `🔥 New Hot Lead: ${lead.name}`,
+        message: `A new inquiry for ${lead.project?.name || 'your project'} has been assigned to ${assignedToId ? 'Sales Agent' : 'Waiting Area'}.`,
+        type: 'NEW_LEAD',
+        leadId: lead.id,
+      });
+    }
+
+    // 5. Trigger AI Scoring
+    await this.aiScoringQueue.add('score-lead', {
+      leadId: lead.id,
+      tenantId,
+    });
+
+    return lead;
+  }
+
+  private async autoAssignBroker(tenantId: string, referralCode?: string): Promise<string | null> {
+    if (referralCode) {
+      const broker = await this.prisma.broker.findUnique({ where: { referralCode } });
+      if (broker && broker.tenantId === tenantId) return broker.id;
+    }
+    // Logic for round-robin broker assignment if necessary
+    return null;
+  }
 
   private normalizePhone(phone: string) {
     return phone.replace(/\D/g, '');
@@ -311,26 +389,5 @@ export class LeadsService {
     return selectedAgent;
   }
 
-  async createFromWebhook(data: any) {
-    const tenantId = data.tenantId || (await this.prisma.tenant.findFirst())?.id;
-    if (!tenantId) throw new Error('No tenant context found for webhook');
-    
-    const phone = this.normalizePhone(data.phone);
-    const existing = await this.prisma.lead.findFirst({
-      where: { tenantId, phone },
-    });
-    if (existing) return existing;
 
-    const lead = await this.prisma.lead.create({
-      data: { 
-        name: data.name,
-        phone,
-        email: data.email,
-        source: data.source || LeadSource.WEBSITE,
-        tenantId,
-      },
-    });
-    await this.aiScoringQueue.add('score-lead', { leadId: lead.id, tenantId });
-    return lead;
-  }
 }

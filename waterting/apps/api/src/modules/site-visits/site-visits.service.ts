@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload, VisitOutcome, ActivityType } from '@waterting/shared';
 
@@ -31,56 +31,84 @@ export class SiteVisitsService {
     return visit;
   }
 
-  async recordOutcome(user: JwtPayload, id: string, data: { outcome: VisitOutcome; notes?: string; followUpDate?: Date }) {
-    const { outcome, notes, followUpDate } = data;
-    const visit = await this.prisma.siteVisit.findUnique({
+  async checkIn(user: JwtPayload, id: string) {
+    const visit = await this.prisma.siteVisit.findFirst({
+      where: { id, lead: { tenantId: user.tenantId } },
+    });
+    if (!visit) throw new NotFoundException('Visit not found');
+    if (visit.checkInTime) throw new BadRequestException('Already checked in');
+
+    return this.prisma.siteVisit.update({
       where: { id },
+      data: { checkInTime: new Date() },
+    });
+  }
+
+  async qrCheckIn(token: string) {
+    const visit = await this.prisma.siteVisit.findFirst({
+      where: { verificationToken: token },
+    });
+    if (!visit) throw new NotFoundException('Invalid or expired QR code');
+    if (visit.checkInTime) return visit; // Already done
+
+    return this.prisma.siteVisit.update({
+      where: { id: visit.id },
+      data: { checkInTime: new Date() },
+    });
+  }
+
+  async checkOut(user: JwtPayload, id: string, dto: { outcome: VisitOutcome; notes: string; followUpDate?: string; rating?: number }) {
+    const visit = await this.prisma.siteVisit.findFirst({
+      where: { id, lead: { tenantId: user.tenantId } },
       include: { lead: true },
     });
-    if (!visit || visit.lead.tenantId !== user.tenantId) {
-      throw new NotFoundException('Site Visit not found');
-    }
+    if (!visit) throw new NotFoundException('Visit not found');
+    if (!visit.checkInTime) throw new BadRequestException('Must check in before checking out');
 
+    // Update visit
     const updated = await this.prisma.siteVisit.update({
       where: { id },
-      data: { outcome, notes, followUpDate },
-    });
-
-    // Update lead stage based on outcome
-    let newStage = visit.lead.stage;
-    if (outcome === 'BOOKED') newStage = 'BOOKING_DONE';
-    else if (outcome === 'INTERESTED') newStage = 'NEGOTIATION';
-    else if (outcome === 'NO_SHOW') newStage = 'CONTACTED';
-
-    await this.prisma.lead.update({
-      where: { id: visit.leadId },
-      data: { stage: newStage as any }
-    });
-
-    await this.prisma.activity.create({
       data: {
-        leadId: visit.lead.id,
-        userId: user.sub,
-        type: ActivityType.VISIT_COMPLETED,
-        title: `Site Visit Feedback: ${outcome}`,
-        description: notes,
+        outcome: dto.outcome,
+        notes: dto.notes,
+        followUpDate: dto.followUpDate ? new Date(dto.followUpDate) : null,
+        checkOutTime: new Date(),
       },
     });
 
-    if (followUpDate) {
-      await this.prisma.notification.create({
-        data: {
-          tenantId: user.tenantId,
-          userId: visit.agentId || user.sub,
-          title: 'Site Visit Follow-up',
-          message: `Follow up with ${visit.lead.name} regarding visit outcome: ${outcome}`,
-          leadId: visit.leadId,
-          createdAt: followUpDate,
-        }
+    // Auto-stage lead
+    const stageMap: Record<string, string> = {
+      BOOKED: 'BOOKING_DONE',
+      INTERESTED: 'NEGOTIATION',
+      NEED_MORE_TIME: 'VISIT_DONE',
+      NO_SHOW: 'CONTACTED',
+    };
+    const newStage = stageMap[dto.outcome];
+    if (newStage) {
+      await this.prisma.lead.update({
+        where: { id: visit.leadId },
+        data: { stage: newStage as any, lastActivityAt: new Date() },
       });
     }
 
+    // Log activity
+    await this.prisma.activity.create({
+      data: {
+        leadId: visit.leadId,
+        userId: user.sub,
+        type: ActivityType.VISIT_COMPLETED,
+        title: `Site Visit Completed — ${dto.outcome}`,
+        description: dto.notes,
+        metadata: { outcome: dto.outcome, followUpDate: dto.followUpDate, rating: dto.rating },
+      },
+    });
+
     return updated;
+  }
+
+  async recordOutcome(user: JwtPayload, id: string, data: { outcome: VisitOutcome; notes?: string; followUpDate?: Date }) {
+    // Legacy support for manual outcome recording
+    return this.checkOut(user, id, { ...data, followUpDate: data.followUpDate?.toISOString() } as any);
   }
 
   async findAll(user: JwtPayload) {

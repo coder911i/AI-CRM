@@ -7,6 +7,10 @@ import { CurrentUser } from '../../common/decorators/user.decorator';
 import { JwtPayload, UserRole, UnitStatus } from '@waterting/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+
+@ApiTags('projects')
+@ApiBearerAuth('JWT-auth')
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UnitsController {

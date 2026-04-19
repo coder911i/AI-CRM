@@ -12,6 +12,10 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+
+@ApiTags('auth')
+@ApiBearerAuth('JWT-auth')
 @Controller('auth')
 export class AuthController {
   constructor(

@@ -84,21 +84,52 @@ export default function AnalyticsPage() {
         </div>
 
       {/* Section 1: Overview Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
         {[
           { label: 'Total Leads', val: stats.totalLeads, icon: '👥', color: '#6366f1' },
           { label: 'Conversions', val: stats.converted, icon: '🏆', color: '#10b981' },
           { label: 'Conv. Rate', val: `${stats.conversionRate}%`, icon: '📈', color: '#f59e0b' },
-          { label: 'Total Revenue', val: `₹${(stats.totalRevenue / 10000000).toFixed(2)}Cr`, icon: '💰', color: '#ef4444' },
-          { label: 'Avg Deal', val: `₹${(stats.avgDealSize / 100000).toFixed(1)}L`, icon: '💎', color: '#8b5cf6' },
+          { label: 'Actual Revenue', val: `₹${(stats.totalRevenue / 10000000).toFixed(2)}Cr`, icon: '💰', color: '#ef4444' },
+          { label: 'AI Forecasted', val: `₹${(stats.forecastedRevenue / 10000000).toFixed(2)}Cr`, icon: '🤖', color: '#6366f1', sub: 'Next 30 Days' },
         ].map(s => (
           <div key={s.label} className="card shadow-sm" style={{ padding: 20 }}>
             <div style={{ fontSize: 24, marginBottom: 12 }}>{s.icon}</div>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>{s.label}</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: s.color, marginTop: 4 }}>{s.val}</div>
+            {s.sub && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>{s.sub}</div>}
           </div>
         ))}
       </div>
+
+      {data?.forecast && (
+        <div className="card shadow-lg" style={{ marginBottom: 24, borderLeft: '4px solid #6366f1', background: 'linear-gradient(to right, #f8fafc, #ffffff)' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', padding: 20 }}>
+              <div>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1e293b' }}>✨ AI Revenue Forecast</h3>
+                <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Projected performance based on {data.forecast.hotLeadsCount} HOT leads in pipeline</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                 <span className={`badge ${data.forecast.confidence === 'HIGH' ? 'badge-success' : 'badge-warning'}`} style={{ padding: '6px 12px' }}>
+                    {data.forecast.confidence} CONFIDENCE
+                 </span>
+              </div>
+           </div>
+           <div style={{ padding: '0 20px 24px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
+              <div style={{ background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                 <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Projected Revenue</div>
+                 <div style={{ fontSize: 24, fontWeight: 800, color: '#6366f1' }}>₹{(data.forecast.projectedRevenue / 10000000).toFixed(2)} Cr</div>
+              </div>
+              <div style={{ background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                 <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Expected Conv. Rate</div>
+                 <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>{data.forecast.expectedConversionRate}%</div>
+              </div>
+              <div style={{ background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                 <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Key Predictor</div>
+                 <div style={{ fontSize: 24, fontWeight: 800, color: '#f59e0b' }}>Pipeline Velocity</div>
+              </div>
+           </div>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 24, marginBottom: 24 }}>
         {/* Section 2: Revenue Timeline */}

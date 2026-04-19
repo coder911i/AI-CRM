@@ -39,16 +39,93 @@ export class PortalService {
     return { access_token: token };
   }
 
-  async getDashboard(email: string) {
-    const bookings = await this.prisma.booking.findMany({
-      where: { buyerEmail: email },
-      include: {
-        unit: { include: { tower: { include: { project: true } } } },
-        payments: { orderBy: { dueDate: 'asc' } },
-      },
-    });
+  async getDashboard(email: string, leadId: string) {
+    const [bookings, visits, wishlist] = await Promise.all([
+      this.prisma.booking.findMany({
+        where: { buyerEmail: email },
+        include: {
+          unit: { include: { tower: { include: { project: true } } } },
+          payments: { orderBy: { dueDate: 'asc' } },
+        },
+      }),
+      this.prisma.siteVisit.findMany({
+        where: { leadId },
+        include: { agent: true, lead: { include: { project: true } } },
+      }),
+      this.prisma.wishlist.findMany({
+        where: { userId: leadId }, // Wait, Wishlist uses userId. Our sub is leadId.
+        include: { project: true, property: true },
+      }),
+    ]);
 
-    return { bookings };
+    return { bookings, visits, wishlist };
+  }
+
+  // Wishlist
+  async getWishlist(leadId: string) {
+    return this.prisma.wishlist.findMany({
+      where: { userId: leadId },
+      include: { project: true, property: true },
+    });
+  }
+
+  async addToWishlist(leadId: string, projectId?: string, propertyId?: string) {
+    return this.prisma.wishlist.create({
+      data: { userId: leadId, projectId, propertyId },
+    });
+  }
+
+  async removeFromWishlist(id: string, leadId: string) {
+    return this.prisma.wishlist.delete({
+      where: { id, userId: leadId },
+    });
+  }
+
+  // Support Tickets
+  async getTickets(leadId: string) {
+    return this.prisma.supportTicket.findMany({
+      where: { userId: leadId },
+      include: { messages: { orderBy: { createdAt: 'desc' } } },
+    });
+  }
+
+  async createTicket(leadId: string, tenantId: string, subject: string, description: string) {
+    return this.prisma.supportTicket.create({
+      data: { userId: leadId, tenantId, subject, description },
+    });
+  }
+
+  async addTicketMessage(ticketId: string, leadId: string, message: string) {
+    return this.prisma.ticketMessage.create({
+      data: { ticketId, userId: leadId, message, isAdmin: false },
+    });
+  }
+
+  // Site Visits
+  async getVisits(leadId: string) {
+    return this.prisma.siteVisit.findMany({
+      where: { leadId },
+      include: { agent: true, lead: { include: { project: true } } },
+    });
+  }
+
+  // Recommendations (Placeholder for Groq)
+  async getRecommendations(leadId: string) {
+    const lead = await this.prisma.lead.findUnique({ 
+      where: { id: leadId },
+      include: { project: true }
+    });
+    if (!lead) return [];
+
+    // Find other projects in the same tenant that are active
+    return this.prisma.project.findMany({
+      where: { 
+        tenantId: lead.tenantId, 
+        status: 'ACTIVE',
+        id: { not: lead.projectId || undefined }
+      },
+      take: 3,
+    });
   }
 
   async getPayments(email: string) {
@@ -67,10 +144,9 @@ export class PortalService {
         lead: { include: { activities: { where: { type: 'DOCUMENT_SHARED' } } } }
       },
     });
-    // In production, these would be R2 signed URLs
     return bookings.map(b => ({
       bookingId: b.id,
-      documents: (b as any).lead?.activities || []
+      documents: b.lead?.activities || []
     }));
   }
 

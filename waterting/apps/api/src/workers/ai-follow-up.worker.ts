@@ -13,6 +13,7 @@ export class AiFollowUpWorker {
     private prisma: PrismaService,
     private ai: AIService,
     @InjectQueue('email') private emailQueue: Queue,
+    @InjectQueue('whatsapp') private waQueue: Queue,
   ) {}
 
   // Daily at 6 AM
@@ -20,6 +21,21 @@ export class AiFollowUpWorker {
   async processSequences() {
     this.logger.log('Starting daily AI follow-up sequences...');
     const now = new Date();
+
+    // 1. WhatsApp Nudge (New Leads - 2h after creation)
+    const newLeads = await this.prisma.lead.findMany({
+      where: {
+        createdAt: { 
+          gte: new Date(now.getTime() - 3 * 3600000), 
+          lte: new Date(now.getTime() - 2 * 3600000) 
+        },
+        activities: { none: { type: 'WHATSAPP' } }
+      },
+      include: { project: true }
+    });
+    for (const lead of newLeads) {
+      await this.sendWhatsAppNudge(lead, 'welcome-nudge');
+    }
 
     // 1. No-Response Drip
     const noResponse = await this.prisma.lead.findMany({
@@ -110,6 +126,29 @@ export class AiFollowUpWorker {
     });
     for (const lead of hotLeads) {
       await this.sendFollowUpEmail(lead, 'inventory-urgency', 0, { remainingUnits });
+    }
+  }
+
+  private async sendWhatsAppNudge(lead: any, type: string) {
+    const prompt = `Write a short, friendly WhatsApp message for a new real estate lead. Lead name: ${lead.name}. Project: ${lead.project?.name}. Action: ${type}. Keep it under 200 characters. Include an emoji. Return ONLY JSON: {"message": "..."}`;
+    
+    try {
+        const res = await this.ai.generateJSON<{ message: string }>(prompt);
+        await this.waQueue.add('send', {
+          to: lead.phone,
+          message: res.message,
+        });
+
+        await this.prisma.activity.create({
+          data: {
+            leadId: lead.id,
+            type: 'WHATSAPP',
+            title: `AI WhatsApp ${type}`,
+            description: res.message,
+          },
+        });
+    } catch (err) {
+        this.logger.error(`Failed to send WA nudge: ${err.message}`);
     }
   }
 

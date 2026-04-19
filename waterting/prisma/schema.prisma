@@ -24,6 +24,7 @@ enum UserRole {
   BROKER
   BUYER
   PROPERTY_OWNER
+  ACCOUNTS
 }
 
 enum LeadStage {
@@ -150,6 +151,8 @@ model Tenant {
   listings      Listing[]
   agencies      Agency[]
   properties    Property[]
+  supportTickets SupportTicket[]
+  ads           Ad[]
 }
 
 model User {
@@ -175,6 +178,11 @@ model User {
   customerVisits PropertyVisit[] @relation("CustomerVisit")
   ownedProperties Property[] @relation("PropertyOwner")
   notifications Notification[]
+  auditLogs     AuditLog[]
+  commissions   Commission[]
+  wishlist      Wishlist[]
+  supportTickets SupportTicket[]
+  ticketMessages TicketMessage[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -203,6 +211,8 @@ model Project {
   media               ProjectMedia[]
   constructionUpdates ConstructionUpdate[]
   listings            Listing[]
+  ads                 Ad[]
+  wishlistedBy        Wishlist[]
 
   @@index([tenantId])
 }
@@ -347,6 +357,7 @@ model SiteVisit {
   followUpDate  DateTime?
   checkInTime   DateTime?
   checkOutTime  DateTime?
+  verificationToken String? @default(cuid())
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -388,6 +399,9 @@ model Booking {
   buyerEmail      String?
   nomineeName     String?
   bookingAmount   Float
+  gstRate         Float         @default(5.0)
+  gstAmount       Float         @default(0)
+  grandTotal      Float         @default(0)
   status          BookingStatus @default(INITIATED)
   isVerified      Boolean       @default(false)
   documents       String[]
@@ -435,9 +449,9 @@ model Refund {
 }
 
 model Payment {
-  // ... existing fields ...
   id              String        @id @default(cuid())
   bookingId       String
+  receiptNumber   String?       @unique
   amount          Float
   dueDate         DateTime
   paidAt          DateTime?
@@ -455,19 +469,21 @@ model Payment {
 }
 
 model Commission {
-  // ... existing fields ...
   id          String   @id @default(cuid())
-  brokerId    String
+  brokerId    String?
+  userId      String?  // Internal Sales Agent
   bookingId   String
   amount      Float
   isPaid      Boolean  @default(false)
   paidAt      DateTime?
   createdAt   DateTime @default(now())
 
-  broker      Broker  @relation(fields: [brokerId], references: [id])
+  broker      Broker?  @relation(fields: [brokerId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id])
   booking     Booking @relation(fields: [bookingId], references: [id])
 
   @@index([brokerId])
+  @@index([userId])
 }
 
 model Automation {
@@ -548,6 +564,7 @@ model AuditLog {
   ipAddress   String?
   createdAt   DateTime @default(now())
 
+  user        User?  @relation(fields: [userId], references: [id])
   tenant      Tenant @relation(fields: [tenantId], references: [id], name: "TenantAuditLogs")
 }
 
@@ -566,6 +583,7 @@ model Listing {
 
   tenant        Tenant   @relation(fields: [tenantId], references: [id])
   project       Project? @relation(fields: [projectId], references: [id])
+  ads           Ad[]
 
   @@index([tenantId])
   @@index([platform])
@@ -605,6 +623,7 @@ model Property {
   tenant      Tenant         @relation(fields: [tenantId], references: [id])
   owner       User           @relation("PropertyOwner", fields: [ownerId], references: [id])
   visits      PropertyVisit[]
+  wishlistedBy Wishlist[]
 
   @@index([tenantId])
   @@index([ownerId])
@@ -628,5 +647,86 @@ model PropertyVisit {
   @@index([propertyId])
   @@index([brokerId])
   @@index([customerId])
+}
+
+model OtpToken {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  subject     String
+  description String?
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant          @relation(fields: [tenantId], references: [id])
+  user        User            @relation(fields: [userId], references: [id])
+  messages    TicketMessage[]
+
+  @@index([tenantId])
+  @@index([userId])
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String
+  message   String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([ticketId])
+}
+
+model Wishlist {
+  id          String   @id @default(cuid())
+  userId      String
+  projectId   String?
+  propertyId  String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  project     Project? @relation(fields: [projectId], references: [id])
+  property    Property? @relation(fields: [propertyId], references: [id])
+
+  @@unique([userId, projectId, propertyId])
+}
+
+model Ad {
+  id          String   @id @default(cuid())
+  tenantId    String
+  projectId   String?
+  listingId   String?
+  title       String
+  platform    String   // FACEBOOK, GOOGLE, INSTAGRAM
+  status      String   @default("ACTIVE")
+  budget      Float?
+  spend       Float?   @default(0)
+  clicks      Int?     @default(0)
+  leads       Int?     @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  project     Project? @relation(fields: [projectId], references: [id])
+  listing     Listing? @relation(fields: [listingId], references: [id])
+
+  @@index([tenantId])
 }
 

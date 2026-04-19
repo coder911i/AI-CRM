@@ -16,12 +16,10 @@ interface DashboardStats {
   totalRevenue: number;
   todaySiteVisits: number;
   recentLeads: any[];
+  staleLeadsCount: number;
+  upcomingPayments: any[];
   stageDistribution: { stage: string; count: number }[];
 }
-
-const Skeleton = ({ className }: { className: string }) => (
-  <div className={`animate-pulse bg-slate-800/10 rounded-xl ${className}`}></div>
-);
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -74,12 +72,29 @@ export default function DashboardPage() {
           </motion.button>
         </div>
 
+        {/* Stale Leads Banner (Bonus-01) */}
+        {!loading && (stats?.staleLeadsCount ?? 0) > 0 && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }} 
+            animate={{ height: 'auto', opacity: 1 }}
+            className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3 text-amber-800">
+              <span className="text-xl">⚠️</span>
+              <div className="text-sm">
+                <span className="font-bold">{stats?.staleLeadsCount} Leads</span> are becoming stale. They haven&apos;t been contacted in over 3 days.
+              </div>
+            </div>
+            <button onClick={() => router.push('/leads?filter=stale')} className="text-amber-700 text-sm font-bold hover:underline">Take Action &rarr;</button>
+          </motion.div>
+        )}
+
         {/* Stats Grid */}
         <AnimatePresence mode='wait'>
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-               {/* Minimalist waiting state */}
-            </div>
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+               {[1,2,3,4,5,6].map(i => <div key={i} className="h-32 bg-slate-100 animate-pulse rounded-2xl" />)}
+             </div>
           ) : (
             <motion.div 
               variants={container}
@@ -107,12 +122,12 @@ export default function DashboardPage() {
           )}
         </AnimatePresence>
 
-        {/* Charts and Tables */}
+        {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             {!loading && (
-              <motion.div initial={{ y: 20, filter: 'blur(10px)', opacity: 0 }} animate={{ y: 0, filter: 'blur(0px)', opacity: 1 }} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="px-8 py-6 border-bottom flex items-center justify-between border-b border-slate-50">
+              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="px-8 py-6 flex items-center justify-between border-b border-slate-50">
                   <h3 className="font-bold text-slate-900">Recent Prospects</h3>
                   <button onClick={() => router.push('/leads')} className="text-blue-600 text-sm font-semibold hover:underline">View All</button>
                 </div>
@@ -155,7 +170,7 @@ export default function DashboardPage() {
 
           <div className="space-y-6">
             {!loading && (
-              <motion.div initial={{ x: 20, filter: 'blur(10px)', opacity: 0 }} animate={{ x: 0, filter: 'blur(0px)', opacity: 1 }} className="bg-[#020617] text-white rounded-3xl p-8 shadow-xl shadow-slate-900/20">
+              <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="bg-[#020617] text-white rounded-3xl p-8 shadow-xl shadow-slate-900/20">
                 <h3 className="text-lg font-bold mb-6">Pipeline Health</h3>
                 <div className="space-y-6">
                   {stats?.stageDistribution?.map((s) => (
@@ -175,6 +190,26 @@ export default function DashboardPage() {
                     </div>
                   ))}
                 </div>
+              </motion.div>
+            )}
+
+            {!loading && (
+              <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+                 <h3 className="font-bold text-slate-900 mb-6">Upcoming Payments</h3>
+                 <div className="space-y-4">
+                    {stats?.upcomingPayments?.length ? stats.upcomingPayments.map((p: any) => (
+                      <div key={p.id} className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
+                        <div className="flex justify-between items-start mb-2">
+                           <span className="font-bold text-slate-900">₹{p.amount.toLocaleString()}</span>
+                           <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">Due {new Date(p.dueDate).toLocaleDateString()}</span>
+                        </div>
+                        <div className="text-xs text-slate-500">Unit {p.booking.unit.unitNumber} • {p.booking.buyerName}</div>
+                      </div>
+                    )) : (
+                      <div className="text-sm text-slate-400 text-center py-4 italic">No payments due this week.</div>
+                    )}
+                 </div>
+                 <button onClick={() => router.push('/bookings')} className="w-full mt-6 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">View All &rarr;</button>
               </motion.div>
             )}
           </div>

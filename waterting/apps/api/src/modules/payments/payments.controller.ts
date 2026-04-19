@@ -8,6 +8,10 @@ import { CurrentUser } from '../../common/decorators/user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload, UserRole } from '@waterting/shared';
 
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+
+@ApiTags('bookings')
+@ApiBearerAuth('JWT-auth')
 @Controller('bookings/:bookingId/payments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PaymentsController {

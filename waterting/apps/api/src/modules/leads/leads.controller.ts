@@ -8,6 +8,10 @@ import { JwtPayload, UserRole } from '@waterting/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AIService } from '../../common/ai/ai.service';
 
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+
+@ApiTags('leads')
+@ApiBearerAuth('JWT-auth')
 @Controller('leads')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class LeadsController {

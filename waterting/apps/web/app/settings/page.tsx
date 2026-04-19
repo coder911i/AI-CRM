@@ -21,16 +21,34 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteForm, setInviteForm] = useState({ name: '', email: '', password: 'User@1234', role: 'SALES_AGENT' });
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditTotal, setAuditTotal] = useState(0);
+  const [auditPage, setAuditPage] = useState(1);
+  const [auditFilter, setAuditFilter] = useState('');
+  const [auditActionFilter, setAuditActionFilter] = useState('');
+  const [expandedLog, setExpandedLog] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) { router.push('/login'); return; }
-    if (user && (user.role === 'TENANT_ADMIN' || user.role === 'SALES_MANAGER')) {
+    if (user && activeTab === 'team') {
       fetchUsers();
+    } else if (user && activeTab === 'audit') {
+      fetchAuditLogs();
     } else if (user) {
       setLoading(false);
-      setActiveTab('profile');
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, activeTab, auditPage, auditFilter, auditActionFilter]);
+
+  const fetchAuditLogs = async () => {
+    try {
+      let url = `/users/audit-logs?page=${auditPage}`;
+      if (auditFilter) url += `&entity=${auditFilter}`;
+      if (auditActionFilter) url += `&action=${auditActionFilter}`;
+      const data = await api.get<any>(url);
+      setAuditLogs(data.logs);
+      setAuditTotal(data.total);
+    } catch (err) { console.error(err); }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -62,6 +80,7 @@ export default function SettingsPage() {
     { id: 'profile', label: 'Company Profile', icon: '🏢' },
     { id: 'notifications', label: 'Notifications', icon: '🔔' },
     { id: 'pipeline', label: 'Pipeline Stages', icon: '🔄' },
+    { id: 'audit', label: 'Audit Log', icon: '📜', roles: ['TENANT_ADMIN'] },
   ].filter(t => !t.roles || t.roles.includes(user?.role || ''));
 
   return (
@@ -177,6 +196,68 @@ export default function SettingsPage() {
                     <span key={s} className="badge badge-info" style={{ padding: '8px 12px' }}>{s.replace(/_/g, ' ')}</span>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'audit' && (
+            <div className="card shadow-sm" style={{padding: 0}}>
+              <div className="card-header" style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                <span>System Audit Logs</span>
+                <div style={{display:'flex', gap: 12}}>
+                  <select className="form-select" style={{width: 150, padding:'4px 8px'}} value={auditFilter} onChange={e => setAuditFilter(e.target.value)}>
+                     <option value="">All Entities</option>
+                     {['LEAD','BOOKING','PAYMENT','REFUND','USER','PROJECT'].map(e => <option key={e} value={e}>{e}</option>)}
+                  </select>
+                  <select className="form-select" style={{width: 150, padding:'4px 8px'}} value={auditActionFilter} onChange={e => setAuditActionFilter(e.target.value)}>
+                    <option value="">All Actions</option>
+                    {['CREATE','UPDATE','DELETE','LOGIN','VERIFY'].map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </div>
+              </div>
+              <table className="data-table">
+                <thead>
+                  <tr><th>Timestamp</th><th>User</th><th>Action</th><th>Entity</th></tr>
+                </thead>
+                <tbody>
+                  {auditLogs.map(log => (
+                    <React.Fragment key={log.id}>
+                      <tr onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)} style={{cursor:'pointer'}}>
+                        <td style={{fontSize: 12}}>{new Date(log.createdAt).toLocaleString()}</td>
+                        <td style={{fontSize: 13}}>{log.user?.name || 'System'}</td>
+                        <td>
+                          <span className={`badge ${log.action === 'CREATE' ? 'badge-success' : log.action === 'DELETE' ? 'badge-danger' : 'badge-info'}`}>
+                            {log.action}
+                          </span>
+                        </td>
+                        <td style={{fontSize: 12, color: 'var(--text-muted)'}}>{log.entity} <small style={{fontSize: 9}}>(#{log.entityId.slice(-6)})</small></td>
+                      </tr>
+                      {expandedLog === log.id && (
+                        <tr>
+                          <td colSpan={4} style={{background: '#f8fafc', padding: 16}}>
+                             <div style={{display:'grid', gridTemplateColumns: '1fr 1fr', gap: 12}}>
+                                <div>
+                                   <div style={{fontSize: 10, fontWeight: 700, marginBottom: 4}}>OLD DATA</div>
+                                   <pre style={{fontSize: 10, overflowX:'auto'}}>{JSON.stringify(log.oldData, null, 2) || 'None'}</pre>
+                                </div>
+                                <div>
+                                   <div style={{fontSize: 10, fontWeight: 700, marginBottom: 4}}>NEW DATA</div>
+                                   <pre style={{fontSize: 10, overflowX:'auto'}}>{JSON.stringify(log.newData, null, 2)}</pre>
+                                </div>
+                             </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{padding: 16, display:'flex', justifyContent:'space-between', alignItems:'center', borderTop:'1px solid var(--border)'}}>
+                 <span style={{fontSize: 12, color: 'var(--text-muted)'}}>Total {auditTotal} logs</span>
+                 <div style={{display:'flex', gap: 8}}>
+                    <button className="btn btn-secondary btn-sm" disabled={auditPage === 1} onClick={() => setAuditPage(auditPage - 1)}>Prev</button>
+                    <button className="btn btn-secondary btn-sm" disabled={auditLogs.length < 50} onClick={() => setAuditPage(auditPage + 1)}>Next</button>
+                 </div>
               </div>
             </div>
           )}

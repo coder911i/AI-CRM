@@ -12,6 +12,7 @@ import { PrismaModule } from '../common/prisma/prisma.module';
 import { AIService } from '../common/ai/ai.service';
 import { AiFollowUpWorker } from './ai-follow-up.worker';
 import { DailyBriefingWorker } from './daily-briefing.worker';
+import { WhatsAppWorker } from './whatsapp.worker';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { DailyBriefingWorker } from './daily-briefing.worker';
     BullModule.registerQueue(
       { name: 'ai-scoring' },
       { name: 'email' },
+      { name: 'whatsapp' },
       { name: 'pdf' },
       { name: 'portal-sync' },
     ),
@@ -35,6 +37,7 @@ import { DailyBriefingWorker } from './daily-briefing.worker';
     PdfGeneratorWorker,
     AiFollowUpWorker,
     DailyBriefingWorker,
+    WhatsAppWorker,
   ],
   exports: [EventsGateway, AiFollowUpWorker]
 })

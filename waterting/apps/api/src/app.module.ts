@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { AuditModule } from './common/audit/audit.module';
 import { AIModule } from './common/ai/ai.module';
+import { RealtimeModule } from './common/realtime/realtime.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -27,6 +28,8 @@ import { PortalModule } from './modules/portal/portal.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ListingsModule } from './modules/listings/listings.module';
+import { AdsModule } from './modules/ads/ads.module';
+import { ListingSyncModule } from './modules/listing-sync/listing-sync.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { BullModule } from '@nestjs/bull';
@@ -48,6 +51,7 @@ import { WorkersModule } from './workers/workers.module';
     PrismaModule,
     AuditModule,
     AIModule,
+    RealtimeModule,
     AuthModule,
     TenantsModule,
     UsersModule,
@@ -68,6 +72,8 @@ import { WorkersModule } from './workers/workers.module';
     ActivitiesModule,
     NotificationsModule,
     ListingsModule,
+    AdsModule,
+    ListingSyncModule,
     WorkersModule,
     ThrottlerModule.forRoot([
       { name: 'short', ttl: 60000, limit: 10 },

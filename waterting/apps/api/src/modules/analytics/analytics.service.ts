@@ -91,12 +91,22 @@ export class AnalyticsService {
       { date: 'Mar', amount: totalRevenue / 2 },
     ];
 
+    // 6. Predictive Forecast (AI Heuristic)
+    const hotLeads = await this.prisma.lead.count({ where: { tenantId, score: { gte: 61 }, stage: { notIn: ['BOOKING_DONE', 'LOST'] } } });
+    const forecastedRevenue = Math.round(hotLeads * (conversionRate / 100) * avgDealSize);
+
     return {
-      overview: { totalLeads, converted, conversionRate, totalRevenue, avgDealSize, avgDaysToClose: 14 },
+      overview: { totalLeads, converted, conversionRate, totalRevenue, avgDealSize, avgDaysToClose: 14, forecastedRevenue },
       funnel,
       sourceROI: sourceROI.sort((a, b) => b.totalRevenue - a.totalRevenue),
       agentPerformance: agentPerformance.sort((a, b) => b.bookings - a.bookings),
-      revenueTimeline
+      revenueTimeline,
+      forecast: {
+        hotLeadsCount: hotLeads,
+        expectedConversionRate: conversionRate,
+        projectedRevenue: forecastedRevenue,
+        confidence: totalLeads > 10 ? 'HIGH' : 'LOW'
+      }
     };
   }
 

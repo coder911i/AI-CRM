@@ -8,7 +8,6 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(user: JwtPayload) {
-    // Tenant middleware theoretically applies, but let's be safe
     return this.prisma.user.findMany({
       where: { tenantId: user.tenantId },
       select: { id: true, email: true, name: true, role: true, phone: true, isActive: true, agentCode: true },
@@ -42,5 +41,27 @@ export class UsersService {
          data: { isActive: false },
        });
     });
+  }
+
+  async getAuditLogs(user: JwtPayload, query: { page: number; limit: number; entity?: string; action?: string }) {
+    const { page, limit, entity, action } = query;
+    const skip = (page - 1) * limit;
+    
+    const where: any = { tenantId: user.tenantId };
+    if (entity) where.entity = entity;
+    if (action) where.action = action;
+
+    const [logs, total] = await Promise.all([
+      this.prisma.auditLog.findMany({
+        where,
+        take: limit,
+        skip,
+        orderBy: { createdAt: 'desc' },
+        include: { user: { select: { name: true } } }
+      }),
+      this.prisma.auditLog.count({ where })
+    ]);
+
+    return { logs, total, page, limit };
   }
 }

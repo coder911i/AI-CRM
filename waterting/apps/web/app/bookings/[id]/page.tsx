@@ -28,6 +28,7 @@ interface Booking {
     tower: { name: string; project: { name: string } };
   };
   payments: Payment[];
+  refunds?: any[];
 }
 
 export default function BookingDetailPage() {
@@ -45,6 +46,10 @@ export default function BookingDetailPage() {
     referenceNumber: '',
     paidAt: new Date().toISOString().split('T')[0]
   });
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundForm, setRefundForm] = useState({ amount: 0, reason: '', referenceNumber: '' });
+  const [showProcessRefund, setShowProcessRefund] = useState<any>(null);
+  const [processForm, setProcessForm] = useState({ referenceNumber: '', processedAt: new Date().toISOString().split('T')[0] });
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login');
@@ -72,6 +77,35 @@ export default function BookingDetailPage() {
     } catch (err) {
       alert('Failed to record payment');
     }
+  };
+
+  const handleRequestRefund = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (refundForm.amount > booking!.bookingAmount) return alert('Refund amount cannot exceed booking amount');
+    try {
+      await api.post(`/bookings/${id}/refunds`, refundForm);
+      setShowRefundModal(false);
+      fetchBooking();
+      alert('Refund request submitted');
+    } catch (err: any) { alert(err.message); }
+  };
+
+  const handleProcessRefund = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.patch(`/bookings/refunds/${showProcessRefund.id}/process`, processForm);
+      setShowProcessRefund(null);
+      fetchBooking();
+    } catch (err: any) { alert(err.message); }
+  };
+
+  const handleRejectRefund = async (refundId: string) => {
+    const reason = prompt('Please enter rejection reason:');
+    if (!reason) return;
+    try {
+      await api.patch(`/bookings/refunds/${refundId}/reject`, { reason });
+      fetchBooking();
+    } catch (err: any) { alert(err.message); }
   };
 
   const generateDoc = async (type: string) => {
@@ -167,6 +201,98 @@ export default function BookingDetailPage() {
           </table>
         </div>
       </div>
+
+      <div className="card" style={{marginTop: 24, padding: 0}}>
+        <div style={{padding: 20, borderBottom: '1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <h3 style={{fontSize: 16}}>Refunds</h3>
+          {(user?.role === 'TENANT_ADMIN' || user?.role === 'ACCOUNTS') && (
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowRefundModal(true)}>Request Refund</button>
+          )}
+        </div>
+        <div style={{padding: '0 20px 20px'}}>
+          <table className="data-table" style={{boxShadow: 'none'}}>
+            <thead>
+              <tr>
+                <th>Amount</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Requested</th>
+                <th>Processed</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {booking.refunds?.length ? booking.refunds.map(r => (
+                <tr key={r.id}>
+                  <td style={{fontWeight: 700}}>₹{r.amount.toLocaleString()}</td>
+                  <td style={{maxWidth: 200, fontSize: 13, color: 'var(--text-muted)'}}>{r.reason}</td>
+                  <td>
+                    <span className={`badge ${r.status === 'PROCESSED' ? 'badge-success' : r.status === 'REJECTED' ? 'badge-danger' : 'badge-warning'}`}>
+                      {r.status}
+                    </span>
+                  </td>
+                  <td style={{fontSize: 12}}>{new Date(r.createdAt).toLocaleDateString()}</td>
+                  <td style={{fontSize: 12}}>{r.processedAt ? new Date(r.processedAt).toLocaleDateString() : '—'}</td>
+                  <td>
+                    {r.status === 'PENDING' && (user?.role === 'TENANT_ADMIN' || user?.role === 'ACCOUNTS') && (
+                      <div style={{display:'flex', gap: 8}}>
+                        <button className="btn btn-primary btn-sm" onClick={() => setShowProcessRefund(r)}>Approve</button>
+                        <button className="btn btn-secondary btn-sm" style={{color:'var(--danger)'}} onClick={() => handleRejectRefund(r.id)}>Reject</button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              )) : (
+                <tr><td colSpan={6} style={{textAlign:'center', padding: 20, color:'var(--text-muted)'}}>No refunds requested for this booking.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showRefundModal && (
+        <div className="modal-overlay" onClick={() => setShowRefundModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: 400}}>
+            <div className="modal-header"><h3>Request Refund</h3><button className="modal-close" onClick={() => setShowRefundModal(false)}>&times;</button></div>
+            <form onSubmit={handleRequestRefund}>
+              <div className="form-group">
+                <label className="form-label">Amount (₹) - Max ₹{booking.bookingAmount.toLocaleString()}</label>
+                <input type="number" className="form-input" required value={refundForm.amount} onChange={e => setRefundForm({...refundForm, amount: parseInt(e.target.value)})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Reason *</label>
+                <textarea className="form-textarea" required value={refundForm.reason} onChange={e => setRefundForm({...refundForm, reason: e.target.value})} placeholder="Why is this being refunded?" />
+              </div>
+              <div style={{display:'flex', gap: 12, marginTop: 24}}>
+                <button type="button" className="btn btn-secondary" style={{flex:1}} onClick={() => setShowRefundModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{flex:1}}>Submit Request</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showProcessRefund && (
+        <div className="modal-overlay" onClick={() => setShowProcessRefund(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: 400}}>
+            <div className="modal-header"><h3>Approve Refund</h3><button className="modal-close" onClick={() => setShowProcessRefund(null)}>&times;</button></div>
+            <form onSubmit={handleProcessRefund}>
+               <div className="form-group">
+                <label className="form-label">Ref / Transaction ID</label>
+                <input className="form-input" required value={processForm.referenceNumber} onChange={e => setProcessForm({...processForm, referenceNumber: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Processed Date</label>
+                <input type="date" className="form-input" required value={processForm.processedAt} onChange={e => setProcessForm({...processForm, processedAt: e.target.value})} />
+              </div>
+              <div style={{display:'flex', gap: 12, marginTop: 24}}>
+                <button type="button" className="btn btn-secondary" style={{flex:1}} onClick={() => setShowProcessRefund(null)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{flex:1}}>Process Refund</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {showPaymentModal && selectedPayment && (
         <div className="modal-overlay">

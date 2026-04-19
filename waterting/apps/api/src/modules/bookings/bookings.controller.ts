@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Res, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Res, Query, NotFoundException, Patch } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -7,6 +7,10 @@ import { CurrentUser } from '../../common/decorators/user.decorator';
 import { JwtPayload, UserRole } from '@waterting/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+
+@ApiTags('bookings')
+@ApiBearerAuth('JWT-auth')
 @Controller('bookings')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class BookingsController {
@@ -67,5 +71,33 @@ export class BookingsController {
     });
     if (!booking) throw new NotFoundException('Booking not found');
     return booking.refunds;
+  }
+
+  @Patch('refunds/:refundId/process')
+  @Roles(UserRole.ACCOUNTS, UserRole.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Process a pending refund' })
+  async processRefund(
+    @Param('refundId') refundId: string, 
+    @Body() dto: { referenceNumber: string; processedAt: string }, 
+    @CurrentUser() user: JwtPayload
+  ) {
+    return this.prisma.refund.update({
+      where: { id: refundId },
+      data: { status: 'PROCESSED', referenceNumber: dto.referenceNumber, processedAt: new Date(dto.processedAt) },
+    });
+  }
+
+  @Patch('refunds/:refundId/reject')
+  @Roles(UserRole.ACCOUNTS, UserRole.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Reject a pending refund request' })
+  async rejectRefund(
+    @Param('refundId') refundId: string, 
+    @Body() dto: { reason: string }, 
+    @CurrentUser() user: JwtPayload
+  ) {
+    return this.prisma.refund.update({
+      where: { id: refundId },
+      data: { status: 'REJECTED', reason: dto.reason },
+    });
   }
 }
