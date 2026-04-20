@@ -68,6 +68,7 @@ async function bootstrap() {
         'http://localhost:3000',
         process.env.FRONTEND_URL,
         /waterting.*\.vercel\.app$/,
+        /ai-crm-web.*\.vercel\.app$/,
       ];
       const ok = allowed.some(a =>
         !a ? !origin : a instanceof RegExp ? a.test(origin ?? '') : a === origin
