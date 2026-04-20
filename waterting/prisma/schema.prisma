@@ -170,6 +170,9 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  ticketMessages TicketMessage[]
+  allocationLogs AllocationLog[] @relation("WatertingAgent")
+  leads Lead[] @relation("AssignedLeads")
   tenant      Tenant     @relation(fields: [tenantId], references: [id])
   agency      Agency?    @relation(fields: [agencyId], references: [id])
   activities  Activity[]
@@ -182,9 +185,6 @@ model User {
   commissions   Commission[]
   wishlist      Wishlist[]
   supportTickets SupportTicket[]
-  ticketMessages TicketMessage[]
-  allocationLogs AllocationLog[] @relation("WatertingAgent")
-  assignedLeads Lead[] @relation("AssignedLeads")
 
   @@unique([tenantId, email])
   @@index([tenantId])

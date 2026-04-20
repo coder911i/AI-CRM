@@ -66,10 +66,10 @@ export class AnalyticsService {
           where: { stage: 'BOOKING_DONE' },
           select: { bookings: { select: { bookingAmount: true } } }
         }
-      }
+      } as any
     });
 
-    const agentPerformance = agents.map(a => {
+    const agentPerformance = (agents as any[]).map(a => {
       const bookingCount = a.leads.length;
       return {
         id: a.id,

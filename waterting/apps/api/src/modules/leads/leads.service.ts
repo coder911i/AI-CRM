@@ -135,13 +135,13 @@ export class LeadsService {
       where: { tenantId, role: UserRole.SALES_AGENT, isActive: true },
       include: {
         _count: {
-          select: { assignedLeads: { where: { stage: { notIn: ['BOOKING_DONE', 'LOST'] } } } }
+          select: { leads: { where: { stage: { notIn: ['BOOKING_DONE', 'LOST'] } } } }
         }
       } as any
     });
 
     if (agents.length === 0) return null;
-    return (agents as any[]).sort((a, b) => a._count.assignedLeads - b._count.assignedLeads)[0].id;
+    return (agents as any[]).sort((a, b) => a._count.leads - b._count.leads)[0].id;
   }
 
   private normalizePhone(phone: string) {

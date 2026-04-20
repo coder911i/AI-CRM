@@ -11,7 +11,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 @ApiBearerAuth('JWT-auth')
 @Controller('builder')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('BUILDER', 'TENANT_ADMIN')
+@Roles(UserRole.BUILDER, UserRole.TENANT_ADMIN)
 export class BuilderController {
   constructor(private readonly builderService: BuilderService) {}
 
