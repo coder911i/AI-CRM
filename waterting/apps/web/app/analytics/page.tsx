@@ -348,7 +348,4 @@ export default function AnalyticsPage() {
       </div>
     </CRMLayout>
   );
-}iv>
-    </CRMLayout>
-  );
 }
