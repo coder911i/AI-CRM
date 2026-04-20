@@ -9,7 +9,10 @@ export default function AdminDeals() {
 
   useEffect(() => {
     api.get('/admin/deals').then(res => {
-      setDeals(res || []);
+      setDeals(Array.isArray(res) ? res : []);
+      setLoading(false);
+    }).catch(() => {
+      setDeals([]);
       setLoading(false);
     });
   }, []);

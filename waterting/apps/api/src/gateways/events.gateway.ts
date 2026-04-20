@@ -5,7 +5,18 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: { origin: '*', credentials: true } })
+@WebSocketGateway({ 
+  cors: { 
+    origin: [
+      'http://localhost:3000',
+      'https://ai-crm-web-sxls.vercel.app',
+      /waterting.*\.vercel\.app$/
+    ], 
+    credentials: true,
+    methods: ['GET', 'POST']
+  },
+  transports: ['websocket', 'polling']
+})
 export class EventsGateway implements OnGatewayConnection {
   @WebSocketServer() server: Server;
 
