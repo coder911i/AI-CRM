@@ -1,3 +1,10 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api-client';
+import CRMLayout from '@/components/CRMLayout';
 import { Plus, Users, Search, Filter, MoreHorizontal, X, UserPlus, Phone, Mail, Globe } from 'lucide-react';
 
 const scoreColor = (label: string) => {

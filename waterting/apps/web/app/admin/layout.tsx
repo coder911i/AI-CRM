@@ -1,3 +1,8 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { 
   BarChart3, 
   Users2, 

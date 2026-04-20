@@ -1,3 +1,10 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api-client';
+import CRMLayout from '@/components/CRMLayout';
 import { 
   Phone, 
   Mail, 

@@ -1,3 +1,10 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api-client';
+import CRMLayout from '@/components/CRMLayout';
 import { 
   QrCode, 
   UserCheck, 
@@ -11,7 +18,8 @@ import {
   History,
   TrendingUp,
   Star,
-  MessageSquare
+  MessageSquare,
+  Eye
 } from 'lucide-react';
 
 export default function SiteVisitsPage() {

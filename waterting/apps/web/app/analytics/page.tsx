@@ -1,3 +1,24 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api-client';
+import CRMLayout from '@/components/CRMLayout';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { 
+  ResponsiveContainer, 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  BarChart, 
+  Bar, 
+  Cell 
+} from 'recharts';
 import { 
   Users, 
   Trophy, 
@@ -14,7 +35,8 @@ import {
   ChevronRight,
   Filter,
   ShieldCheck,
-  Briefcase
+  Briefcase,
+  UserCheck
 } from 'lucide-react';
 
 export default function AnalyticsPage() {

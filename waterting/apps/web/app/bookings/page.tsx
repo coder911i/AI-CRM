@@ -1,4 +1,11 @@
-import { Receipt, IndianRupee, Calendar, Building2, User, ChevronRight, PieChart, TrendingUp, Filter, Download, Plus } from 'lucide-react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api-client';
+import CRMLayout from '@/components/CRMLayout';
+import { Receipt, IndianRupee, Calendar, Building2, User, ChevronRight, PieChart, TrendingUp, Filter, Download, Plus, Layout } from 'lucide-react';
 
 export default function BookingsPage() {
   const { user, loading: authLoading } = useAuth();
