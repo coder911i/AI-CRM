@@ -1,9 +1,26 @@
-'use client';
-
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { 
+  LayoutDashboard, 
+  CreditCard, 
+  FileText, 
+  Heart, 
+  MapPin, 
+  LifeBuoy, 
+  Building2, 
+  LogOut, 
+  ShieldCheck,
+  ChevronDown
+} from 'lucide-react';
 import { Chatbot } from '@/components/portal/Chatbot';
+
+const navItems = [
+  { label: 'Overview', href: '/portal/dashboard', icon: LayoutDashboard },
+  { label: 'Payments', href: '/portal/payments', icon: CreditCard },
+  { label: 'Documents', href: '/portal/documents', icon: FileText },
+  { label: 'Wishlist', href: '/portal/wishlist', icon: Heart },
+  { label: 'Visits', href: '/portal/visits', icon: MapPin },
+  { label: 'Support', href: '/portal/tickets', icon: LifeBuoy },
+  { label: 'Property', href: '/portal/property', icon: Building2 },
+];
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -11,55 +28,55 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   if (isLoginPage) return <>{children}</>;
 
-  const navItems = [
-    { label: 'Overview', href: '/portal/dashboard', icon: '📊' },
-    { label: 'Payments', href: '/portal/payments', icon: '💳' },
-    { label: 'Documents', href: '/portal/documents', icon: '📄' },
-    { label: 'Wishlist', href: '/portal/wishlist', icon: '❤️' },
-    { label: 'Visits', href: '/portal/visits', icon: '📍' },
-    { label: 'Support', href: '/portal/tickets', icon: '💬' },
-    { label: 'Property', href: '/portal/property', icon: '🏠' },
-  ];
-
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      <header style={{ background: 'var(--navy)', color: '#fff', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 32, height: 32, background: 'var(--primary)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>W</div>
-            <h1 style={{ fontSize: 18, fontWeight: 800 }}>Waterting Portal</h1>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="logout-btn" onClick={() => { localStorage.removeItem('waterting_portal_token'); window.location.href = '/portal/login'; }}>Logout</button>
-          </div>
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+           <div className="h-16 flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                 <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center font-black text-white shadow-lg shadow-primary/20">W</div>
+                    <h1 className="text-sm font-black text-white tracking-widest uppercase hidden md:block">Waterting <span className="text-slate-500">Asset Portal</span></h1>
+                 </div>
+                 <div className="h-6 w-px bg-slate-800 mx-2 hidden md:block" />
+                 <div className="hidden lg:flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700/50">
+                    <ShieldCheck size={12} className="text-emerald-500" /> Authorized Access Only
+                 </div>
+              </div>
+              <div className="flex items-center gap-4">
+                 <div className="flex items-center gap-3 bg-slate-800/30 px-3 py-1.5 rounded-xl border border-slate-700/30">
+                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[8px] font-black text-white">U</div>
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest hidden md:block">Authenticated User</span>
+                    <ChevronDown size={12} className="text-slate-500" />
+                 </div>
+                 <button className="p-2 text-slate-500 hover:text-white transition-colors" onClick={() => { localStorage.removeItem('waterting_portal_token'); window.location.href = '/portal/login'; }}>
+                    <LogOut size={18} />
+                 </button>
+              </div>
+           </div>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.05)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <nav style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px', display: 'flex', gap: 0, overflowX: 'auto' }}>
-            {navItems.map(item => (
-              <Link 
-                key={item.href} 
-                href={item.href} 
-                style={{
-                  padding: '12px 16px',
-                  fontSize: 13, 
-                  fontWeight: 600, 
-                  textDecoration: 'none', 
-                  color: pathname === item.href ? '#fff' : 'rgba(255,255,255,0.6)',
-                  borderBottom: `2px solid ${pathname === item.href ? 'var(--primary)' : 'transparent'}`,
-                  whiteSpace: 'nowrap',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6
-                }}
-              >
-                <span>{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+        <div className="bg-slate-900/50 border-t border-slate-800/50 backdrop-blur-md">
+           <div className="max-w-7xl mx-auto px-4 md:px-8">
+              <nav className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                 {navItems.map(item => (
+                   <Link 
+                     key={item.href} 
+                     href={item.href} 
+                     className={`flex items-center gap-2 px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
+                       pathname === item.href 
+                       ? 'text-white border-primary bg-primary/5' 
+                       : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-white/5'
+                     }`}
+                   >
+                     <item.icon size={14} className={pathname === item.href ? 'text-primary' : 'text-slate-500'} />
+                     {item.label}
+                   </Link>
+                 ))}
+              </nav>
+           </div>
         </div>
       </header>
-      <main style={{ maxWidth: 1200, margin: '24px auto', padding: '0 20px' }}>
+      <main className="max-w-7xl mx-auto py-8 px-4 md:px-8 min-h-[calc(100vh-140px)]">
         {children}
       </main>
       <Chatbot />

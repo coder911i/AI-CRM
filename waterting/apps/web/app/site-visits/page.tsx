@@ -1,10 +1,18 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import CRMLayout from '@/components/CRMLayout';
-import { api } from '@/lib/api-client';
-import { useAuth } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
+import { 
+  QrCode, 
+  UserCheck, 
+  CalendarClock, 
+  Activity, 
+  ChevronRight, 
+  MapPin, 
+  CheckCircle2, 
+  AlertCircle, 
+  X,
+  History,
+  TrendingUp,
+  Star,
+  MessageSquare
+} from 'lucide-react';
 
 export default function SiteVisitsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -34,7 +42,6 @@ export default function SiteVisitsPage() {
     try {
       await api.patch(`/site-visits/${id}/checkin`, {});
       fetchVisits();
-      alert('Checked in successfully');
     } catch (err: any) { alert(err.message); }
   };
 
@@ -43,7 +50,6 @@ export default function SiteVisitsPage() {
     try {
       await api.patch(`/site-visits/${id}/checkout`, { outcome: 'NO_SHOW', notes: 'Client did not arrive' });
       fetchVisits();
-      alert('Marked as No Show. Lead moved back to Contacted.');
     } catch (err: any) { alert(err.message); }
   };
 
@@ -55,7 +61,6 @@ export default function SiteVisitsPage() {
       setShowCheckout(null);
       setFeedback({ outcome: 'INTERESTED', notes: '', followUpDate: '', rating: 5 });
       fetchVisits();
-      alert('Visit feedback saved');
     } catch (err: any) { alert(err.message); }
   };
 
@@ -67,131 +72,195 @@ export default function SiteVisitsPage() {
       setShowQrModal(false);
       setQrToken('');
       fetchVisits();
-      alert('QR Check-in successful!');
     } catch (err: any) { alert(err.message || 'Invalid token'); }
   };
 
   if (authLoading || loading) return <div className="loading-page"><div className="spinner" /></div>;
 
   const getStatusBadge = (v: any) => {
-    if (v.outcome === 'NO_SHOW') return <span className="badge badge-cold">NO SHOW</span>;
-    if (v.outcome) return <span className="badge badge-success">{v.outcome.replace(/_/g, ' ')}</span>;
-    if (v.checkInTime && !v.checkOutTime) return <span className="badge badge-warning">IN PROGRESS</span>;
-    return <span className="badge badge-info">SCHEDULED</span>;
+    if (v.outcome === 'NO_SHOW') return <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border bg-rose-50 text-rose-600 border-rose-100">NO SHOW</span>;
+    if (v.outcome) return <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border bg-emerald-50 text-emerald-600 border-emerald-100">{v.outcome.replace(/_/g, ' ')}</span>;
+    if (v.checkInTime && !v.checkOutTime) return <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border bg-amber-50 text-amber-600 border-amber-100 animate-pulse">IN PROGRESS</span>;
+    return <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border bg-slate-50 text-slate-500 border-slate-100">SCHEDULED</span>;
   };
 
   return (
     <CRMLayout>
-      <div className="page-header">
-        <div>
-          <h2>Site Visits</h2>
-          <p className="subtitle">{visits.length} tracked visits</p>
+      <div className="space-y-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+           <div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-3">
+                 <MapPin size={28} className="text-primary" />
+                 Operational Logistics
+              </h1>
+              <p className="text-slate-400 text-sm font-medium mt-1">Real-time tracking of {visits.length} scheduled occupancy visits</p>
+           </div>
+           <button className="btn btn-primary flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-6 shadow-xl shadow-primary/20" onClick={() => setShowQrModal(true)}>
+              <QrCode size={16} /> Scan Protocol Hash
+           </button>
         </div>
-        <button className="btn btn-primary" style={{ background: 'var(--navy)', color: 'white' }} onClick={() => setShowQrModal(true)}>
-           📷 Scan Visitor QR
-        </button>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {visits.map(v => (
-          <div key={v.id} className="card shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {visits.map(v => (
+            <div key={v.id} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-xl transition-all group overflow-hidden">
+               <div className="p-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                     <div className="w-2 h-2 rounded-full bg-primary" />
+                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">VS-{v.id.slice(-6)}</span>
+                  </div>
+                  {getStatusBadge(v)}
+               </div>
+               
+               <div className="p-6 space-y-6">
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 uppercase tracking-tight group-hover:text-primary transition-colors">{v.lead?.name}</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5 flex items-center gap-1">
+                       <MapPin size={10} /> {v.lead?.project?.name || 'GENERIC_INVENTORY'}
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                     <div className="flex items-center gap-3 text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                        <UserCheck size={14} className="text-slate-300" />
+                        {v.agent?.name || 'UNASSIGNED_LOGISTICIAN'}
+                     </div>
+                     <div className="flex items-center gap-3 text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                        <CalendarClock size={14} className="text-slate-300" />
+                        <span className="font-mono text-slate-900">{new Date(v.scheduledAt).toLocaleString()}</span>
+                     </div>
+                     {v.checkInTime && (
+                       <div className="flex items-center gap-2 text-[9px] font-bold text-emerald-500 uppercase tracking-tighter bg-emerald-50 px-2 py-1 rounded">
+                          <CheckCircle2 size={10} /> Initialized: {new Date(v.checkInTime).toLocaleTimeString()}
+                       </div>
+                     )}
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                     {!v.checkInTime && !v.outcome && (
+                       <>
+                         <button className="flex-1 btn btn-primary py-2.5 text-[9px] font-black uppercase tracking-widest shadow-lg shadow-primary/10" onClick={() => handleCheckIn(v.id)}>Manual Check-In</button>
+                         <button className="btn btn-secondary py-2.5 px-3 text-[9px] font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity" onClick={() => handleNoShow(v.id)}>No-Show</button>
+                       </>
+                     )}
+                     {v.checkInTime && !v.checkOutTime && (
+                       <button className="w-full btn btn-primary py-2.5 text-[9px] font-black uppercase tracking-widest shadow-lg shadow-primary/20" onClick={() => setShowCheckout(v)}>Conclude Visit</button>
+                     )}
+                     {v.outcome === 'NO_SHOW' && (
+                       <button className="w-full btn btn-secondary py-2.5 text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2" onClick={() => router.push(`/leads/${v.leadId}`)}>
+                          Reschedule Outcome <ChevronRight size={12} />
+                       </button>
+                     )}
+                     {v.outcome && v.outcome !== 'NO_SHOW' && (
+                       <button className="w-full btn btn-secondary py-2.5 text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 group-hover:bg-primary/5 group-hover:text-primary transition-all" onClick={() => alert(`Outcome: ${v.outcome}\n\nNotes: ${v.notes}`)}>
+                          View Intelligence <Eye size={12} />
+                       </button>
+                     )}
+                  </div>
+               </div>
+            </div>
+          ))}
+          
+          {visits.length === 0 && (
+            <div className="col-span-full py-32 text-center bg-white rounded-3xl border border-dashed border-slate-200 shadow-inner flex flex-col items-center gap-4">
+               <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 border border-slate-100">
+                  <Activity size={32} />
+               </div>
                <div>
-                 <div className="font-bold text-slate-900">{v.lead?.name}</div>
-                 <div className="text-xs text-slate-500">{v.lead?.project?.name || 'No Project'}</div>
+                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Logistic Void</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter max-w-[220px] mx-auto mt-1">No operational site visits discovered in current synchronization cycle.</p>
                </div>
-               {getStatusBadge(v)}
             </div>
-            
-            <div className="space-y-2 mb-6">
-               <div className="flex items-center gap-2 text-sm text-slate-600">
-                 <span>👤</span> {v.agent?.name || 'Unassigned Agent'}
-               </div>
-               <div className="flex items-center gap-2 text-sm text-slate-600">
-                 <span>📅</span> {new Date(v.scheduledAt).toLocaleString()}
-               </div>
-               {v.checkInTime && (
-                 <div className="text-xs text-slate-400">Checked in at {new Date(v.checkInTime).toLocaleTimeString()}</div>
-               )}
-            </div>
-
-            <div className="flex gap-2">
-               {!v.checkInTime && !v.outcome && (
-                 <>
-                   <button className="btn btn-primary btn-sm flex-1" onClick={() => handleCheckIn(v.id)}>Manual Check In</button>
-                   <button className="btn btn-secondary btn-sm" onClick={() => handleNoShow(v.id)}>No Show</button>
-                 </>
-               )}
-               {v.checkInTime && !v.checkOutTime && (
-                 <button className="btn btn-warning btn-sm w-full" onClick={() => setShowCheckout(v)}>Check Out</button>
-               )}
-               {v.outcome === 'NO_SHOW' && (
-                 <button className="btn btn-secondary btn-sm w-full" onClick={() => router.push(`/leads/${v.leadId}`)}>Reschedule</button>
-               )}
-               {v.outcome && v.outcome !== 'NO_SHOW' && (
-                 <button className="btn btn-secondary btn-sm w-full" onClick={() => alert(`Outcome: ${v.outcome}\n\nNotes: ${v.notes}`)}>View Feedback</button>
-               )}
-            </div>
-          </div>
-        ))}
-        {visits.length === 0 && (
-          <div className="col-span-full py-12 text-center text-slate-400 italic">No site visits scheduled.</div>
-        )}
+          )}
+        </div>
       </div>
 
       {showQrModal && (
-        <div className="modal-overlay" onClick={() => setShowQrModal(false)}>
-           <div className="modal-content" style={{maxWidth: 400}} onClick={e => e.stopPropagation()}>
-              <div className="modal-header">
-                 <h3>Scan Visitor QR</h3>
-                 <button className="modal-close" onClick={() => setShowQrModal(false)}>&times;</button>
-              </div>
-              <form onSubmit={handleQrCheckIn} style={{marginTop: 20}}>
-                 <p className="text-sm text-slate-500 mb-4">Input the verification token from the client's portal or scan it with your handheld device.</p>
-                 <div className="form-group">
-                    <label className="form-label">Verification Token</label>
-                    <input autoFocus className="form-input" value={qrToken} onChange={e => setQrToken(e.target.value)} placeholder="000-XXX-000" />
-                 </div>
-                 <button type="submit" className="btn btn-primary w-full mt-4">Confirm Entry</button>
-              </form>
-           </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+             <div className="px-8 py-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+               <div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Authorized Entry</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">Physical Verification Protocol</p>
+               </div>
+               <button className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400" onClick={() => setShowQrModal(false)}>
+                  <X size={20} />
+               </button>
+            </div>
+            
+            <form onSubmit={handleQrCheckIn} className="p-8 space-y-6">
+               <p className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter leading-relaxed">Input the digital verification hash from the client's asset portal to initialize the structural visit.</p>
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Protocol Hash</label>
+                  <div className="relative">
+                     <QrCode size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+                     <input autoFocus className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-primary/10 transition-all font-mono placeholder:text-slate-200" value={qrToken} onChange={e => setQrToken(e.target.value)} placeholder="000-XXX-000" />
+                  </div>
+               </div>
+               <button type="submit" className="w-full btn btn-primary py-4 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
+                  AUTHORIZE PHYSICAL ENTRY
+               </button>
+            </form>
+          </div>
         </div>
       )}
 
       {showCheckout && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{maxWidth: 440}}>
-            <div className="modal-header">
-              <h3>Visit Feedback</h3>
-              {/* No close button allowed per requirement 6C - forced feedback */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-8 py-6 border-b border-slate-50 bg-slate-900">
+               <h3 className="text-sm font-black text-white uppercase tracking-widest">Post-Visit Intelligence</h3>
+               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter mt-0.5 italic">Structural feedback required for conclusion</p>
             </div>
-            <p className="text-xs text-slate-400 mb-6 font-semibold uppercase tracking-wider">Required to complete checkout</p>
-            <form onSubmit={handleCheckOutSubmit}>
-              <div className="form-group">
-                <label className="form-label">Outcome *</label>
+            
+            <form onSubmit={handleCheckOutSubmit} className="p-8 space-y-8">
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                   <TrendingUp size={12} /> Acquisition Trajectory *
+                </label>
                 <div className="grid grid-cols-2 gap-2">
                    {['INTERESTED', 'BOOKED', 'NEED_MORE_TIME', 'NOT_INTERESTED', 'NO_SHOW'].map(opt => (
-                     <label key={opt} className={`flex items-center gap-2 p-3 border rounded-xl cursor-pointer transition-all ${feedback.outcome === opt ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300'}`}>
+                     <label key={opt} className={`flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-all ${
+                        feedback.outcome === opt 
+                        ? 'border-primary bg-primary/5 text-primary' 
+                        : 'border-slate-100 hover:border-slate-200 text-slate-400 hover:text-slate-600'
+                     }`}>
                        <input type="radio" value={opt} checked={feedback.outcome === opt} onChange={e => setFeedback({...feedback, outcome: e.target.value})} className="hidden" />
-                       <span className="text-xs font-bold">{opt.replace(/_/g, ' ')}</span>
+                       <span className="text-[9px] font-black uppercase tracking-widest text-center leading-none">{opt.replace(/_/g, ' ')}</span>
                      </label>
                    ))}
                 </div>
               </div>
-              <div className="form-group">
-                <label className="form-label">Notes *</label>
-                <textarea className="form-textarea" required rows={3} value={feedback.notes} onChange={e => setFeedback({...feedback, notes: e.target.value})} placeholder="What did the client say?" />
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                   <MessageSquare size={12} /> Strategic Observations *
+                </label>
+                <textarea className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/10 transition-all font-sans placeholder:text-slate-200" required rows={3} value={feedback.notes} onChange={e => setFeedback({...feedback, notes: e.target.value})} placeholder="Input key verbal signals and resistance markers..." />
               </div>
-              <div className="form-group">
-                <label className="form-label">Follow-up Date (Optional)</label>
-                <input type="date" className="form-input" value={feedback.followUpDate} onChange={e => setFeedback({...feedback, followUpDate: e.target.value})} />
+
+              <div className="grid grid-cols-2 gap-6">
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                       <History size={12} /> Follow-Up Offset
+                    </label>
+                    <input type="date" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black focus:ring-2 focus:ring-primary/10 transition-all uppercase" value={feedback.followUpDate} onChange={e => setFeedback({...feedback, followUpDate: e.target.value})} />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                       <Star size={12} /> Lead Potency ({feedback.rating}/5)
+                    </label>
+                    <div className="flex items-center gap-4 h-[46px]">
+                       <input type="range" min="1" max="5" className="flex-1 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary" value={feedback.rating} onChange={e => setFeedback({...feedback, rating: parseInt(e.target.value)})} />
+                       <span className="text-sm font-black text-slate-900 font-mono">{feedback.rating}.0</span>
+                    </div>
+                 </div>
               </div>
-              <div className="form-group">
-                <label className="form-label">Lead Rating ({feedback.rating}/5)</label>
-                <input type="range" min="1" max="5" className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer" value={feedback.rating} onChange={e => setFeedback({...feedback, rating: parseInt(e.target.value)})} />
-              </div>
-              <div style={{marginTop: 24}}>
-                <button type="submit" className="btn btn-primary w-full py-3 shadow-lg shadow-blue-500/20" disabled={!feedback.notes}>Submit Feedback & Checkout</button>
+
+              <div className="pt-4 border-t border-slate-50">
+                <button type="submit" className="w-full btn btn-primary py-4 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all" disabled={!feedback.notes}>
+                   FINALIZE VISIT INTELLIGENCE
+                </button>
+                <p className="text-[8px] text-slate-300 font-bold text-center mt-4 uppercase tracking-tighter">DATA WILL BE SYNCHRONIZED WITH LEAD TIMELINE IMMEDIATELY</p>
               </div>
             </form>
           </div>

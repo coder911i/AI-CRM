@@ -1,16 +1,21 @@
-/* eslint-disable */
-'use client';
-import { useEffect, useState } from 'react';
-import CRMLayout from '@/components/CRMLayout';
-import { api } from '@/lib/api-client';
-import { useAuth } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell, PieChart, Pie, Legend } from 'recharts';
-
-const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+import { 
+  Users, 
+  Trophy, 
+  BarChart3, 
+  IndianRupee, 
+  Zap, 
+  Sparkles, 
+  Activity, 
+  Download, 
+  Calendar, 
+  Target, 
+  TrendingUp, 
+  PieChart as PieIcon,
+  ChevronRight,
+  Filter,
+  ShieldCheck,
+  Briefcase
+} from 'lucide-react';
 
 export default function AnalyticsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -37,7 +42,7 @@ export default function AnalyticsPage() {
     } catch (e) {
       console.error('PDF Export failed', e);
     } finally {
-      if (btn) btn.innerText = 'Export PDF';
+      if (btn) btn.innerText = 'EXPORT PDF';
     }
   };
 
@@ -49,8 +54,11 @@ export default function AnalyticsPage() {
   }, [user, authLoading]);
 
   if (authLoading || loading) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[#020617]">
-      <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-500/20 rounded-full animate-spin"></div>
+    <div className="fixed inset-0 flex items-center justify-center bg-slate-900 z-[9999]">
+      <div className="flex flex-col items-center gap-6">
+        <div className="w-16 h-16 border-2 border-slate-700 border-t-primary rounded-full animate-spin shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]"></div>
+        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] animate-pulse">Syncing Intelligence...</span>
+      </div>
     </div>
   );
 
@@ -60,201 +68,265 @@ export default function AnalyticsPage() {
 
   return (
     <CRMLayout>
-      <div id="analytics-report" className="p-1 sm:p-4 md:p-6 lg:p-8 space-y-8 bg-white font-sans min-h-screen">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
-          <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight italic">Analytics Studio</h1>
-            <p className="text-slate-500">{user?.tenant?.name || 'Skyline Developers'} Performance Review</p>
-          </motion.div>
-          <div className="flex items-center gap-3">
-            <select className="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold">
-              <option value="30">Last 30 Days</option>
-              <option value="90">Last 90 Days</option>
-            </select>
-            <motion.button 
-              id="export-pdf-btn"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={exportPDF}
-              className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold shadow-xl hover:bg-slate-800 transition-all border-b-4 border-slate-950 active:border-b-0 uppercase tracking-widest text-xs"
-            >
-              Export PDF
-            </motion.button>
+      <div id="analytics-report" className="min-h-screen bg-white">
+        <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-8 py-6">
+          <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                 <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                 <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">Strategic Briefing</h1>
+              </div>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{user?.tenant?.name || 'Authorized'} Portfolio Performance Audit</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="relative group">
+                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-primary transition-colors" size={14} />
+                <select className="bg-slate-50 border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-xl pl-10 pr-6 py-3 outline-none focus:ring-4 focus:ring-primary/5 transition-all appearance-none cursor-pointer">
+                  <option value="30">Cycle: Last 30 Days</option>
+                  <option value="90">Cycle: Last 90 Days</option>
+                </select>
+              </div>
+              <button 
+                id="export-pdf-btn"
+                onClick={exportPDF}
+                className="bg-slate-900 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:bg-primary transition-all flex items-center gap-2 border border-slate-900"
+              >
+                Export Dossier <Download size={14} />
+              </button>
+            </div>
           </div>
         </div>
 
-      {/* Section 1: Overview Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
-        {[
-          { label: 'Total Leads', val: stats.totalLeads, icon: '👥', color: '#6366f1' },
-          { label: 'Conversions', val: stats.converted, icon: '🏆', color: '#10b981' },
-          { label: 'Conv. Rate', val: `${stats.conversionRate}%`, icon: '📈', color: '#f59e0b' },
-          { label: 'Actual Revenue', val: `₹${(stats.totalRevenue / 10000000).toFixed(2)}Cr`, icon: '💰', color: '#ef4444' },
-          { label: 'AI Forecasted', val: `₹${(stats.forecastedRevenue / 10000000).toFixed(2)}Cr`, icon: '🤖', color: '#6366f1', sub: 'Next 30 Days' },
-        ].map(s => (
-          <div key={s.label} className="card shadow-sm" style={{ padding: 20 }}>
-            <div style={{ fontSize: 24, marginBottom: 12 }}>{s.icon}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>{s.label}</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: s.color, marginTop: 4 }}>{s.val}</div>
-            {s.sub && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>{s.sub}</div>}
-          </div>
-        ))}
-      </div>
-
-      {data?.forecast && (
-        <div className="card shadow-lg" style={{ marginBottom: 24, borderLeft: '4px solid #6366f1', background: 'linear-gradient(to right, #f8fafc, #ffffff)' }}>
-           <div style={{ display: 'flex', justifyContent: 'space-between', padding: 20 }}>
-              <div>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1e293b' }}>✨ AI Revenue Forecast</h3>
-                <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Projected performance based on {data.forecast.hotLeadsCount} HOT leads in pipeline</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                 <span className={`badge ${data.forecast.confidence === 'HIGH' ? 'badge-success' : 'badge-warning'}`} style={{ padding: '6px 12px' }}>
-                    {data.forecast.confidence} CONFIDENCE
-                 </span>
-              </div>
-           </div>
-           <div style={{ padding: '0 20px 24px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
-              <div style={{ background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0' }}>
-                 <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Projected Revenue</div>
-                 <div style={{ fontSize: 24, fontWeight: 800, color: '#6366f1' }}>₹{(data.forecast.projectedRevenue / 10000000).toFixed(2)} Cr</div>
-              </div>
-              <div style={{ background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0' }}>
-                 <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Expected Conv. Rate</div>
-                 <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>{data.forecast.expectedConversionRate}%</div>
-              </div>
-              <div style={{ background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0' }}>
-                 <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Key Predictor</div>
-                 <div style={{ fontSize: 24, fontWeight: 800, color: '#f59e0b' }}>Pipeline Velocity</div>
-              </div>
-           </div>
-        </div>
-      )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 24, marginBottom: 24 }}>
-        {/* Section 2: Revenue Timeline */}
-        <div className="card shadow-sm">
-          <div className="card-header">Revenue Collection Timeline</div>
-          <div style={{ height: 300, padding: '20px 10px 0' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data?.revenueTimeline || []}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="date" fontSize={11} />
-                <YAxis fontSize={11} tickFormatter={v => `₹${v / 100000}L`} />
-                <Tooltip />
-                <Line type="monotone" dataKey="amount" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, fill: '#6366f1' }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Section 4: Stage Funnel */}
-        <div className="card shadow-sm">
-          <div className="card-header">Conversion Funnel</div>
-          <div style={{ height: 300, padding: '20px 10px 0' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data?.funnel || []} layout="vertical">
-                <XAxis type="number" hide />
-                <YAxis dataKey="stage" type="category" width={120} fontSize={11} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={24} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Section: Activity Heatmap */}
-      <div className="card shadow-sm" style={{ marginBottom: 24 }}>
-        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>Interaction Density Heatmap</span>
-          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Real-time user event stream</span>
-        </div>
-        <div style={{ padding: '20px', overflowX: 'auto' }}>
-           <div style={{ display: 'flex', gap: 3 }}>
-              {Array.from({ length: 52 }).map((_, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  {Array.from({ length: 7 }).map((_, j) => {
-                    const opacity = Math.random() > 0.7 ? (Math.random() * 0.8 + 0.2) : 0.05;
-                    return (
-                      <div 
-                        key={j} 
-                        style={{ 
-                          width: 10, height: 10, borderRadius: 2, 
-                          background: opacity > 0.1 ? 'var(--primary)' : '#e2e8f0',
-                          opacity 
-                        }} 
-                        title={`Activity level: ${Math.round(opacity * 100)}%`}
-                      />
-                    );
-                  })}
+        <div className="max-w-[1400px] mx-auto p-8 space-y-12">
+          {/* Section 1: Overview Registry */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {[
+              { label: 'Asset Entrants', val: stats.totalLeads, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+              { label: 'Realized Conversions', val: stats.converted, icon: Trophy, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { label: 'Efficiency Quotient', val: `${stats.conversionRate}%`, icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-50' },
+              { label: 'Actualized Revenue', val: `₹${(stats.totalRevenue / 10000000).toFixed(2)}Cr`, icon: IndianRupee, color: 'text-slate-900', bg: 'bg-slate-100', mono: true },
+              { label: 'AI Forecasting', val: `₹${(stats.forecastedRevenue / 10000000).toFixed(2)}Cr`, icon: Zap, color: 'text-primary', bg: 'bg-primary/5', sub: 'Next 30 Cycles', mono: true },
+            ].map((s, i) => (
+              <div key={i} className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
+                <div className={`absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform ${s.color}`}>
+                   <s.icon size={64} />
                 </div>
-              ))}
-           </div>
-           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>
-              <span>Less</span>
-              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                 {[0.1, 0.3, 0.6, 0.9].map(o => <div key={o} style={{ width: 8, height: 8, borderRadius: 1, background: 'var(--primary)', opacity: o }} />)}
-                 <span style={{ marginLeft: 4 }}>More</span>
+                <div className="relative z-10 space-y-4">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                     <s.icon size={12} className={s.color} /> {s.label}
+                  </label>
+                  <h3 className={`text-2xl font-black text-slate-900 tracking-tighter uppercase ${s.mono ? 'font-mono' : ''}`}>{s.val}</h3>
+                  {s.sub && <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight italic leading-none">{s.sub}</p>}
+                </div>
               </div>
-           </div>
-        </div>
-      </div>
+            ))}
+          </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
-        {/* Section 8: Lead Source ROI */}
-        <div className="card shadow-sm">
-          <div className="card-header">Lead Source ROI Report</div>
-          <div style={{ padding: 20 }}>
-            <table className="data-table">
-              <thead>
-                <tr><th>Source</th><th>Leads</th><th>Conv. %</th><th>Revenue</th></tr>
-              </thead>
-              <tbody>
-                {(data?.sourceROI || []).map((s: any) => (
-                  <tr key={s.source}>
-                    <td style={{ fontWeight: 600 }}>{s.source}</td>
-                    <td>{s.totalLeads}</td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ flex: 1, height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden' }}>
-                          <div style={{ width: `${s.conversionRate}%`, height: '100%', background: '#10b981' }} />
-                        </div>
-                        <span style={{ fontSize: 12, fontWeight: 700 }}>{s.conversionRate}%</span>
-                      </div>
-                    </td>
-                    <td style={{ fontWeight: 700 }}>₹{(s.totalRevenue / 100000).toFixed(1)}L</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {data?.forecast && (
+            <div className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden relative group">
+               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent pointer-events-none" />
+               <div className="relative z-10 flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-slate-800">
+                  <div className="p-12 lg:w-1/3 space-y-4">
+                    <div className="flex items-center gap-3">
+                       <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20">
+                          <Sparkles className="text-primary" size={24} />
+                       </div>
+                       <div>
+                          <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">AI PROJECTION</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                             <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest italic">{data.forecast.confidence} Confidence Level</span>
+                          </div>
+                       </div>
+                    </div>
+                    <p className="text-[11px] text-slate-400 font-medium italic uppercase tracking-tighter leading-relaxed">System discovery indicates {data.forecast.hotLeadsCount} high-probability assets currently traversing the secondary funnel stages.</p>
+                  </div>
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-3 divide-x divide-slate-800">
+                     {[
+                       { label: 'PROJECTED REVENUE', val: `₹${(data.forecast.projectedRevenue / 10000000).toFixed(2)} Cr`, icon: IndianRupee },
+                       { label: 'ESTIMATED VELOCITY', val: `${data.forecast.expectedConversionRate}%`, icon: TrendingUp },
+                       { label: 'PIPELINE INTEGRITY', val: 'NOMINAL', icon: ShieldCheck },
+                     ].map((item, i) => (
+                       <div key={i} className="p-12 space-y-3">
+                          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                             <item.icon size={12} className="text-primary" /> {item.label}
+                          </span>
+                          <div className="text-2xl font-black text-white font-mono tracking-tighter uppercase">{item.val}</div>
+                       </div>
+                     ))}
+                  </div>
+               </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-200/60 shadow-lg overflow-hidden group">
+              <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
+                 <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                    <Activity size={14} className="text-slate-400" />
+                    Revenue Collection Timeline
+                 </h3>
+                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">Authorized Real-Time Feed</span>
+              </div>
+              <div className="p-10 h-[380px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data?.revenueTimeline || []}>
+                    <defs>
+                      <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="date" fontSize={9} fontVariant="all-small-caps" fontWeight={900} axisLine={false} tickLine={false} dy={10} />
+                    <YAxis fontSize={9} fontWeight={900} axisLine={false} tickLine={false} tickFormatter={v => `₹${v / 100000}L`} />
+                    <Tooltip 
+                       contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', background: '#0f172a', color: '#fff' }}
+                       itemStyle={{ fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}
+                    />
+                    <Line type="monotone" dataKey="amount" stroke="var(--primary)" strokeWidth={4} dot={{ r: 4, fill: 'white', stroke: 'var(--primary)', strokeWidth: 2 }} activeDot={{ r: 8, shadow: '0 0 20px rgba(var(--primary-rgb),0.4)' }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-lg overflow-hidden group">
+              <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
+                 <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                    <Target size={14} className="text-slate-400" />
+                    Conversion Funnel
+                 </h3>
+              </div>
+              <div className="p-10 h-[380px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data?.funnel || []} layout="vertical" margin={{ left: 20 }}>
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="stage" type="category" width={100} fontSize={9} fontWeight={900} textTransform="uppercase" axisLine={false} tickLine={false} />
+                    <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', fontSize: '10px', fontWeight: '900' }} />
+                    <Bar dataKey="count" fill="var(--primary)" radius={[0, 10, 10, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-lg overflow-hidden">
+            <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
+              <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <Activity size={14} className="text-slate-400" /> Interaction Density Heatmap
+              </h3>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">Global Activity Synchronization</span>
+            </div>
+            <div className="p-12 overflow-x-auto no-scrollbar">
+               <div className="flex gap-2.5">
+                  {Array.from({ length: 52 }).map((_, i) => (
+                    <div key={i} className="flex flex-col gap-2.5">
+                      {Array.from({ length: 7 }).map((_, j) => {
+                        const opacity = Math.random() > 0.7 ? (Math.random() * 0.8 + 0.2) : 0.05;
+                        return (
+                          <div 
+                            key={j} 
+                            className="w-3.5 h-3.5 rounded-[4px] transition-all hover:scale-125 cursor-pointer"
+                            style={{ 
+                              background: opacity > 0.1 ? 'var(--primary)' : '#f1f5f9',
+                              opacity 
+                            }} 
+                           />
+                        );
+                      })}
+                    </div>
+                  ))}
+               </div>
+               <div className="flex justify-between mt-8 items-center border-t border-slate-50 pt-6">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic leading-none">Inert State</span>
+                  <div className="flex gap-3 items-center">
+                     {[0.1, 0.3, 0.6, 0.9].map(o => <div key={o} className="w-2.5 h-2.5 rounded-[3px] bg-primary" style={{ opacity: o }} />)}
+                     <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 italic leading-none">Maximum Intensity</span>
+                  </div>
+               </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-lg overflow-hidden flex flex-col">
+              <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
+                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <Briefcase size={14} className="text-slate-400" /> Lead Source ROI Briefing
+                </h3>
+              </div>
+              <div className="p-8 flex-1">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/50">
+                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Protocol Source</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Throughput</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Efficiency</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {(data?.sourceROI || []).map((s: any) => (
+                      <tr key={s.source} className="hover:bg-slate-50/30 transition-all">
+                        <td className="px-6 py-4 text-[10px] font-black text-slate-900 uppercase">{s.source}</td>
+                        <td className="px-6 py-4 text-xs font-black text-slate-900 font-mono text-right">{s.totalLeads}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
+                               <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${s.conversionRate}%` }} />
+                            </div>
+                            <span className="text-[10px] font-black text-emerald-600 font-mono">{s.conversionRate}%</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-xs font-black text-slate-900 font-mono text-right italic">₹{(s.totalRevenue / 100000).toFixed(1)}L</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-lg overflow-hidden flex flex-col">
+              <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
+                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <UserCheck size={14} className="text-slate-400" /> Operational Efficiency (Top Agents)
+                </h3>
+              </div>
+              <div className="p-8 flex-1">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/50">
+                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Logistician</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Inbound</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Visits</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Success</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Coefficient</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {(data?.agentPerformance || []).map((a: any) => (
+                      <tr key={a.id} className="hover:bg-slate-50/30 transition-all">
+                        <td className="px-6 py-4 flex items-center gap-3">
+                           <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center text-[9px] font-black text-white">{a.name.charAt(0)}</div>
+                           <span className="text-[10px] font-black text-slate-900 uppercase">{a.name}</span>
+                        </td>
+                        <td className="px-6 py-4 text-[10px] font-bold text-slate-900 font-mono text-center">{a.assignedLeads}</td>
+                        <td className="px-6 py-4 text-[10px] font-bold text-slate-900 font-mono text-center">{a.siteVisits}</td>
+                        <td className="px-6 py-4 text-[10px] font-bold text-slate-900 font-mono text-center italic">{a.bookings}</td>
+                        <td className="px-6 py-4 text-right">
+                           <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20">{a.conversionRate}%</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Section 3: Agent Performance */}
-        <div className="card shadow-sm">
-          <div className="card-header">Top Performing Agents</div>
-          <div style={{ padding: 20 }}>
-            <table className="data-table">
-              <thead>
-                <tr><th>Agent</th><th>Leads</th><th>Visits</th><th>Books</th><th>%</th></tr>
-              </thead>
-              <tbody>
-                {(data?.agentPerformance || []).map((a: any) => (
-                  <tr key={a.id}>
-                    <td style={{ fontWeight: 600 }}>{a.name}</td>
-                    <td>{a.assignedLeads}</td>
-                    <td>{a.siteVisits}</td>
-                    <td>{a.bookings}</td>
-                    <td><span className="badge badge-success">{a.conversionRate}%</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        </div>
       </div>
+    </CRMLayout>
+  );
+}iv>
     </CRMLayout>
   );
 }
