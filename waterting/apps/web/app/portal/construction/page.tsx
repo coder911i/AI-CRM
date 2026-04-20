@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api-client';
+import { Construction, BrickWall, HardHat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function PortalConstructionPage() {
@@ -36,12 +37,14 @@ export default function PortalConstructionPage() {
 
           <div style={{display: 'flex', flexDirection: 'column', gap: 20}}>
             {[
-              { title: 'Foundation Completed', date: 'Jan 15, 2026', img: '🏗️' },
-              { title: 'First Floor Slab Cast', date: 'Feb 20, 2026', img: '🏗️' },
-              { title: 'Brickwork in Progress', date: 'Current Task', img: '🧱' },
+              { title: 'Foundation Completed', date: 'Jan 15, 2026', icon: <HardHat size={24} className="text-primary" /> },
+              { title: 'First Floor Slab Cast', date: 'Feb 20, 2026', icon: <Construction size={24} className="text-primary" /> },
+              { title: 'Brickwork in Progress', date: 'Current Task', icon: <BrickWall size={24} className="text-primary" /> },
             ].reverse().map((update, i) => (
-              <div key={i} className="card shadow-sm" style={{display: 'flex', gap: 20, padding: 20}}>
-                 <div style={{width: 60, height: 60, background: '#f8fafc', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24}}>{update.img}</div>
+              <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex gap-6 items-center">
+                 <div className="w-14 h-14 bg-slate-50 flex items-center justify-center rounded-xl shrink-0">
+                    {update.icon}
+                 </div>
                  <div>
                     <div style={{fontWeight: 700}}>{update.title}</div>
                     <div style={{fontSize: 12, color: 'var(--text-muted)', marginTop: 4}}>{update.date}</div>

@@ -1,3 +1,9 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth';
+import { useSocket } from '@/lib/socket';
+import { api } from '@/lib/api-client';
 import { Bell, CheckCircle2, AlertTriangle, Info, Clock } from 'lucide-react';
 
 export default function NotificationBell() {

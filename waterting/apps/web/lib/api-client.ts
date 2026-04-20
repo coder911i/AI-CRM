@@ -11,10 +11,15 @@ export const getToken = () => {
   return localStorage.getItem('waterting_token') || localStorage.getItem('waterting_portal_token');
 };
 
-export const setToken = (t: string) => localStorage.setItem('waterting_token', t);
+export const setToken = (t: string) => {
+  if (typeof window !== 'undefined') localStorage.setItem('waterting_token', t);
+};
+
 export const clearToken = () => {
-  localStorage.removeItem('waterting_token');
-  localStorage.removeItem('waterting_user');
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('waterting_token');
+    localStorage.removeItem('waterting_user');
+  }
 };
 
 async function request<T>(method: string, path: string, body?: unknown, auth = true): Promise<T> {
@@ -22,7 +27,10 @@ async function request<T>(method: string, path: string, body?: unknown, auth = t
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (auth) {
     const token = getToken();
-    if (!token) { window.location.href = '/login'; throw new Error('No token'); }
+    if (!token) { 
+      if (typeof window !== 'undefined') window.location.href = '/login'; 
+      throw new Error('No token'); 
+    }
     headers['Authorization'] = `Bearer ${token}`;
   }
   const res = await fetch(url, {
