@@ -14,4 +14,9 @@ export class ChatbotController {
   handleMessage(@Request() req: any, @Body('message') message: string) {
     return this.chatbotService.handleMessage(req.user.email, req.user.sub, message);
   }
+
+  @Post('buyer-chat')
+  handleBuyerChat(@Request() req: any, @Body('preferences') preferences: any) {
+    return this.chatbotService.handleBuyerChat(req.user.sub, req.user.tenantId, preferences);
+  }
 }

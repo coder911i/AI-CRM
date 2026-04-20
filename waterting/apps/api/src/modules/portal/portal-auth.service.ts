@@ -1,12 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import { EmailService } from '../../common/email/email.service';
 
 @Injectable()
 export class PortalAuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private emailService: EmailService,
   ) {}
 
   async requestOTP(email: string) {
@@ -28,8 +30,8 @@ export class PortalAuthService {
       data: { email, code, expires },
     });
 
-    // 3. Send email via SMTP (Mocked)
-    console.log(`[SMTP MOCK] OTP for ${email}: ${code}`);
+    // 3. Send email via SMTP
+    await this.emailService.sendOtp(email, code);
     
     return { message: 'OTP sent successfully' };
   }

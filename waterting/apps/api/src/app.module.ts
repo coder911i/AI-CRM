@@ -8,6 +8,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
 import { RedisModule } from './common/redis/redis.module';
 import { AuditModule } from './common/audit/audit.module';
 import { AIModule } from './common/ai/ai.module';
+import { EmailModule } from './common/email/email.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -37,6 +38,11 @@ import { GatewaysModule } from './gateways/gateways.module';
 import { RefundsModule } from './modules/refunds/refunds.module';
 import { BuilderModule } from './modules/builder/builder.module';
 import { CommunicationModule } from './common/comm/communication.module';
+import { AllocationModule } from './modules/allocation/allocation.module';
+import { OwnerPortalModule } from './modules/owner-portal/owner-portal.module';
+import { BrokerPortalModule } from './modules/broker-portal/broker-portal.module';
+import { AgentPanelModule } from './modules/agent-panel/agent-panel.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { BullModule } from '@nestjs/bull';
@@ -66,6 +72,7 @@ import { NestModule, MiddlewareConsumer } from '@nestjs/common';
     RedisModule,
     AuditModule,
     AIModule,
+    EmailModule,
     GatewaysModule,
     AuthModule,
     TenantsModule,
@@ -93,6 +100,11 @@ import { NestModule, MiddlewareConsumer } from '@nestjs/common';
     RefundsModule,
     BuilderModule,
     CommunicationModule,
+    AllocationModule,
+    OwnerPortalModule,
+    BrokerPortalModule,
+    AgentPanelModule,
+    AdminModule,
     WorkersModule,
     ThrottlerModule.forRoot([
       { name: 'default', ttl: 60000, limit: 60 },

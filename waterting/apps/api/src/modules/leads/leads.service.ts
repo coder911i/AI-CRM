@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload, LeadSource, ActivityType, UserRole } from '@waterting/shared';
@@ -55,7 +55,6 @@ export class LeadsService {
     
     if (matches.length > 0 && matches[0].distance < 0.1) {
        // Flag as potential duplicate
-       console.log(`Potential AI Duplicate found for ${data.name}: LeadID ${matches[0].leadId}`);
        // We can still create it but mark it for merge or just return existing
        if (matches[0].leadId) {
          return this.prisma.lead.findUnique({ where: { id: matches[0].leadId } });
@@ -115,14 +114,41 @@ export class LeadsService {
       const broker = await this.prisma.broker.findUnique({ where: { referralCode } });
       if (broker && broker.tenantId === tenantId) return broker.id;
     }
-    // Logic for round-robin broker assignment if necessary
-    return null;
+    
+    // Weighted Round-robin: Pick broker with least active leads
+    const brokers = await this.prisma.broker.findMany({
+      where: { tenantId, isActive: true },
+      include: {
+        _count: {
+          select: { leads: { where: { stage: { notIn: ['BOOKING_DONE', 'LOST'] } } } }
+        }
+      }
+    });
+
+    if (brokers.length === 0) return null;
+    return brokers.sort((a, b) => a._count.leads - b._count.leads)[0].id;
+  }
+
+  private async autoAssignAgent(tenantId: string): Promise<string | null> {
+    // Round-robin among SALES_AGENTs
+    const agents = await this.prisma.user.findMany({
+      where: { tenantId, role: UserRole.SALES_AGENT, isActive: true },
+      include: {
+        _count: {
+          select: { assignedLeads: { where: { stage: { notIn: ['BOOKING_DONE', 'LOST'] } } } }
+        }
+      }
+    });
+
+    if (agents.length === 0) return null;
+    return agents.sort((a, b) => a._count.assignedLeads - b._count.assignedLeads)[0].id;
   }
 
   private normalizePhone(phone: string) {
     return phone.replace(/\D/g, '');
   }
 
+  async create(user: JwtPayload, dto: any) {
     try {
       // 1. Check for duplicates
       const phone = this.normalizePhone(String(dto.phone || ''));
@@ -169,6 +195,7 @@ export class LeadsService {
       throw e;
     }
   }
+
 
   async findAll(user: JwtPayload, page = 1, limit = 50) {
     return this.prisma.lead.findMany({
@@ -306,21 +333,28 @@ export class LeadsService {
   async updateStage(user: JwtPayload, id: string, stage: string) {
     const lead = await this.prisma.lead.findUnique({ where: { id } });
     if (!lead) throw new NotFoundException('Lead not found');
-    await this.prisma.lead.update({
-      where: { id },
-      data: { stage: stage as any },
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const res = await tx.lead.update({
+        where: { id },
+        data: { stage: stage as any },
+      });
+
+      await tx.activity.create({
+        data: {
+          leadId: id,
+          userId: user.sub,
+          type: ActivityType.STAGE_CHANGE,
+          title: `Stage changed to ${stage}`,
+        },
+      });
+
+      return res;
     });
-    await this.prisma.activity.create({
-      data: {
-        leadId: id,
-        userId: user.sub,
-        type: ActivityType.STAGE_CHANGE,
-        title: `Stage changed to ${stage}`,
-      },
-    });
+
     this.gateway.emitToTenant(user.tenantId, 'lead:updated', { leadId: id, stage });
-    await this.handleStageTrigger(user, lead, stage);
-    return lead;
+    await this.handleStageTrigger(user, updated, stage);
+    return updated;
   }
 
   private async handleStageTrigger(user: JwtPayload, lead: any, stage: string) {

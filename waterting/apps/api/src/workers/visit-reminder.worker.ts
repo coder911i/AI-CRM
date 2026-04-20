@@ -54,4 +54,29 @@ export class VisitReminderWorker {
       });
     }
   }
+
+  @Cron('0 9 * * *') // Daily 9 AM
+  async sendCoordinatedReminders() {
+    // Check confirmed VisitSlots via Allocation Engine
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const start = new Date(tomorrow.setHours(0, 0, 0, 0));
+    const end = new Date(tomorrow.setHours(23, 59, 59, 999));
+
+    const slots = await this.prisma.visitSlot.findMany({
+      where: { proposedAt: { gte: start, lte: end }, isConfirmed: true },
+      include: { allocation: { include: { lead: true, broker: { select: { phone: true, name: true } } } } }
+    });
+
+    for (const slot of slots) {
+      const lead = slot.allocation.lead;
+      if (!lead.email || lead.emailOptOut) continue;
+      
+      await this.emailQueue.add('send', {
+        to: lead.email,
+        subject: 'Reminder: Coordinated Site Visit tomorrow',
+        html: `Hi ${lead.name}, your visit is confirmed for tomorrow at ${slot.proposedAt.toLocaleTimeString()}. ${slot.allocation.broker ? `Your broker ${slot.allocation.broker.name} will be there to assist you.` : ''}`
+      });
+    }
+  }
 }

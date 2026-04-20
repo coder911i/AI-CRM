@@ -5,41 +5,18 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class PortalService {
-  private otpStore = new Map<string, { otp: string; expiresAt: number }>();
-
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
   ) {}
 
-  async requestOtp(email: string) {
-    // Find booking by buyer email
-    const booking = await this.prisma.booking.findFirst({
-      where: { buyerEmail: email },
-    });
-    if (!booking) throw new NotFoundException('No booking found for this email');
-
-    const otp = crypto.randomInt(100000, 999999).toString();
-    this.otpStore.set(email, { otp, expiresAt: Date.now() + 10 * 60 * 1000 }); // 10 min
-
-    // In production, send via email service
-    // For now, return OTP in dev mode
-    return { message: 'OTP sent to your email', ...(process.env.NODE_ENV !== 'production' ? { otp } : {}) };
-  }
-
-  async verifyOtp(email: string, otp: string) {
-    const stored = this.otpStore.get(email);
-    if (!stored || stored.otp !== otp || stored.expiresAt < Date.now()) {
-      throw new UnauthorizedException('Invalid or expired OTP');
-    }
-
-    this.otpStore.delete(email);
-
-    const token = this.jwtService.sign({ email, type: 'portal' });
-    return { access_token: token };
-  }
-
   async getDashboard(email: string, leadId: string) {
+    // Resolve user by email since wishlist/tickets use User ID
+    const user = await this.prisma.user.findFirst({
+      where: { email },
+      select: { id: true }
+    });
+
     const [bookings, visits, wishlist] = await Promise.all([
       this.prisma.booking.findMany({
         where: { buyerEmail: email },
@@ -52,10 +29,10 @@ export class PortalService {
         where: { leadId },
         include: { agent: true, lead: { include: { project: true } } },
       }),
-      this.prisma.wishlist.findMany({
-        where: { userId: leadId }, // Wait, Wishlist uses userId. Our sub is leadId.
+      user ? this.prisma.wishlist.findMany({
+        where: { userId: user.id },
         include: { project: true, property: true },
-      }),
+      }) : [],
     ]);
 
     return { bookings, visits, wishlist };
@@ -63,41 +40,65 @@ export class PortalService {
 
   // Wishlist
   async getWishlist(leadId: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id: leadId } });
+    const user = lead?.email ? await this.prisma.user.findFirst({ where: { email: lead.email } }) : null;
+    if (!user) return [];
+
     return this.prisma.wishlist.findMany({
-      where: { userId: leadId },
+      where: { userId: user.id },
       include: { project: true, property: true },
     });
   }
 
   async addToWishlist(leadId: string, projectId?: string, propertyId?: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id: leadId } });
+    const user = lead?.email ? await this.prisma.user.findFirst({ where: { email: lead.email } }) : null;
+    if (!user) throw new NotFoundException('User profile not found for this lead');
+
     return this.prisma.wishlist.create({
-      data: { userId: leadId, projectId, propertyId },
+      data: { userId: user.id, projectId, propertyId },
     });
   }
 
   async removeFromWishlist(id: string, leadId: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id: leadId } });
+    const user = lead?.email ? await this.prisma.user.findFirst({ where: { email: lead.email } }) : null;
+    if (!user) throw new UnauthorizedException();
+
     return this.prisma.wishlist.delete({
-      where: { id, userId: leadId },
+      where: { id, userId: user.id },
     });
   }
 
   // Support Tickets
   async getTickets(leadId: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id: leadId } });
+    const user = lead?.email ? await this.prisma.user.findFirst({ where: { email: lead.email } }) : null;
+    if (!user) return [];
+
     return this.prisma.supportTicket.findMany({
-      where: { userId: leadId },
+      where: { userId: user.id },
       include: { messages: { orderBy: { createdAt: 'desc' } } },
     });
   }
 
   async createTicket(leadId: string, tenantId: string, subject: string, description: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id: leadId } });
+    const user = lead?.email ? await this.prisma.user.findFirst({ where: { email: lead.email } }) : null;
+    if (!user) throw new NotFoundException('User profile not found');
+
     return this.prisma.supportTicket.create({
-      data: { userId: leadId, tenantId, subject, description },
+      data: { userId: user.id, tenantId, subject, description },
     });
   }
 
   async addTicketMessage(ticketId: string, leadId: string, message: string) {
+    const lead = await this.prisma.lead.findUnique({ where: { id: leadId } });
+    const user = lead?.email ? await this.prisma.user.findFirst({ where: { email: lead.email } }) : null;
+    if (!user) throw new UnauthorizedException();
+
     return this.prisma.ticketMessage.create({
-      data: { ticketId, userId: leadId, message, isAdmin: false },
+      data: { ticketId, userId: user.id, message, isAdmin: false },
     });
   }
 

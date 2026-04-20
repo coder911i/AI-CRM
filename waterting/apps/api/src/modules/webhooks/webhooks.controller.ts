@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, Param, UseGuards, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param, Headers, UnauthorizedException } from '@nestjs/common';
 import { WebhooksService } from './webhooks.service';
 import { LeadsService } from '../leads/leads.service';
 import { Public } from '../../common/decorators/public.decorator';
@@ -41,7 +41,10 @@ export class WebhooksController {
 
   @Public()
   @Post('inbound/:tenantId')
-  async universalInbound(@Param('tenantId') tenantId: string, @Body() body: any) {
+  async universalInbound(@Param('tenantId') tenantId: string, @Body() body: any, @Headers('x-webhook-secret') secret: string) {
+    if (process.env.WEBHOOK_SECRET && secret !== process.env.WEBHOOK_SECRET) {
+      throw new UnauthorizedException('Invalid webhook secret');
+    }
     // Generic mapping approach
     const lead = {
       name: body.name || body.full_name || body.customer_name || 'Generic Lead',

@@ -31,7 +31,7 @@ export default function PortalLoginPage() {
       const res = await api.publicPost<{ access_token: string }>('/portal/auth/verify-otp', { email, otp });
       localStorage.setItem('waterting_portal_token', res.access_token);
       localStorage.setItem('waterting_portal_email', email);
-      router.push('/portal/dashboard');
+      router.push('/portal/chat');
     } catch (err: any) { setError(err.message); }
     finally { setLoading(false); }
   };

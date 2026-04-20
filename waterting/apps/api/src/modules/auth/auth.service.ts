@@ -7,9 +7,11 @@ import { RedisService } from '../../common/redis/redis.service';
 import { JwtPayload, UserRole } from '@waterting/shared';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -52,7 +54,7 @@ export class AuthService {
           },
         });
       } catch (auditError) {
-        console.error('Audit Log failed but proceeding with login:', auditError);
+        this.logger.error('Audit Log failed but proceeding with login:', auditError);
       }
 
       const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
@@ -75,7 +77,7 @@ export class AuthService {
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) throw error;
-      console.error('Login error:', error);
+      this.logger.error('Login error:', error);
       throw new BadRequestException('An unexpected error occurred during login. Please try again.');
     }
   }

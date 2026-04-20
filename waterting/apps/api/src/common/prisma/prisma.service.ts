@@ -17,7 +17,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
             'Project', 'Lead', 'Broker', 'Booking', 'Payment', 
             'SiteVisit', 'Unit', 'Tower', 'Floor', 'Listing', 
             'Notification', 'AuditLog', 'Commission', 'Automation',
-            'Embedding', 'Activity', 'Agency', 'Property', 'PropertyVisit'
+            'Embedding', 'Activity', 'Agency', 'Property', 'PropertyVisit',
+            'AllocationLog', 'SupportTicket', 'Ad'
           ];
 
           if (tenantId && modelsWithTenantId.includes(model)) {

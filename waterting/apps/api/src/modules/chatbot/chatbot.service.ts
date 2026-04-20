@@ -34,4 +34,35 @@ export class ChatbotService {
     const response = await this.ai.generateText(`${systemPrompt}\n\nUser: ${message}`);
     return { response };
   }
+
+  async handleBuyerChat(leadId: string, tenantId: string, preferences: any) {
+    // 1. Save preferences
+    await this.prisma.buyerPreference.upsert({
+      where: { leadId },
+      create: {
+        leadId,
+        budgetMin: parseFloat(preferences.budget?.match(/\d+/g)?.[0] || '0') * 100000, // naive parse lakhs
+        budgetMax: parseFloat(preferences.budget?.match(/\d+/g)?.[1] || '0') * 100000,
+        locationPref: preferences.location,
+        bhk: preferences.bhk,
+        purpose: preferences.purpose,
+        amenities: preferences.amenities?.split(',').map((s: string) => s.trim()),
+        possessionBy: preferences.timeline,
+      },
+      update: {
+        budgetMin: parseFloat(preferences.budget?.match(/\d+/g)?.[0] || '0') * 100000,
+        budgetMax: parseFloat(preferences.budget?.match(/\d+/g)?.[1] || '0') * 100000,
+        locationPref: preferences.location,
+        bhk: preferences.bhk,
+        purpose: preferences.purpose,
+        amenities: preferences.amenities?.split(',').map((s: string) => s.trim()),
+        possessionBy: preferences.timeline,
+      }
+    });
+
+    // 2. Match
+    const properties = await this.ai.matchProperties(preferences, tenantId);
+    
+    return { properties };
+  }
 }

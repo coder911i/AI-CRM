@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { EventsGateway } from '../gateways/events.gateway';
+import { AIService } from '../common/ai/ai.service';
 
 @Injectable()
 export class StaleLeadWorker {
@@ -9,7 +10,8 @@ export class StaleLeadWorker {
 
   constructor(
     private prisma: PrismaService,
-    private events: EventsGateway
+    private events: EventsGateway,
+    private ai: AIService,
   ) {}
 
   @Cron('0 9 * * *') // 9 AM Daily
@@ -30,13 +32,18 @@ export class StaleLeadWorker {
       const lastActivity = lead.lastActivityAt || lead.createdAt;
       const daysSince = Math.floor((Date.now() - lastActivity.getTime()) / 86400000);
       
+      // Generate re-engagement text via Groq
+      const reEngageText = await this.ai.generateText(
+        `Generate a soft, professional re-engagement WhatsApp message for a real estate lead named ${lead.name} who hasn't been active for ${daysSince} days. Just the message.`
+      );
+
       // Log activity
       await this.prisma.activity.create({
         data: {
           leadId: lead.id,
           type: 'AI_ACTION' as any,
-          title: 'Stale Lead Alert',
-          description: `No activity for ${daysSince} days. Flagged for immediate follow-up.`,
+          title: 'Stale Lead Recommendation',
+          description: `AI suggested follow-up: "${reEngageText}"`,
         },
       });
 
@@ -45,6 +52,7 @@ export class StaleLeadWorker {
         leadId: lead.id,
         name: lead.name,
         daysSince,
+        suggestion: reEngageText
       });
 
       this.logger.warn(`Stale Lead Alert: ${lead.name} (${daysSince} days)`);

@@ -6,7 +6,7 @@ export class AIService {
   private readonly logger = new Logger(AIService.name);
   private readonly groqBase = 'https://api.groq.com/openai/v1';
   private readonly groqKey = process.env.GROQ_API_KEY;
-  private readonly openaiKey = process.env.OPENAI_API_KEY;
+  private readonly mxbKey = process.env.MXB_API_KEY; // MixedBread.ai for embeddings
 
   constructor(private prisma: PrismaService) {}
 
@@ -98,35 +98,37 @@ export class AIService {
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
-    if (!this.openaiKey) {
-      this.logger.warn('OPENAI_API_KEY not set. Returning zero vector.');
-      return new Array(1536).fill(0);
+    if (!this.mxbKey) {
+      // Fallback handled in matchProperties via GroqSearch
+      return [];
     }
 
     try {
-      const res = await fetch('https://api.openai.com/v1/embeddings', {
+      const res = await fetch('https://api.mixedbread.ai/v1/embeddings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.openaiKey}`,
+          Authorization: `Bearer ${this.mxbKey}`,
         },
         body: JSON.stringify({
+          model: 'mxbai-embed-large-v1',
           input: text,
-          model: 'text-embedding-3-small',
+          normalized: true,
+          encoding_format: 'float',
         }),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        this.logger.error(`OpenAI embedding error: ${JSON.stringify(err)}`);
-        return new Array(1536).fill(0);
+        this.logger.error(`MixedBread embedding error: ${JSON.stringify(err)}`);
+        return [];
       }
 
       const data = await res.json();
       return data.data[0].embedding;
     } catch (err) {
-      this.logger.error('OpenAI embedding fetch failed', err);
-      return new Array(1536).fill(0);
+      this.logger.error('MixedBread embedding fetch failed', err);
+      return [];
     }
   }
 
@@ -166,5 +168,85 @@ export class AIService {
       this.logger.error(`pgvector query failed`, error);
       return [];
     }
+  }
+  async matchProperties(buyerPref: any, tenantId: string) {
+    // 1. Fetch active properties
+    const properties = await this.prisma.property.findMany({
+      where: { tenantId, status: 'AVAILABLE' },
+    });
+
+    if (properties.length === 0) return [];
+
+    // Mode A: Semantic Matching (if MixedBread/Embedding key present)
+    if (this.mxbKey) {
+      const prefText = `Seeking ${buyerPref.bhk} BHK in ${buyerPref.locationPref || 'area'}, budget around ${buyerPref.budgetMin}-${buyerPref.budgetMax}, purpose: ${buyerPref.purpose}. Amenities needed: ${buyerPref.amenities?.join(', ')}.`;
+      const queryVector = await this.generateEmbedding(prefText);
+
+      if (queryVector.length > 0) {
+        const matches = await Promise.all(properties.map(async (p) => {
+          let pVector: number[];
+          if (p.embedding) {
+            pVector = JSON.parse(p.embedding);
+          } else {
+            const pText = `${p.title}. ${p.type} at ${p.location}. Price: ${p.price}. Area: ${p.areaSqft} sqft. BHK: ${p.bhk}. Amenities: ${p.amenities.join(', ')}.`;
+            pVector = await this.generateEmbedding(pText);
+            if (pVector.length > 0) {
+              await this.prisma.property.update({ where: { id: p.id }, data: { embedding: JSON.stringify(pVector) } });
+            }
+          }
+
+          const score = pVector.length > 0 ? this.cosineSimilarity(queryVector, pVector) : 0;
+          return { 
+            ...p, 
+            matchScore: Math.round(score * 100),
+            matchReasons: this.getMatchReasons(buyerPref, p)
+          };
+        }));
+        return matches.sort((a, b) => b.matchScore - a.matchScore).slice(0, 5);
+      }
+    }
+
+    // Mode B: GroqSearch (Keyword Extraction + weighted intersection)
+    const prompt = `Convert these buyer preferences into 10 comma-separated searching keywords:
+    Budget: ${buyerPref.budgetMin}-${buyerPref.budgetMax}, Location: ${buyerPref.locationPref}, BHK: ${buyerPref.bhk}, Amenities: ${buyerPref.amenities}.
+    Return ONLY keywords.`;
+    
+    const keywordsRaw = await this.generateText(prompt);
+    const keywords = keywordsRaw.split(',').map(k => k.trim().toLowerCase());
+
+    const matches = properties.map(p => {
+      const pText = `${p.title} ${p.location} ${p.type} ${p.amenities.join(' ')}`.toLowerCase();
+      let matchCount = 0;
+      keywords.forEach(k => { if (pText.includes(k)) matchCount++; });
+      
+      const score = (matchCount / keywords.length);
+      return {
+        ...p,
+        matchScore: Math.round(score * 100),
+        matchReasons: this.getMatchReasons(buyerPref, p)
+      };
+    });
+
+    return matches.sort((a, b) => b.matchScore - a.matchScore).slice(0, 5);
+  }
+
+  private cosineSimilarity(vecA: number[], vecB: number[]): number {
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    for (let i = 0; i < vecA.length; i++) {
+        dotProduct += vecA[i] * vecB[i];
+        normA += vecA[i] * vecA[i];
+        normB += vecB[i] * vecB[i];
+    }
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
+
+  private getMatchReasons(pref: any, p: any): string[] {
+    const reasons = [];
+    if (pref.bhk && p.bhk && String(p.bhk).includes(String(pref.bhk).replace(/\D/g, ''))) reasons.push('Matching BHK configuration');
+    if (p.price >= pref.budgetMin && p.price <= pref.budgetMax) reasons.push('Fits within your budget');
+    if (pref.locationPref && p.location.toLowerCase().includes(pref.locationPref.toLowerCase())) reasons.push('Located in your preferred area');
+    return reasons;
   }
 }

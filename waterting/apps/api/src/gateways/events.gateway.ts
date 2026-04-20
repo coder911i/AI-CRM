@@ -15,7 +15,6 @@ export class EventsGateway implements OnGatewayConnection {
 
     if (tenantId) {
       client.join(`tenant:${tenantId}`);
-      console.log(`Socket ${client.id} auto-joined tenant:${tenantId}`);
     }
     if (userId) {
       client.join(`user:${userId}`);

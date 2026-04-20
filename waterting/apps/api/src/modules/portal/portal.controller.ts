@@ -1,5 +1,6 @@
 import { Controller, Post, Get, Body, UseGuards, Request, Param } from '@nestjs/common';
 import { PortalService } from './portal.service';
+import { PortalAuthService } from './portal-auth.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -8,18 +9,21 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 @ApiBearerAuth('JWT-auth')
 @Controller('portal')
 export class PortalController {
-  constructor(private readonly portalService: PortalService) {}
+  constructor(
+    private readonly portalService: PortalService,
+    private readonly portalAuthService: PortalAuthService,
+  ) {}
 
   @Public()
   @Post('auth/request-otp')
   requestOtp(@Body('email') email: string) {
-    return this.portalService.requestOtp(email);
+    return this.portalAuthService.requestOTP(email);
   }
 
   @Public()
   @Post('auth/verify-otp')
   verifyOtp(@Body('email') email: string, @Body('otp') otp: string) {
-    return this.portalService.verifyOtp(email, otp);
+    return this.portalAuthService.verifyOTP(email, otp);
   }
 
   @Get('dashboard')
@@ -54,7 +58,7 @@ export class PortalController {
 
   @Post('tickets/:id/messages')
   @UseGuards(JwtAuthGuard)
-  addMessage(@Request() req: any, @Body('message') message: string, @Body('id') id: string) {
+  addMessage(@Request() req: any, @Body('message') message: string, @Param('id') id: string) {
     return this.portalService.addTicketMessage(id, req.user.sub, message);
   }
 

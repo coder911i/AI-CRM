@@ -6,8 +6,10 @@ const getBase = () => {
   return url?.replace(/\/$/, '') ?? '';
 };
 
-export const getToken = () =>
-  typeof window !== 'undefined' ? localStorage.getItem('waterting_token') : null;
+export const getToken = () => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('waterting_token') || localStorage.getItem('waterting_portal_token');
+};
 
 export const setToken = (t: string) => localStorage.setItem('waterting_token', t);
 export const clearToken = () => {
@@ -29,7 +31,12 @@ async function request<T>(method: string, path: string, body?: unknown, auth = t
     body: body ? JSON.stringify(body) : undefined,
     credentials: 'include',
   });
-  if (res.status === 401) { clearToken(); window.location.href = '/login'; throw new Error('Unauthorized'); }
+  if (res.status === 401) { 
+    clearToken(); 
+    const isPortal = typeof window !== 'undefined' && window.location.pathname.startsWith('/portal');
+    window.location.href = isPortal ? '/portal/login' : '/login'; 
+    throw new Error('Unauthorized'); 
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(err.message ?? `Error ${res.status}`);

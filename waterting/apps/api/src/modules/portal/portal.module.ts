@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PortalService } from './portal.service';
+import { PortalAuthService } from './portal-auth.service';
 import { PortalController } from './portal.controller';
 import { PrismaModule } from '../../common/prisma/prisma.module';
 
@@ -13,6 +14,7 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
     }),
   ],
   controllers: [PortalController],
-  providers: [PortalService],
+  providers: [PortalService, PortalAuthService],
+  exports: [PortalAuthService]
 })
 export class PortalModule {}
