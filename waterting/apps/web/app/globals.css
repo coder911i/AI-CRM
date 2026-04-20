@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
 
 :root {
   /* Slate Enterprise Palette */
@@ -46,16 +46,20 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   
   --transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+
+  --font-sf: 'SF Pro Display', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sf);
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.015em;
+  line-height: 1.5;
 }
 
 /* ── CRM Layout ─────────────────────────────────────── */
@@ -199,10 +203,10 @@ body {
   padding-bottom: 24px;
 }
 .page-header h2 {
-  font-size: 26px;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 700;
   color: var(--slate-900);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.03em; /* Apple-style tight headings */
 }
 .page-header .subtitle {
   font-size: 14px;
@@ -313,13 +317,14 @@ body {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: var(--radius-sm);
+  border-radius: 10px; /* iOS-style curvature */
   font-size: 14px;
   font-weight: 600;
   border: none;
   cursor: pointer;
   transition: var(--transition);
   text-decoration: none;
+  letter-spacing: -0.01em;
 }
 .btn-primary { background: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,87,255,0.3); }
