@@ -12,17 +12,30 @@ export const configValidationSchema = Joi.object({
   GROQ_API_KEY: Joi.string().required(),
   OPENAI_API_KEY: Joi.string().optional(),
   MXB_API_KEY: Joi.string().optional(),
-  R2_ACCOUNT_ID: Joi.string().required(),
-  R2_ACCESS_KEY_ID: Joi.string().required(),
-  R2_SECRET_ACCESS_KEY: Joi.string().required(),
-  R2_BUCKET_NAME: Joi.string().required(),
-  R2_PUBLIC_URL: Joi.string().uri().required(),
-  BREVO_API_KEY: Joi.string().required(),
+  
+  // Storage (Optional)
+  R2_ACCOUNT_ID: Joi.string().optional(),
+  R2_ACCESS_KEY_ID: Joi.string().optional(),
+  R2_SECRET_ACCESS_KEY: Joi.string().optional(),
+  R2_BUCKET_NAME: Joi.string().optional(),
+  R2_PUBLIC_URL: Joi.string().uri().optional(),
+  
+  // Comms (Optional)
+  BREVO_API_KEY: Joi.string().optional(),
+  MSG91_AUTH_KEY: Joi.string().optional(),
+  TWILIO_ACCOUNT_SID: Joi.string().optional(),
+  TWILIO_AUTH_TOKEN: Joi.string().optional(),
+  TWILIO_FROM_NUMBER: Joi.string().optional(),
+  
+  // SMTP Email (Preferred)
+  EMAIL_HOST: Joi.string().default('smtp.gmail.com'),
+  EMAIL_PORT: Joi.number().default(587),
+  EMAIL_USER: Joi.string().optional(),
+  EMAIL_PASS: Joi.string().optional(),
+  EMAIL_FROM: Joi.string().optional(),
+
   FRONTEND_URL: Joi.string().uri().required(),
-  MSG91_AUTH_KEY: Joi.string().required(),
-  TWILIO_ACCOUNT_SID: Joi.string().required(),
-  TWILIO_AUTH_TOKEN: Joi.string().required(),
-  TWILIO_FROM_NUMBER: Joi.string().required(),
+  BACKEND_URL: Joi.string().uri().optional(),
   SENTRY_DSN: Joi.string().uri().optional(),
   FB_APP_ID: Joi.string().optional(),
   FB_VERIFY_TOKEN: Joi.string().optional(),
