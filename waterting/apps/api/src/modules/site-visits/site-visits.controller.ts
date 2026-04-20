@@ -1,13 +1,13 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { SiteVisitsService } from './site-visits.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload, VisitOutcome } from '@waterting/shared';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('site-visits')
-@ApiBearerAuth('JWT-auth')
 @Controller('site-visits')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SiteVisitsController {
@@ -42,8 +42,16 @@ export class SiteVisitsController {
   }
 
   @Patch(':id/outcome')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Record visit outcome manually' })
   recordOutcome(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body() data: { outcome: VisitOutcome; notes?: string; followUpDate?: Date }) {
     return this.siteVisitsService.recordOutcome(user, id, data);
+  }
+
+  @Public()
+  @Post('qr-checkin')
+  @ApiOperation({ summary: 'Public QR check-in endpoint' })
+  async qrCheckIn(@Body() dto: { token: string; lat?: number; lng?: number }) {
+    return this.siteVisitsService.qrCheckIn(dto.token, dto.lat, dto.lng);
   }
 }

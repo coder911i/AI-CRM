@@ -6,6 +6,7 @@ export class AIService {
   private readonly logger = new Logger(AIService.name);
   private readonly groqBase = 'https://api.groq.com/openai/v1';
   private readonly groqKey = process.env.GROQ_API_KEY;
+  private readonly openaiKey = process.env.OPENAI_API_KEY;
 
   constructor(private prisma: PrismaService) {}
 
@@ -97,10 +98,36 @@ export class AIService {
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
-    // Groq does not support embeddings yet.
-    // When Groq adds embedding support, swap this out.
-    this.logger.warn('Groq does not support embeddings. Returning zero vector as placeholder.');
-    return new Array(1536).fill(0);
+    if (!this.openaiKey) {
+      this.logger.warn('OPENAI_API_KEY not set. Returning zero vector.');
+      return new Array(1536).fill(0);
+    }
+
+    try {
+      const res = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.openaiKey}`,
+        },
+        body: JSON.stringify({
+          input: text,
+          model: 'text-embedding-3-small',
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        this.logger.error(`OpenAI embedding error: ${JSON.stringify(err)}`);
+        return new Array(1536).fill(0);
+      }
+
+      const data = await res.json();
+      return data.data[0].embedding;
+    } catch (err) {
+      this.logger.error('OpenAI embedding fetch failed', err);
+      return new Array(1536).fill(0);
+    }
   }
 
   async upsertVector(id: string, tenantId: string, values: number[], metadata: any, leadId?: string, unitId?: string) {

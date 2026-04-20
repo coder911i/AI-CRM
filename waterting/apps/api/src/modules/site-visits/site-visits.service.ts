@@ -1,10 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload, VisitOutcome, ActivityType } from '@waterting/shared';
+import { SiteVisit } from '@prisma/client';
+import { CommunicationService } from '../comm/communication.service';
 
 @Injectable()
 export class SiteVisitsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private comm: CommunicationService,
+  ) {}
 
   async schedule(user: JwtPayload, data: any) {
     const lead = await this.prisma.lead.findFirst({
@@ -15,6 +20,7 @@ export class SiteVisitsService {
     const visit = await this.prisma.siteVisit.create({
       data: {
         ...data,
+        verificationToken: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
       },
     });
 
@@ -44,17 +50,32 @@ export class SiteVisitsService {
     });
   }
 
-  async qrCheckIn(token: string) {
+  async qrCheckIn(token: string, lat?: number, lng?: number) {
     const visit = await this.prisma.siteVisit.findFirst({
       where: { verificationToken: token },
+      include: { lead: true, agent: true }
     });
     if (!visit) throw new NotFoundException('Invalid or expired QR code');
-    if (visit.checkInTime) return visit; // Already done
+    if (visit.checkInTime) return visit;
 
-    return this.prisma.siteVisit.update({
+    const updated = await this.prisma.siteVisit.update({
       where: { id: visit.id },
-      data: { checkInTime: new Date() },
+      data: { 
+        checkInTime: new Date(),
+        metadata: { ...(visit.metadata as any || {}), checkInGps: { lat, lng } }
+      },
+      include: { lead: true }
     });
+
+    // Send WhatsApp confirmation
+    if (updated.lead.phone) {
+      this.comm.sendWhatsApp(
+        updated.lead.phone, 
+        `Hello ${updated.lead.name}, welcome to your site visit! Your check-in has been recorded at ${new Date().toLocaleTimeString()}.`
+      );
+    }
+
+    return updated;
   }
 
   async checkOut(user: JwtPayload, id: string, dto: { outcome: VisitOutcome; notes: string; followUpDate?: string; rating?: number }) {

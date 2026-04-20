@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { configValidationSchema } from './common/config/config.schema';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { RedisModule } from './common/redis/redis.module';
 import { AuditModule } from './common/audit/audit.module';
 import { AIModule } from './common/ai/ai.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -32,16 +35,23 @@ import { ListingSyncModule } from './modules/listing-sync/listing-sync.module';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { GatewaysModule } from './gateways/gateways.module';
 import { RefundsModule } from './modules/refunds/refunds.module';
+import { BuilderModule } from './modules/builder/builder.module';
+import { CommunicationModule } from './common/comm/communication.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
 import { WorkersModule } from './workers/workers.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
 import { NestModule, MiddlewareConsumer } from '@nestjs/common';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: configValidationSchema,
+    }),
     ScheduleModule.forRoot(),
     BullModule.forRoot({
       redis: process.env.REDIS_URL,
@@ -53,6 +63,7 @@ import { NestModule, MiddlewareConsumer } from '@nestjs/common';
       { name: 'portal-sync' },
     ),
     PrismaModule,
+    RedisModule,
     AuditModule,
     AIModule,
     GatewaysModule,
@@ -80,10 +91,12 @@ import { NestModule, MiddlewareConsumer } from '@nestjs/common';
     ListingSyncModule,
     ChatbotModule,
     RefundsModule,
+    BuilderModule,
+    CommunicationModule,
     WorkersModule,
     ThrottlerModule.forRoot([
-      { name: 'short', ttl: 60000, limit: 10 },
-      { name: 'login', ttl: 60000, limit: 5 },
+      { name: 'default', ttl: 60000, limit: 60 },
+      { name: 'auth', ttl: 60000, limit: 5 },
     ]),
   ],
   controllers: [AppController],
@@ -100,6 +113,10 @@ import { NestModule, MiddlewareConsumer } from '@nestjs/common';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TenantInterceptor,
     },
   ],
 })

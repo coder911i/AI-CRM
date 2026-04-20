@@ -70,47 +70,73 @@ export default function PortalDashboardPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24 }}>
         <div>
           <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>My Bookings</h3>
-          {data?.bookings?.map((booking: any) => (
-            <div key={booking.id} className="card" style={{ marginBottom: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <div>
-                  <h4 style={{ fontSize: 16, fontWeight: 700 }}>{booking.unit?.tower?.project?.name}</h4>
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Unit {booking.unit?.unitNumber} · {booking.unit?.type?.replace('_', ' ')}</p>
-                </div>
-                <div className={`badge ${booking.status === 'CONFIRMED' ? 'badge-success' : 'badge-warning'}`}>
-                  {booking.status}
-                </div>
-              </div>
+          {data?.bookings?.map((booking: any) => {
+            const paid = booking.payments?.filter((p: any) => p.paidAt).reduce((sum: number, p: any) => sum + p.amount, 0) || 0;
+            const progress = (paid / booking.grandTotal) * 100;
+            const nextInstallment = booking.payments?.find((p: any) => !p.paidAt);
 
-              <div className="data-table" style={{ background: 'transparent', boxShadow: 'none' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <th style={{ padding: '8px 0', fontSize: 11 }}>Instalment</th>
-                      <th style={{ padding: '8px 0', fontSize: 11 }}>Amount</th>
-                      <th style={{ padding: '8px 0', fontSize: 11 }}>Due Date</th>
-                      <th style={{ padding: '8px 0', fontSize: 11 }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {booking.payments?.slice(0, 5).map((p: any) => (
-                      <tr key={p.id}>
-                        <td style={{ padding: '10px 0', fontSize: 13 }}>{p.receiptNumber || 'Installment'}</td>
-                        <td style={{ padding: '10px 0', fontSize: 13, fontWeight: 600 }}>₹{p.amount.toLocaleString()}</td>
-                        <td style={{ padding: '10px 0', fontSize: 13 }}>{new Date(p.dueDate).toLocaleDateString()}</td>
-                        <td style={{ padding: '10px 0' }}>
-                          <span className={`badge ${p.paidAt ? 'badge-success' : p.isOverdue ? 'badge-danger' : 'badge-warning'}`} style={{ fontSize: 10 }}>
-                            {p.paidAt ? 'Paid' : p.isOverdue ? 'Overdue' : 'Pending'}
-                          </span>
-                        </td>
+            return (
+              <div key={booking.id} className="card" style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <div>
+                    <h4 style={{ fontSize: 16, fontWeight: 700 }}>{booking.unit?.tower?.project?.name}</h4>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Unit {booking.unit?.unitNumber} · {booking.unit?.type?.replace('_', ' ')}</p>
+                  </div>
+                  <div className={`badge ${booking.status === 'CONFIRMED' ? 'badge-success' : 'badge-warning'}`}>
+                    {booking.status}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 8 }}>
+                    <span style={{ fontWeight: 600 }}>Payment Progress</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{Math.round(progress)}% (₹{paid.toLocaleString()} / ₹{booking.grandTotal.toLocaleString()})</span>
+                  </div>
+                  <div style={{ height: 8, background: '#E2E8F0', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, #10B981, #059669)', borderRadius: 4 }} />
+                  </div>
+                </div>
+
+                {nextInstallment && (
+                  <div style={{ background: 'var(--primary-light)', padding: '12px 16px', borderRadius: 8, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, color: 'var(--primary)' }}>Next Installment</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4 }}>₹{nextInstallment.amount.toLocaleString()} due on {new Date(nextInstallment.dueDate).toLocaleDateString()}</div>
+                    </div>
+                    <Link href={`/portal/payments/${nextInstallment.id}`} className="btn btn-primary btn-xs">Pay Now</Link>
+                  </div>
+                )}
+
+                <div className="data-table" style={{ background: 'transparent', boxShadow: 'none' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ padding: '8px 0', fontSize: 11 }}>Instalment</th>
+                        <th style={{ padding: '8px 0', fontSize: 11 }}>Amount</th>
+                        <th style={{ padding: '8px 0', fontSize: 11 }}>Due Date</th>
+                        <th style={{ padding: '8px 0', fontSize: 11 }}>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {booking.payments?.slice(0, 5).map((p: any) => (
+                        <tr key={p.id}>
+                          <td style={{ padding: '10px 0', fontSize: 13 }}>{p.receiptNumber || 'Installment'}</td>
+                          <td style={{ padding: '10px 0', fontSize: 13, fontWeight: 600 }}>₹{p.amount.toLocaleString()}</td>
+                          <td style={{ padding: '10px 0', fontSize: 13 }}>{new Date(p.dueDate).toLocaleDateString()}</td>
+                          <td style={{ padding: '10px 0' }}>
+                            <span className={`badge ${p.paidAt ? 'badge-success' : p.isOverdue ? 'badge-danger' : 'badge-warning'}`} style={{ fontSize: 10 }}>
+                              {p.paidAt ? 'Paid' : p.isOverdue ? 'Overdue' : 'Pending'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Link href="/portal/payments" className="btn btn-secondary btn-sm" style={{ marginTop: 16, width: '100%', justifyContent: 'center' }}>View Full Payment Schedule</Link>
               </div>
-              <Link href="/portal/payments" className="btn btn-secondary btn-sm" style={{ marginTop: 16, width: '100%', justifyContent: 'center' }}>View Full Payment Schedule</Link>
-            </div>
-          ))}
+            );
+          })}
           {!data?.bookings?.length && (
             <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
               <div style={{ fontSize: 40, marginBottom: 16 }}>🏠</div>

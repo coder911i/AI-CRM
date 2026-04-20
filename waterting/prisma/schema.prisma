@@ -23,6 +23,7 @@ enum UserRole {
   SALES_AGENT
   BROKER
   BUYER
+  BUILDER
   PROPERTY_OWNER
   ACCOUNTS
 }
@@ -254,9 +255,25 @@ model Tower {
   createdAt   DateTime @default(now())
 
   project     Project @relation(fields: [projectId], references: [id])
+  floors      Floor[]
   units       Unit[]
 
   @@index([projectId])
+}
+
+model Floor {
+  id           String   @id @default(cuid())
+  towerId      String
+  floorNumber  Int
+  totalUnits   Int      @default(0)
+  floorPlanUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tower        Tower    @relation(fields: [towerId], references: [id])
+  units        Unit[]
+
+  @@index([towerId])
 }
 
 model Unit {
@@ -278,9 +295,12 @@ model Unit {
   updatedAt    DateTime   @updatedAt
 
   tower        Tower     @relation(fields: [towerId], references: [id])
+  floorId      String?
+  floorRel     Floor?    @relation(fields: [floorId], references: [id])
   bookings     Booking[]
 
   @@index([towerId])
+  @@index([floorId])
   @@index([status])
 }
 
@@ -651,12 +671,12 @@ model PropertyVisit {
 
 model OtpToken {
   id        String   @id @default(cuid())
-  email     String
+  identifier String   // email or phone
   code      String
   expires   DateTime
   createdAt DateTime @default(now())
 
-  @@index([email])
+  @@index([identifier])
 }
 
 model SupportTicket {

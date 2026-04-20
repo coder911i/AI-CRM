@@ -52,15 +52,18 @@ export class AuthController {
     return user;
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Public()
   @Post('refresh')
-  refresh(@CurrentUser() user: JwtPayload) {
-    return this.authService.refresh(user);
+  async refresh(@Body('refresh_token') refreshToken: string) {
+    return this.authService.refresh(refreshToken);
   }
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
-  async logout(@Res({ passthrough: true }) res: Response) {
+  async logout(@Body('refresh_token') refreshToken: string, @Res({ passthrough: true }) res: Response) {
+    if (refreshToken) {
+      await this.authService.revokeRefreshToken(refreshToken);
+    }
     res.clearCookie('auth_token');
     return { message: 'Logged out successfully' };
   }

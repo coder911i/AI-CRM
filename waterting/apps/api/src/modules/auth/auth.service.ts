@@ -2,6 +2,8 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
+import { RedisService } from '../../common/redis/redis.service';
 import { JwtPayload, UserRole } from '@waterting/shared';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -11,6 +13,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private redis: RedisService,
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -52,8 +55,15 @@ export class AuthService {
         console.error('Audit Log failed but proceeding with login:', auditError);
       }
 
+      const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+      const refreshToken = uuidv4();
+
+      // Store refresh token in Redis for 7 days
+      await this.redis.set(`refresh_token:${refreshToken}`, user.id, 7 * 24 * 60 * 60);
+
       return {
-        access_token: this.jwtService.sign(payload),
+        access_token: accessToken,
+        refresh_token: refreshToken,
         user: { 
           id: user.id,
           sub: user.id,
@@ -104,28 +114,50 @@ export class AuthService {
       email: tenantAndUser.user.email 
     };
 
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+    const refreshToken = uuidv4();
+    await this.redis.set(`refresh_token:${refreshToken}`, tenantAndUser.user.id, 7 * 24 * 60 * 60);
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: accessToken,
+      refresh_token: refreshToken,
       user: payload
     };
   }
 
-  async refresh(user: JwtPayload) {
-    // Re-fetch user to get latest role/status
-    const dbUser = await this.prisma.user.findUnique({ where: { id: user.sub } });
-    if (!dbUser || !dbUser.isActive) {
+  async refresh(refreshToken: string) {
+    const userId = await this.redis.get(`refresh_token:${refreshToken}`);
+    if (!userId) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.isActive) {
+      await this.redis.del(`refresh_token:${refreshToken}`);
       throw new UnauthorizedException('Account no longer active');
     }
+
+    // Rotate refresh token
+    await this.redis.del(`refresh_token:${refreshToken}`);
+    const newRefreshToken = uuidv4();
+    await this.redis.set(`refresh_token:${newRefreshToken}`, user.id, 7 * 24 * 60 * 60);
+
     const payload: JwtPayload = {
-      sub: dbUser.id,
-      tenantId: dbUser.tenantId,
-      role: dbUser.role as UserRole,
-      email: dbUser.email,
+      sub: user.id,
+      tenantId: user.tenantId,
+      role: user.role as UserRole,
+      email: user.email,
     };
+
     return {
-      access_token: this.jwtService.sign(payload),
-      user: { ...payload, name: dbUser.name },
+      access_token: this.jwtService.sign(payload, { expiresIn: '15m' }),
+      refresh_token: newRefreshToken,
+      user: { ...payload, name: user.name },
     };
+  }
+
+  async revokeRefreshToken(refreshToken: string) {
+    await this.redis.del(`refresh_token:${refreshToken}`);
   }
 
   async createStaff(dto: any, tenantId: string) {

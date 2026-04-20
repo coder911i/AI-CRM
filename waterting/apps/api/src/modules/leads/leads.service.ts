@@ -6,6 +6,8 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { EventsGateway } from '../../gateways/events.gateway';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AIService } from '../../common/ai/ai.service';
+import { CommunicationService } from '../../common/comm/communication.service';
 
 @Injectable()
 export class LeadsService {
@@ -13,6 +15,8 @@ export class LeadsService {
     private prisma: PrismaService,
     private gateway: EventsGateway,
     private notificationsService: NotificationsService,
+    private aiService: AIService,
+    private comm: CommunicationService,
     @InjectQueue('ai-scoring') private aiScoringQueue: Queue,
     @InjectQueue('email') private emailQueue: Queue,
     @InjectQueue('pdf') private pdfQueue: Queue,
@@ -22,9 +26,15 @@ export class LeadsService {
     const tenantId = data.tenantId;
     const phone = this.normalizePhone(String(data.phone || ''));
     
-    // 1. Check for duplicates
+    // 1. Check for duplicates (Phone or Email)
     const existing = await this.prisma.lead.findFirst({
-      where: { phone, tenantId }
+      where: {
+        tenantId,
+        OR: [
+          { phone },
+          { email: data.email ? String(data.email) : undefined },
+        ].filter(Boolean) as Prisma.LeadWhereInput[]
+      }
     });
 
     if (existing) {
@@ -37,6 +47,19 @@ export class LeadsService {
         }
       });
       return existing;
+    }
+
+    // AI Semantic Check
+    const embedding = await this.aiService.generateEmbedding(`${data.name} ${data.email || ''} ${data.phone}`);
+    const matches = await this.aiService.queryVector(tenantId, embedding, 1);
+    
+    if (matches.length > 0 && matches[0].distance < 0.1) {
+       // Flag as potential duplicate
+       console.log(`Potential AI Duplicate found for ${data.name}: LeadID ${matches[0].leadId}`);
+       // We can still create it but mark it for merge or just return existing
+       if (matches[0].leadId) {
+         return this.prisma.lead.findUnique({ where: { id: matches[0].leadId } });
+       }
     }
 
     // 2. Auto-allocation (Multi-party)
@@ -100,8 +123,25 @@ export class LeadsService {
     return phone.replace(/\D/g, '');
   }
 
-  async create(user: JwtPayload, dto: any) {
     try {
+      // 1. Check for duplicates
+      const phone = this.normalizePhone(String(dto.phone || ''));
+      const existing = await this.prisma.lead.findFirst({
+        where: {
+          tenantId: user.tenantId,
+          OR: [
+            { phone },
+            { email: dto.email ? String(dto.email) : undefined },
+          ].filter(Boolean) as Prisma.LeadWhereInput[]
+        }
+      });
+
+      if (existing) {
+        throw new ConflictException(
+          `A lead with this ${existing.phone === phone ? 'phone number' : 'email'} already exists.`
+        );
+      }
+
       // Auto-assign agent if none specified
       if (!dto.assignedToId) {
         dto.assignedToId = await this.autoAssignAgent(user.tenantId);
@@ -183,6 +223,49 @@ export class LeadsService {
     return this.prisma.lead.update({
       where: { id },
       data: { assignedToId: userId },
+    });
+  }
+
+  async parseWhatsAppLead(user: JwtPayload, text: string) {
+    const prompt = `
+      You are a Real Estate Assistant. Extract lead information from this WhatsApp message snippet:
+      "${text}"
+
+      Identify:
+      - Full name
+      - Phone number (clean it to digits only)
+      - Email (if any)
+      - Project Interested in (if mentioned)
+      - Notes / Requirements
+
+      Return JSON format:
+      {
+        "name": "string",
+        "phone": "string",
+        "email": "string | null",
+        "projectInterest": "string | null",
+        "notes": "string"
+      }
+    `;
+
+    const parsed = await this.aiService.generateJSON<any>(prompt);
+    
+    // We try to find project by name if extracted
+    let projectId: string | undefined;
+    if (parsed.projectInterest) {
+      const project = await this.prisma.project.findFirst({
+        where: { name: { contains: parsed.projectInterest, mode: 'insensitive' }, tenantId: user.tenantId }
+      });
+      if (project) projectId = project.id;
+    }
+
+    return this.create(user, {
+      name: parsed.name || 'WhatsApp Lead',
+      phone: parsed.phone,
+      email: parsed.email || undefined,
+      projectId,
+      notes: parsed.notes,
+      source: LeadSource.WHATSAPP,
     });
   }
 
@@ -356,37 +439,27 @@ export class LeadsService {
     }
   }
 
-  async autoAssignAgent(tenantId: string): Promise<string | null> {
-    // Get all active sales agents for this tenant
-    const agents = await this.prisma.user.findMany({
-      where: { tenantId, isActive: true, role: { in: ['SALES_AGENT', 'SALES_MANAGER'] } },
+  async claim(user: JwtPayload, id: string) {
+    const lead = await this.prisma.lead.findFirst({
+      where: { id, tenantId: user.tenantId },
     });
-    if (!agents.length) return null;
+    if (!lead) throw new NotFoundException('Lead not found');
+    if (lead.assignedToId) throw new BadRequestException('Lead already claimed by another agent');
 
-    // Count active (non-closed) leads per agent
-    const leadCounts = await this.prisma.lead.groupBy({
-      by: ['assignedToId'],
-      where: {
-        tenantId,
-        assignedToId: { not: null },
-        stage: { notIn: ['BOOKING_DONE', 'LOST'] },
-      },
-      _count: { id: true },
+    const updated = await this.prisma.lead.update({
+      where: { id },
+      data: { assignedToId: user.sub },
     });
 
-    const countMap = new Map(leadCounts.map(lc => [lc.assignedToId, lc._count.id]));
-
-    // Find agent with fewest active leads (least-loaded)
-    let minLoad = Infinity;
-    let selectedAgent: string | null = null;
-    for (const agent of agents) {
-      const load = countMap.get(agent.id) ?? 0;
-      if (load < minLoad) {
-        minLoad = load;
-        selectedAgent = agent.id;
-      }
+    // Notify lead via WhatsApp with Agent Bio (placeholder)
+    if (updated.phone) {
+       await this.comm.sendWhatsApp(
+         updated.phone,
+         `Hello ${updated.name}, I'm ${user.name} from Waterting. I'll be assisting you with your home search today!`
+       );
     }
-    return selectedAgent;
+
+    return updated;
   }
 
 

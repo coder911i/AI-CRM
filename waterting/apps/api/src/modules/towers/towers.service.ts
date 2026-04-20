@@ -13,12 +13,25 @@ export class TowersService {
     });
     if (!project) throw new NotFoundException('Project not found');
 
-    return this.prisma.tower.create({
+    const tower = await this.prisma.tower.create({
       data: {
         ...data,
         projectId,
       },
     });
+
+    if (data.totalFloors) {
+      const floorsData = Array.from({ length: data.totalFloors }).map((_, i) => ({
+        towerId: tower.id,
+        floorNumber: i + 1,
+      }));
+
+      await this.prisma.floor.createMany({
+        data: floorsData,
+      });
+    }
+
+    return tower;
   }
 
   async findAllByProject(user: JwtPayload, projectId: string) {
@@ -29,7 +42,12 @@ export class TowersService {
 
     return this.prisma.tower.findMany({
       where: { projectId },
-      include: { units: true },
+      include: { 
+        floors: {
+          include: { units: true }
+        },
+        units: true 
+      },
     });
   }
 

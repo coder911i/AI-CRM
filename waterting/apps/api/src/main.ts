@@ -3,14 +3,30 @@ if (!globalThis.crypto) {
   (globalThis as any).crypto = webcrypto;
 }
 
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { SentryFilter } from './common/filters/sentry.filter';
 import cookieParser from 'cookie-parser';
+import * as Sentry from '@sentry/nestjs';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
+  if (process.env.SENTRY_DSN) {
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+      integrations: [
+        nodeProfilingIntegration(),
+      ],
+      tracesSampleRate: 1.0,
+      profilesSampleRate: 1.0,
+      environment: process.env.NODE_ENV,
+    });
+  }
+
   app.use(cookieParser());
   const logger = new Logger('Bootstrap');
 
@@ -62,6 +78,9 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type','Authorization','Accept'],
     credentials: true,
   });
+
+  const httpAdapterHost = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new SentryFilter(httpAdapterHost));
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,

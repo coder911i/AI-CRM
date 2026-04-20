@@ -79,6 +79,12 @@ export class LeadsController {
     return this.leadsService.addCall(user, id, duration, outcome);
   }
 
+  @Post('parse-whatsapp')
+  @ApiOperation({ summary: 'Parse lead from WhatsApp text snippet using AI' })
+  parseWhatsApp(@CurrentUser() user: JwtPayload, @Body('text') text: string) {
+    return this.leadsService.parseWhatsAppLead(user, text);
+  }
+
   @Patch(':id/stage')
   updateStage(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Body('stage') stage: string) {
     return this.leadsService.updateStage(user, id, stage);
