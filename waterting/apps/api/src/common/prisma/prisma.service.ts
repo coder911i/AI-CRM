@@ -22,7 +22,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           ];
 
           if (tenantId && modelsWithTenantId.includes(model)) {
-            args.where = { ...args.where, tenantId };
+            (args as any).where = { ...(args as any).where, tenantId };
           }
           return query(args);
         },

@@ -137,11 +137,11 @@ export class LeadsService {
         _count: {
           select: { assignedLeads: { where: { stage: { notIn: ['BOOKING_DONE', 'LOST'] } } } }
         }
-      }
+      } as any
     });
 
     if (agents.length === 0) return null;
-    return agents.sort((a, b) => a._count.assignedLeads - b._count.assignedLeads)[0].id;
+    return (agents as any[]).sort((a, b) => a._count.assignedLeads - b._count.assignedLeads)[0].id;
   }
 
   private normalizePhone(phone: string) {
@@ -489,7 +489,7 @@ export class LeadsService {
     if (updated.phone) {
        await this.comm.sendWhatsApp(
          updated.phone,
-         `Hello ${updated.name}, I'm ${user.name} from Waterting. I'll be assisting you with your home search today!`
+         `Hello ${updated.name}, I'm ${(user as any).name || 'your agent'} from Waterting. I'll be assisting you with your home search today!`
        );
     }
 

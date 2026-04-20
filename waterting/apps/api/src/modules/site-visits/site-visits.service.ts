@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload, VisitOutcome, ActivityType } from '@waterting/shared';
 import { SiteVisit } from '@prisma/client';
-import { CommunicationService } from '../comm/communication.service';
+import { CommunicationService } from '../../common/comm/communication.service';
 
 @Injectable()
 export class SiteVisitsService {

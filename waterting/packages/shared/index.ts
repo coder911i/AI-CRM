@@ -15,6 +15,7 @@ export enum UserRole {
   ACCOUNTS = 'ACCOUNTS',
   BROKER = 'BROKER',
   BUYER = 'BUYER',
+  BUILDER = 'BUILDER',
   PROPERTY_OWNER = 'PROPERTY_OWNER',
 }
 
@@ -126,4 +127,5 @@ export interface JwtPayload {
   tenantId: string;
   role: UserRole;
   email: string;
+  name?: string;
 }

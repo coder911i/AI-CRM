@@ -160,14 +160,14 @@ export class AllocationService {
         _count: {
           select: { allocationLogs: { where: { status: { not: 'CLOSED' } } } }
         }
-      }
+      } as any
     });
 
     if (brokers.length === 0) return null;
 
     // Simplified selection logic: lowest active log count
     // (In reality, would also look at commissionPct or rating)
-    return brokers.sort((a, b) => a._count.allocationLogs - b._count.allocationLogs)[0].id;
+    return (brokers as any[]).sort((a, b) => a._count.allocationLogs - b._count.allocationLogs)[0].id;
   }
 
   private async findBestAgent(tenantId: string): Promise<string | null> {
@@ -181,13 +181,13 @@ export class AllocationService {
         _count: {
           select: { allocationLogs: { where: { status: { not: 'CLOSED' } } } }
         }
-      }
+      } as any
     });
 
     if (agents.length === 0) return null;
 
     // Round-robin: pick the one with the fewest active supervisions
-    return agents.sort((a, b) => a._count.allocationLogs - b._count.allocationLogs)[0].id;
+    return (agents as any[]).sort((a, b) => a._count.allocationLogs - b._count.allocationLogs)[0].id;
   }
 
   private generateVisitSuggestions(): Date[] {
