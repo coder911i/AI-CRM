@@ -7,8 +7,14 @@ import { api } from '@/lib/api-client';
 import CRMLayout from '@/components/CRMLayout';
 import { Plus, Users, Search, Filter, MoreHorizontal, X, UserPlus, Phone, Mail, Globe } from 'lucide-react';
 
-const scoreColor = (label: string) => {
-  switch (label) { case 'COLD': return 'badge-cold'; case 'WARM': return 'badge-warm'; case 'HOT': return 'badge-hot'; case 'VERY_HOT': return 'badge-very-hot'; default: return ''; }
+const getBadgeStyle = (label: string) => {
+  const base = "rounded-full px-2.5 py-0.5 text-xs font-medium border inline-flex items-center tracking-tighter uppercase";
+  if (label === 'COLD') return `${base} bg-blue-500/10 text-blue-400 border-blue-500/20`;
+  if (label === 'WARM') return `${base} bg-amber-500/10 text-amber-400 border-amber-500/20`;
+  if (label === 'HOT' || label === 'VERY_HOT') return `${base} bg-red-500/10 text-red-400 border-red-500/20`;
+  if (label === 'BOOKING_DONE' || label === 'WON') return `${base} bg-green-500/10 text-green-400 border-green-500/20`;
+  if (label === 'LOST') return `${base} bg-red-500/10 text-red-400 border-red-500/20`;
+  return `${base} bg-yellow-500/10 text-yellow-400 border-yellow-500/20`;
 };
 
 const sourceClass = (source: string) => `source-${source?.toLowerCase().replace(/_/g, '-')}`;
@@ -43,14 +49,23 @@ export default function LeadsPage() {
     finally { setCreating(false); }
   };
 
-  if (authLoading || loading) return <div className="loading-page"><div className="spinner" /></div>;
+  if (authLoading || loading) {
+    return (
+      <CRMLayout>
+        <div className="p-8 space-y-6">
+          <div className="h-12 w-64 animate-pulse bg-[#22262F] rounded-lg"></div>
+          <div className="h-[600px] w-full animate-pulse bg-[#22262F] rounded-lg"></div>
+        </div>
+      </CRMLayout>
+    );
+  }
 
   return (
     <CRMLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-end pb-4 border-b border-slate-100">
+      <div className="bg-[#0F1117] min-h-full p-6 space-y-6">
+        <div className="flex justify-between items-end pb-4 border-b border-[#2E3340]">
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+            <h1 className="text-2xl font-black text-[#F1F3F5] tracking-tight flex items-center gap-3">
                <Users size={24} className="text-primary" />
                Global Prospect Ledger
             </h1>
@@ -65,60 +80,63 @@ export default function LeadsPage() {
              </button>
           </div>
         </div>
+        <div className="bg-[#1A1D23] border-b border-[#2E3340] px-4 py-3 flex items-center gap-3">
+           <input className="bg-[#0F1117] border border-[#2E3340] rounded-lg px-3 py-1.5 text-sm text-[#F1F3F5] placeholder:text-[#5A5F6B] focus:border-[#4F6EF7] focus:ring-1 focus:ring-[#4F6EF7] outline-none transition-colors duration-150" placeholder="Search..." />
+        </div>
 
-        <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm overflow-hidden">
-          <table className="data-table">
+        <div className="bg-[#1A1D23] rounded-xl border border-[#2E3340] overflow-hidden">
+          <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50/50">
-                <th>Entity Identity</th>
-                <th>Phase</th>
-                <th>Intelligence Score</th>
-                <th>Custodian</th>
-                <th>Origin</th>
-                <th>Registered</th>
-                <th></th>
+              <tr className="bg-[#0F1117] text-xs font-semibold uppercase tracking-wider text-[#5A5F6B]">
+                <th className="px-4 py-3">Entity Identity</th>
+                <th className="px-4 py-3">Phase</th>
+                <th className="px-4 py-3">Intelligence Score</th>
+                <th className="px-4 py-3">Custodian</th>
+                <th className="px-4 py-3">Origin</th>
+                <th className="px-4 py-3">Registered</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr key={lead.id} className="hover:bg-slate-50/50 cursor-pointer group transition-colors" onClick={() => router.push(`/leads/${lead.id}`)}>
-                  <td>
-                    <div className="font-bold text-slate-900 group-hover:text-primary transition-colors text-sm">{lead.name}</div>
+                <tr key={lead.id} className="border-b border-[#1E2128] hover:bg-[#22262F] transition-colors duration-100 cursor-pointer" onClick={() => router.push(`/leads/${lead.id}`)}>
+                  <td className="px-4 py-3 text-sm text-[#8B909A]">
+                    <div className="text-sm font-medium text-[#F1F3F5] transition-colors">{lead.name}</div>
                     <div className="flex items-center gap-2 mt-1">
-                       <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1"><Phone size={10} /> {lead.phone}</span>
-                       {lead.email && <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1 border-l border-slate-200 pl-2"><Mail size={10} /> {lead.email.split('@')[0]}...</span>}
+                       <span className="text-[10px] font-mono text-[#8B909A] flex items-center gap-1"><Phone size={10} /> {lead.phone}</span>
+                       {lead.email && <span className="text-[10px] font-mono text-[#8B909A] flex items-center gap-1 border-l border-[#2E3340] pl-2"><Mail size={10} /> {lead.email.split('@')[0]}...</span>}
                     </div>
                   </td>
-                  <td>
-                     <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter bg-blue-50 text-primary border border-blue-100">
+                  <td className="px-4 py-3 text-sm text-[#8B909A]">
+                     <span className={getBadgeStyle(lead.stage)}>
                         {lead.stage?.replace(/_/g, ' ')}
                       </span>
                   </td>
-                  <td>
+                  <td className="px-4 py-3 text-sm text-[#8B909A]">
                     {lead.scoreLabel ? (
                       <div className="flex flex-col gap-1">
-                        <span className={`inline-flex w-fit px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter ${scoreColor(lead.scoreLabel)}`}>
+                        <span className={getBadgeStyle(lead.scoreLabel)}>
                           {lead.scoreLabel}
                         </span>
-                        <div className="h-1 w-16 bg-slate-100 rounded-full overflow-hidden">
-                           <div className="h-full bg-slate-900" style={{ width: `${lead.score}%` }} />
+                        <div className="h-1 w-16 bg-[#2E3340] rounded-full overflow-hidden">
+                           <div className="h-full bg-red-400" style={{ width: `${lead.score}%` }} />
                         </div>
                       </div>
                     ) : (
-                      <span className="text-slate-300 text-xs">—</span>
+                      <span className="text-slate-500 text-xs">—</span>
                     )}
                   </td>
-                  <td className="text-xs font-medium text-slate-600">{lead.assignedTo?.name || 'Unassigned'}</td>
-                  <td>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border ${sourceClass(lead.source)}`}>
+                  <td className="px-4 py-3 text-sm text-[#8B909A]">{lead.assignedTo?.name || 'Unassigned'}</td>
+                  <td className="px-4 py-3 text-sm text-[#8B909A]">
+                    <span className="bg-[#22262F] text-[#8B909A] rounded-full px-2.5 py-0.5 text-xs font-medium border border-[#2E3340]">
                       {lead.source?.replace(/_/g, ' ')}
                     </span>
                   </td>
-                  <td className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                  <td className="px-4 py-3 text-sm text-[#8B909A]">
                     {new Date(lead.createdAt).toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' })}
                   </td>
-                  <td>
-                     <button className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-400">
+                  <td className="px-4 py-3 text-sm text-[#8B909A]">
+                     <button className="p-1 hover:bg-[#22262F] rounded transition-colors text-[#5A5F6B]">
                         <MoreHorizontal size={16} />
                      </button>
                   </td>

@@ -30,8 +30,9 @@ export class DashboardService {
         this.prisma.lead.findMany({
           where: { tenantId },
           take: 10,
+          skip: 0,
           orderBy: { lastActivityAt: 'desc' },
-          include: { project: true, assignedTo: { select: { id: true, name: true } } },
+          select: { id: true, name: true, phone: true, source: true, stage: true, assignedTo: { select: { name: true } } },
         }),
         this.prisma.lead.groupBy({
           by: ['stage'],
@@ -52,14 +53,17 @@ export class DashboardService {
             paidAt: null,
             dueDate: { gte: new Date(), lte: sevenDaysHence }
           },
-          include: { booking: { include: { unit: true } } },
+          select: { id: true, amount: true, dueDate: true, booking: { select: { buyerName: true, unit: { select: { unitNumber: true } } } } },
           orderBy: { dueDate: 'asc' },
-          take: 5
+          take: 5,
+          skip: 0
         }),
         this.prisma.lead.findMany({
           where: { tenantId, score: { gte: 80 }, stage: { notIn: ['LOST', 'BOOKING_DONE'] } },
           take: 4,
-          orderBy: { score: 'desc' }
+          skip: 0,
+          orderBy: { score: 'desc' },
+          select: { id: true, name: true, phone: true, score: true, source: true }
         })
       ]);
 
@@ -87,11 +91,13 @@ export class DashboardService {
     const [projects, leads, bookings, revenue, recentLeads, ads] = await Promise.all([
       this.prisma.project.findMany({
         where: { tenantId },
-        include: {
-          towers: { include: { units: true } },
-          _count: {
-            select: { leads: true }
-          }
+        take: 50,
+        skip: 0,
+        select: {
+          id: true,
+          name: true,
+          towers: { select: { units: { select: { status: true } } } },
+          _count: { select: { leads: true } }
         },
       }),
       this.prisma.lead.count({ where: { tenantId } }),
@@ -103,12 +109,14 @@ export class DashboardService {
       this.prisma.lead.findMany({
         where: { tenantId },
         take: 5,
+        skip: 0,
         orderBy: { createdAt: 'desc' },
-        include: { project: true },
+        select: { id: true, name: true, scoreLabel: true, project: { select: { name: true } } },
       }),
       this.prisma.ad.findMany({
         where: { tenantId },
         take: 3,
+        skip: 0,
         orderBy: { updatedAt: 'desc' },
       }),
     ]);

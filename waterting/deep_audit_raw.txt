@@ -1,0 +1,177 @@
+=== TASK 1: CONTROLLERS ===
+
+--- apps/api/src/modules/leads/leads.controller.ts ---
+Guards: @UseGuards(JwtAuthGuard, RolesGuard)
+Get :id
+Patch :id
+Patch :id/assign
+Post :id/notes
+Post :id/calls
+Patch :id/stage
+Get :id/ai-brief
+Get :id/whatsapp-message
+Get :id/ai-summary
+Get export/csv
+
+--- apps/api/src/modules/bookings/bookings.controller.ts ---
+Guards: @UseGuards(JwtAuthGuard, RolesGuard), @UseGuards(RolesGuard)
+
+--- apps/api/src/modules/payments/payments.controller.ts ---
+Guards: @UseGuards(JwtAuthGuard, RolesGuard), @UseGuards(JwtAuthGuard, RolesGuard)
+
+--- apps/api/src/modules/projects/projects.controller.ts ---
+Guards: @UseGuards(JwtAuthGuard, RolesGuard)
+
+--- apps/api/src/modules/brokers/brokers.controller.ts ---
+Guards: @UseGuards(JwtAuthGuard, RolesGuard)
+
+--- apps/api/src/modules/webhooks/webhooks.controller.ts ---
+Guards: None
+
+--- apps/api/src/modules/units/units.controller.ts ---
+Guards: @UseGuards(JwtAuthGuard, RolesGuard)
+
+=== TASK 2: UI ISSUES ===
+
+--- apps/web/components/CRMLayout.tsx ---
+Buttons: 13
+Z-Index classes: z-[2000], z-[3000]
+Positioning: fixed (3), absolute (4)
+Overlays: bg-black/60
+
+--- apps/web/app/pipeline/page.tsx ---
+Buttons: 6
+Z-Index classes: 
+Positioning: fixed (0), absolute (1)
+Overlays: 
+
+--- apps/web/app/leads/page.tsx ---
+Buttons: 2
+Z-Index classes: 
+Positioning: fixed (0), absolute (0)
+Overlays: 
+
+--- apps/web/app/leads/[id]/page.tsx ---
+Buttons: 4
+Z-Index classes: z-10
+Positioning: fixed (0), absolute (4)
+Overlays: 
+
+--- apps/web/app/inventory/page.tsx ---
+Buttons: 4
+Z-Index classes: 
+Positioning: fixed (1), absolute (3)
+Overlays: 
+
+--- apps/web/app/analytics/page.tsx ---
+Buttons: 0
+Z-Index classes: z-[9999], z-40, z-10
+Positioning: fixed (1), absolute (3)
+Overlays: 
+
+--- apps/web/app/site-visits/page.tsx ---
+Buttons: 3
+Z-Index classes: z-50
+Positioning: fixed (2), absolute (1)
+Overlays: bg-slate-900/40, bg-slate-900/60
+
+--- apps/web/app/settings/page.tsx ---
+Buttons: 3
+Z-Index classes: z-50
+Positioning: fixed (1), absolute (0)
+Overlays: bg-slate-900/40
+
+=== TASK 3: SERVICES ===
+
+--- apps/api/src/modules/leads/leads.service.ts ---
+Methods: createFromWebhook, create, findAll, findOne, update, assign, parseWhatsAppLead, addNote, addCall, updateStage, handleStageTrigger, claim
+
+--- apps/api/src/modules/analytics/analytics.service.ts ---
+Methods: getDashboardReport, getInventoryInsights
+
+--- apps/api/src/modules/auth/auth.service.ts ---
+Methods: login, register, refresh, revokeRefreshToken, createStaff
+
+--- apps/api/src/modules/allocation/allocation.service.ts ---
+Methods: triggerAllocation, findOne, flagDeal, overrideBroker, confirmSlot
+
+--- apps/api/src/modules/portal/portal.service.ts ---
+Methods: getDashboard, getWishlist, addToWishlist, removeFromWishlist, getTickets, createTicket, addTicketMessage, getVisits, getRecommendations, getPayments, getDocuments, getProperty
+
+--- apps/api/src/modules/units/units.service.ts ---
+Methods: create, findAllByTower, updateStatus, updatePrice, placeHold, releaseHold, extendHold
+
+--- apps/api/src/modules/bookings/bookings.service.ts ---
+Methods: create, findAll, findOne, schedulePayments, recordPayment, createRefund
+
+--- apps/api/src/modules/site-visits/site-visits.service.ts ---
+Methods: schedule, checkIn, qrCheckIn, checkOut, recordOutcome, findAll
+
+--- apps/api/src/common/ai/ai.service.ts ---
+Methods: upsertVector, queryVector, matchProperties
+
+=== TASK 4: WORKERS ===
+
+--- apps/api/src/workers/ai-follow-up.worker.ts ---
+Triggers: @Cron('0 6 * * *')
+Status: Has Code
+
+--- apps/api/src/workers/ai-lead-scoring.worker.ts ---
+Triggers: @Process('score-lead')
+Status: Has Code
+
+--- apps/api/src/workers/visit-reminder.worker.ts ---
+Triggers: @Cron('0 8 * * *'), @Cron('0 * * * *'), @Cron('0 9 * * *')
+Status: Has Code
+
+--- apps/api/src/workers/payment-reminder.worker.ts ---
+Triggers: @Cron('0 9 * * *')
+Status: Has Code
+
+--- apps/api/src/workers/pdf-generator.worker.ts ---
+Triggers: @Process('booking-confirmation')
+Status: Has Code
+
+--- apps/api/src/workers/daily-briefing.worker.ts ---
+Triggers: @Cron('30 8 * * *')
+Status: Has Code
+
+--- apps/api/src/workers/stale-lead.worker.ts ---
+Triggers: @Cron('0 9 * * *')
+Status: Has Code
+
+--- apps/api/src/workers/unit-hold-expiry.worker.ts ---
+Triggers: @Cron('*/30 * * * *')
+Status: Has Code
+
+--- apps/api/src/workers/email.worker.ts ---
+Triggers: @Process('send')
+Status: Has Code
+
+--- apps/api/src/workers/whatsapp.worker.ts ---
+Triggers: @Process('send')
+Status: Has Code
+
+=== TASK 5: SOCKETS ===
+Backend Listens: join, join-user
+Backend Emits: 
+Frontend Listens: connect, disconnect, connect_error, reconnect, reconnect_error, reconnect_failed, lead:new, lead:scored, lead:updated, unit:status, notification
+Frontend Emits: join, join-user, ping
+
+=== TASK 6: AUTH ===
+localStorage usage: 
+
+=== TASK 7: API CALLS ===
+apps/web/app/pipeline/page.tsx:
+  - POST /leads/bulk
+apps/web/app/leads/page.tsx:
+  - POST /leads
+apps/web/app/settings/page.tsx:
+  - POST /auth/create-staff
+
+=== TASK 8: DEAD CODE ===
+apps/api/src/modules/agencies/agencies.service.ts: Length 843 chars. Contains: import { Injectable } from '@nestjs/common'; import { PrismaService } from '../../common/prisma/pris
+apps/api/src/workers/email.worker.ts: Length 490 chars. Contains: import { Processor, Process } from '@nestjs/bull'; import { Job } from 'bull'; import { EmailServi
+apps/api/src/workers/whatsapp.worker.ts: Length 836 chars. Contains: import { Process, Processor } from '@nestjs/bull'; import { Logger } from '@nestjs/common'; import {
+apps/web/lib/api.ts: Length 30 chars. Contains: export * from './api-client'; 
+packages/shared/index.ts: Length 2932 chars. Contains: // ── Enums ────────────────────────────────────────────────────── export enum Plan {   STARTER = 

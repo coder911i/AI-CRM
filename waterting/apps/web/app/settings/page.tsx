@@ -106,11 +106,11 @@ export default function SettingsPage() {
 
   return (
     <CRMLayout>
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+      <div className="bg-[#0F1117] min-h-screen text-[#F1F3F5] p-8 space-y-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#2E3340]">
            <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Command Center</h1>
-              <p className="text-slate-400 text-sm font-medium mt-1 lowercase tracking-widest text-[10px] font-black uppercase">Authorized system and organizational overrides</p>
+              <h1 className="text-3xl font-black text-[#F1F3F5] tracking-tighter uppercase">Command Center</h1>
+              <p className="text-[#8B909A] text-sm font-medium mt-1 lowercase tracking-widest text-[10px] font-black uppercase">Authorized system and organizational overrides</p>
            </div>
         </div>
 
@@ -121,12 +121,12 @@ export default function SettingsPage() {
                 key={tab.id}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                   activeTab === tab.id 
-                  ? 'bg-slate-900 text-white shadow-lg' 
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-[#1A1D23] text-[#F1F3F5] shadow-lg border border-[#2E3340]' 
+                  : 'text-[#8B909A] hover:bg-[#1A1D23] hover:text-[#F1F3F5]'
                 }`}
                 onClick={() => setActiveTab(tab.id)}
               >
-                <tab.icon size={16} className={activeTab === tab.id ? 'text-primary' : 'text-slate-400'} />
+                <tab.icon size={16} className={activeTab === tab.id ? 'text-[#4F6EF7]' : 'text-[#8B909A]'} />
                 {tab.label}
               </button>
             ))}
@@ -139,10 +139,10 @@ export default function SettingsPage() {
 
           <main className="flex-1 space-y-6">
             {activeTab === 'team' && (
-              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                    <Users2 size={14} className="text-slate-400" />
+              <div className="bg-[#1A1D23] rounded-2xl border border-[#2E3340] shadow-sm overflow-hidden">
+                <div className="px-6 py-5 border-b border-[#2E3340] flex justify-between items-center">
+                  <h3 className="text-[11px] font-black text-[#F1F3F5] uppercase tracking-widest flex items-center gap-2">
+                    <Users2 size={14} className="text-[#8B909A]" />
                     Internal Directory
                   </h3>
                   <button className="btn btn-primary btn-xs flex items-center gap-2 text-[9px] px-4" onClick={() => setShowInviteModal(true)}>
@@ -152,24 +152,24 @@ export default function SettingsPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-slate-50/10 border-b border-slate-50 font-mono">
-                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Entity</th>
-                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Class</th>
-                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">State</th>
+                      <tr className="bg-[#0F1117] border-b border-[#2E3340] font-mono">
+                        <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest">Entity</th>
+                        <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest">Class</th>
+                        <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest">State</th>
                         <th className="px-6 py-4"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-[#2E3340]">
                       {users.map(u => {
                         const role = ROLES.find(r => r.value === u.role);
                         return (
-                          <tr key={u.id} className="hover:bg-slate-50/30 transition-all">
+                          <tr key={u.id} className="hover:bg-[#22262F] transition-all">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                 <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border border-slate-200 shadow-sm uppercase">{u.name?.charAt(0)}</div>
+                                 <div className="w-8 h-8 rounded-full bg-[#2E3340] flex items-center justify-center text-[10px] font-black text-[#F1F3F5] uppercase">{u.name?.charAt(0)}</div>
                                  <div className="flex flex-col">
-                                    <span className="text-sm font-black text-slate-900 tracking-tight uppercase">{u.name}</span>
-                                    <span className="text-[10px] font-bold text-slate-400 lowercase">{u.email}</span>
+                                    <span className="text-sm font-black text-[#F1F3F5] tracking-tight uppercase">{u.name}</span>
+                                    <span className="text-[10px] font-bold text-[#8B909A] lowercase">{u.email}</span>
                                  </div>
                               </div>
                             </td>
@@ -185,7 +185,7 @@ export default function SettingsPage() {
                             </td>
                             <td className="px-6 py-4 text-right">
                               {u.id !== user?.sub && (
-                                <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors underline decoration-slate-200 underline-offset-4" onClick={() => toggleUserStatus(u.id)}>
+                                <button className="text-[10px] font-black text-[#8B909A] uppercase tracking-widest hover:text-[#4F6EF7] transition-colors underline decoration-[#2E3340] underline-offset-4" onClick={() => toggleUserStatus(u.id)}>
                                   {u.isActive ? 'SUSPEND' : 'ACTIVATE'}
                                 </button>
                               )}
@@ -200,29 +200,29 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'profile' && (
-              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden p-8 space-y-8">
-                <div className="border-b border-slate-50 pb-6">
-                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                    <Building size={14} className="text-slate-400" />
+              <div className="bg-[#1A1D23] rounded-2xl border border-[#2E3340] shadow-sm overflow-hidden p-8 space-y-8">
+                <div className="border-b border-[#2E3340] pb-6">
+                  <h3 className="text-[11px] font-black text-[#F1F3F5] uppercase tracking-widest flex items-center gap-2">
+                    <Building size={14} className="text-[#8B909A]" />
                     Corporation Framework
                   </h3>
                 </div>
                 <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Legal Identity</label>
-                    <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/10 transition-all uppercase" defaultValue="Skyline Developers" />
+                    <label className="text-[10px] font-black text-[#5A5F6B] uppercase tracking-widest ml-1">Legal Identity</label>
+                    <input className="w-full px-4 py-3 bg-[#0F1117] border border-[#2E3340] rounded-xl text-sm font-bold text-[#F1F3F5] focus:ring-2 focus:ring-[#4F6EF7]/10 transition-all uppercase" defaultValue="Skyline Developers" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">RERA Authorization</label>
-                    <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/10 transition-all font-mono uppercase" placeholder="UPRERAPRJXXXX" />
+                    <label className="text-[10px] font-black text-[#5A5F6B] uppercase tracking-widest ml-1">RERA Authorization</label>
+                    <input className="w-full px-4 py-3 bg-[#0F1117] border border-[#2E3340] rounded-xl text-sm font-bold text-[#F1F3F5] focus:ring-2 focus:ring-[#4F6EF7]/10 transition-all font-mono uppercase" placeholder="UPRERAPRJXXXX" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Command Signal Email</label>
-                    <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/10 transition-all lowercase" defaultValue={user?.email} />
+                    <label className="text-[10px] font-black text-[#5A5F6B] uppercase tracking-widest ml-1">Command Signal Email</label>
+                    <input className="w-full px-4 py-3 bg-[#0F1117] border border-[#2E3340] rounded-xl text-sm font-bold text-[#F1F3F5] focus:ring-2 focus:ring-[#4F6EF7]/10 transition-all lowercase" defaultValue={user?.email} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Insignia Path</label>
-                    <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/10 transition-all" placeholder="https://..." />
+                    <label className="text-[10px] font-black text-[#5A5F6B] uppercase tracking-widest ml-1">Insignia Path</label>
+                    <input className="w-full px-4 py-3 bg-[#0F1117] border border-[#2E3340] rounded-xl text-sm font-bold text-[#F1F3F5] focus:ring-2 focus:ring-[#4F6EF7]/10 transition-all" placeholder="https://..." />
                   </div>
                 </div>
                 <div className="pt-4">
@@ -232,14 +232,14 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'notifications' && (
-              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden p-8">
-                <div className="border-b border-slate-50 pb-6 mb-4">
-                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                    <BellRing size={14} className="text-slate-400" />
+              <div className="bg-[#1A1D23] rounded-2xl border border-[#2E3340] shadow-sm overflow-hidden p-8">
+                <div className="border-b border-[#2E3340] pb-6 mb-4">
+                  <h3 className="text-[11px] font-black text-[#F1F3F5] uppercase tracking-widest flex items-center gap-2">
+                    <BellRing size={14} className="text-[#8B909A]" />
                     Information Broadcast Logic
                   </h3>
                 </div>
-                <div className="divide-y divide-slate-50">
+                <div className="divide-y divide-[#2E3340]">
                   {[
                     { id: 'n1', label: 'Authorization Signal on lead allocation', default: true },
                     { id: 'n2', label: 'Messaging Protocol on stage shift', default: true },
@@ -247,8 +247,8 @@ export default function SettingsPage() {
                     { id: 'n4', label: 'Operational site-visit proximity markers', default: true },
                   ].map(n => (
                     <div key={n.id} className="flex items-center justify-between py-5 group">
-                      <span className="text-xs font-black text-slate-600 uppercase tracking-tight group-hover:text-slate-900 transition-colors">{n.label}</span>
-                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" defaultChecked={n.default} />
+                      <span className="text-xs font-black text-[#8B909A] uppercase tracking-tight group-hover:text-[#F1F3F5] transition-colors">{n.label}</span>
+                      <input type="checkbox" className="w-4 h-4 rounded border-[#2E3340] bg-[#0F1117] text-[#4F6EF7] focus:ring-[#4F6EF7]" defaultChecked={n.default} />
                     </div>
                   ))}
                 </div>
@@ -256,18 +256,18 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'pipeline' && (
-              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden p-8">
-                <div className="border-b border-slate-50 pb-6 mb-8 flex justify-between items-center">
-                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                    <GitMerge size={14} className="text-slate-400" />
+              <div className="bg-[#1A1D23] rounded-2xl border border-[#2E3340] shadow-sm overflow-hidden p-8">
+                <div className="border-b border-[#2E3340] pb-6 mb-8 flex justify-between items-center">
+                  <h3 className="text-[11px] font-black text-[#F1F3F5] uppercase tracking-widest flex items-center gap-2">
+                    <GitMerge size={14} className="text-[#8B909A]" />
                     Pipeline Evolution Logic
                   </h3>
                   <span className="text-[9px] font-bold text-rose-500 uppercase tracking-tighter bg-rose-50 px-2 py-1 rounded border border-rose-100">Immutability Lock Enabled</span>
                 </div>
-                <p className="text-[11px] text-slate-400 font-medium mb-8 leading-relaxed uppercase tracking-tighter">Current trajectory states are synchronized with internal reporting frameworks. Structural modifications are restricted.</p>
+                <p className="text-[11px] text-[#5A5F6B] font-medium mb-8 leading-relaxed uppercase tracking-tighter">Current trajectory states are synchronized with internal reporting frameworks. Structural modifications are restricted.</p>
                 <div className="flex flex-wrap gap-3">
                   {['NEW_LEAD', 'CONTACTED', 'INTERESTED', 'VISIT_SCHEDULED', 'VISIT_DONE', 'NEGOTIATION', 'BOOKING_DONE', 'LOST'].map(s => (
-                    <span key={s} className="px-3 py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg border border-slate-800">
+                    <span key={s} className="px-3 py-2 bg-[#0F1117] text-[#F1F3F5] text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg border border-[#2E3340]">
                        {s.replace(/_/g, ' ')}
                     </span>
                   ))}
@@ -276,18 +276,18 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'audit' && (
-              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
-                   <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                      <History size={14} className="text-slate-400" />
+              <div className="bg-[#1A1D23] rounded-2xl border border-[#2E3340] shadow-sm overflow-hidden">
+                <div className="px-6 py-5 bg-[#0F1117] border-b border-[#2E3340] flex justify-between items-center">
+                   <h3 className="text-[11px] font-black text-[#F1F3F5] uppercase tracking-widest flex items-center gap-2">
+                      <History size={14} className="text-[#8B909A]" />
                       Global Execution Registry
                    </h3>
                    <div className="flex gap-4">
-                      <select className="bg-white px-3 py-1.5 border border-slate-200 rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/10 transition-all outline-none" value={auditFilter} onChange={e => setAuditFilter(e.target.value)}>
+                      <select className="bg-[#1A1D23] px-3 py-1.5 border border-[#2E3340] text-[#F1F3F5] rounded-lg text-[9px] font-black uppercase tracking-widest outline-none" value={auditFilter} onChange={e => setAuditFilter(e.target.value)}>
                          <option value="">ALL ENTITIES</option>
                          {['LEAD','BOOKING','PAYMENT','REFUND','USER','PROJECT'].map(e => <option key={e} value={e}>{e}</option>)}
                       </select>
-                      <select className="bg-white px-3 py-1.5 border border-slate-200 rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/10 transition-all outline-none" value={auditActionFilter} onChange={e => setAuditActionFilter(e.target.value)}>
+                      <select className="bg-[#1A1D23] px-3 py-1.5 border border-[#2E3340] text-[#F1F3F5] rounded-lg text-[9px] font-black uppercase tracking-widest outline-none" value={auditActionFilter} onChange={e => setAuditActionFilter(e.target.value)}>
                         <option value="">ALL ACTIONS</option>
                         {['CREATE','UPDATE','DELETE','LOGIN','VERIFY'].map(a => <option key={a} value={a}>{a}</option>)}
                       </select>
@@ -296,26 +296,26 @@ export default function SettingsPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-slate-50/10 border-b border-slate-50">
-                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Timestamp</th>
-                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Entity Signature</th>
-                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Protocol Action</th>
+                      <tr className="bg-[#0F1117] border-b border-[#2E3340]">
+                        <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest font-mono">Timestamp</th>
+                        <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest">Entity Signature</th>
+                        <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest text-center">Protocol Action</th>
                         <th className="px-6 py-4"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-[#2E3340]">
                       {auditLogs.map(log => (
                         <React.Fragment key={log.id}>
-                          <tr className="hover:bg-slate-50/50 transition-all cursor-pointer group" onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}>
-                            <td className="px-6 py-4 text-[10px] font-bold text-slate-500 font-mono italic">
+                          <tr className="hover:bg-[#22262F] transition-all cursor-pointer group" onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}>
+                            <td className="px-6 py-4 text-[10px] font-bold text-[#8B909A] font-mono italic">
                                {new Date(log.createdAt).toLocaleString()}
                             </td>
                             <td className="px-6 py-4">
                                <div className="flex items-center gap-3">
-                                  <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center text-[9px] font-black text-white border border-slate-800 shadow-sm uppercase">{log.user?.name?.charAt(0) || 'S'}</div>
+                                  <div className="w-7 h-7 rounded-lg bg-[#2E3340] flex items-center justify-center text-[9px] font-black text-[#F1F3F5] border border-[#2E3340] shadow-sm uppercase">{log.user?.name?.charAt(0) || 'S'}</div>
                                   <div className="flex flex-col">
-                                     <span className="text-xs font-black text-slate-900 group-hover:text-primary transition-colors uppercase tracking-tight">{log.user?.name || 'SYSTEM_SYNC'}</span>
-                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{log.entity} <code className="text-slate-300">#{log.entityId.slice(-6)}</code></span>
+                                     <span className="text-xs font-black text-[#F1F3F5] group-hover:text-[#4F6EF7] transition-colors uppercase tracking-tight">{log.user?.name || 'SYSTEM_SYNC'}</span>
+                                     <span className="text-[9px] font-bold text-[#8B909A] uppercase tracking-tighter">{log.entity} <code className="text-[#5A5F6B]">#{log.entityId.slice(-6)}</code></span>
                                   </div>
                                </div>
                             </td>
@@ -329,24 +329,24 @@ export default function SettingsPage() {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                               <ChevronRight size={14} className={`text-slate-300 transition-transform ${expandedLog === log.id ? 'rotate-90 text-primary' : ''}`} />
+                               <ChevronRight size={14} className={`text-[#5A5F6B] transition-transform ${expandedLog === log.id ? 'rotate-90 text-[#4F6EF7]' : ''}`} />
                             </td>
                           </tr>
                           {expandedLog === log.id && (
-                            <tr className="bg-slate-50/50">
-                              <td colSpan={4} className="px-8 py-8 border-l-4 border-primary">
+                            <tr className="bg-[#22262F]">
+                              <td colSpan={4} className="px-8 py-8 border-l-4 border-[#4F6EF7]">
                                  <div className="grid grid-cols-2 gap-8">
                                     <div className="space-y-3">
-                                       <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                       <div className="text-[9px] font-black text-[#8B909A] uppercase tracking-widest flex items-center gap-2">
                                           <AlertCircle size={10} /> Antecedent State
                                        </div>
-                                       <pre className="bg-white p-6 rounded-xl border border-slate-100 text-[9px] font-mono font-bold text-slate-500 overflow-x-auto shadow-inner h-48">{JSON.stringify(log.oldData, null, 2) || 'NONE_RECORDED'}</pre>
+                                       <pre className="bg-[#0F1117] p-6 rounded-xl border border-[#2E3340] text-[9px] font-mono font-bold text-[#8B909A] overflow-x-auto shadow-inner h-48">{JSON.stringify(log.oldData, null, 2) || 'NONE_RECORDED'}</pre>
                                     </div>
                                     <div className="space-y-3">
-                                       <div className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                                       <div className="text-[9px] font-black text-[#4F6EF7] uppercase tracking-widest flex items-center gap-2">
                                           <CheckCircle2 size={10} /> Mutation Execution
                                        </div>
-                                       <pre className="bg-white p-6 rounded-xl border border-slate-100 text-[9px] font-mono font-bold text-slate-900 overflow-x-auto shadow-inner h-48">{JSON.stringify(log.newData, null, 2)}</pre>
+                                       <pre className="bg-[#0F1117] p-6 rounded-xl border border-[#2E3340] text-[9px] font-mono font-bold text-[#F1F3F5] overflow-x-auto shadow-inner h-48">{JSON.stringify(log.newData, null, 2)}</pre>
                                     </div>
                                  </div>
                               </td>
@@ -357,11 +357,11 @@ export default function SettingsPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="px-8 py-5 flex justify-between items-center bg-slate-50/50 border-t border-slate-50">
-                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">{auditTotal} SYSTEM EVOCATIONS REGISTERED</span>
+                <div className="px-8 py-5 flex justify-between items-center bg-[#0F1117] border-t border-[#2E3340]">
+                   <span className="text-[10px] font-black text-[#5A5F6B] uppercase tracking-widest italic">{auditTotal} SYSTEM EVOCATIONS REGISTERED</span>
                    <div className="flex gap-2">
                       <button className="btn btn-secondary px-4 py-2 text-[9px] font-black uppercase tracking-widest" disabled={auditPage === 1} onClick={() => setAuditPage(auditPage - 1)}>ANTECEDENT</button>
-                      <span className="px-4 py-2 text-[10px] font-black text-slate-900 border border-slate-100 bg-white rounded-lg">{auditPage}</span>
+                      <span className="px-4 py-2 text-[10px] font-black text-[#F1F3F5] border border-[#2E3340] bg-[#1A1D23] rounded-lg">{auditPage}</span>
                       <button className="btn btn-secondary px-4 py-2 text-[9px] font-black uppercase tracking-widest" disabled={auditLogs.length < 50} onClick={() => setAuditPage(auditPage + 1)}>SUBSEQUENT</button>
                    </div>
                 </div>
@@ -372,30 +372,30 @@ export default function SettingsPage() {
       </div>
 
       {showInviteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
-             <div className="px-8 py-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#1A1D23] w-full max-w-sm rounded-3xl shadow-2xl border border-[#2E3340] overflow-hidden animate-in zoom-in-95 duration-200">
+             <div className="px-8 py-6 border-b border-[#2E3340] flex justify-between items-center bg-[#0F1117]">
                <div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Protocol Initiation</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">Staff Authorization Sequence</p>
+                  <h3 className="text-sm font-black text-[#F1F3F5] uppercase tracking-widest">Protocol Initiation</h3>
+                  <p className="text-[10px] text-[#5A5F6B] font-bold uppercase tracking-tighter mt-0.5">Staff Authorization Sequence</p>
                </div>
-               <button className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400" onClick={() => setShowInviteModal(false)}>
+               <button className="p-2 hover:bg-[#22262F] rounded-xl transition-colors text-[#8B909A]" onClick={() => setShowInviteModal(false)}>
                   <X size={20} />
                </button>
             </div>
             
             <div className="p-8 space-y-6">
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Identity Identifier</label>
-                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-primary/10 transition-all uppercase" placeholder="LEGAL STAFF NAME" value={inviteForm.name} onChange={e => setInviteForm({ ...inviteForm, name: e.target.value })} />
+                  <label className="text-[10px] font-black text-[#5A5F6B] uppercase tracking-widest ml-1">Identity Identifier</label>
+                  <input className="w-full px-4 py-3 bg-[#0F1117] border border-[#2E3340] text-[#F1F3F5] rounded-xl text-sm font-black focus:ring-2 focus:ring-[#4F6EF7]/10 transition-all uppercase" placeholder="LEGAL STAFF NAME" value={inviteForm.name} onChange={e => setInviteForm({ ...inviteForm, name: e.target.value })} />
                </div>
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Primary Transmission Hash</label>
-                  <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/10 transition-all lowercase" placeholder="EMAIL@PROTOCOL.IO" value={inviteForm.email} onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })} />
+                  <label className="text-[10px] font-black text-[#5A5F6B] uppercase tracking-widest ml-1">Primary Transmission Hash</label>
+                  <input className="w-full px-4 py-3 bg-[#0F1117] border border-[#2E3340] text-[#F1F3F5] rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#4F6EF7]/10 transition-all lowercase" placeholder="EMAIL@PROTOCOL.IO" value={inviteForm.email} onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })} />
                </div>
                <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Authorization Tier</label>
-                   <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-primary/10 transition-all uppercase appearance-none" value={inviteForm.role} onChange={e => setInviteForm({ ...inviteForm, role: e.target.value })}>
+                   <label className="text-[10px] font-black text-[#5A5F6B] uppercase tracking-widest ml-1">Authorization Tier</label>
+                   <select className="w-full px-4 py-3 bg-[#0F1117] border border-[#2E3340] text-[#F1F3F5] rounded-xl text-sm font-black focus:ring-2 focus:ring-[#4F6EF7]/10 transition-all uppercase appearance-none" value={inviteForm.role} onChange={e => setInviteForm({ ...inviteForm, role: e.target.value })}>
                      {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                    </select>
                </div>

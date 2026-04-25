@@ -86,7 +86,10 @@ export class LeadsService {
         tenantId, 
         role: { in: [UserRole.TENANT_ADMIN, UserRole.AGENCY_OWNER] },
         isActive: true
-      }
+      },
+      take: 50,
+      skip: 0,
+      select: { id: true }
     });
 
     for (const builder of builders) {
@@ -118,7 +121,10 @@ export class LeadsService {
     // Weighted Round-robin: Pick broker with least active leads
     const brokers = await this.prisma.broker.findMany({
       where: { tenantId, isActive: true },
-      include: {
+      take: 50,
+      skip: 0,
+      select: {
+        id: true,
         _count: {
           select: { leads: { where: { stage: { notIn: ['BOOKING_DONE', 'LOST'] } } } }
         }
@@ -133,11 +139,14 @@ export class LeadsService {
     // Round-robin among SALES_AGENTs
     const agents = await this.prisma.user.findMany({
       where: { tenantId, role: UserRole.SALES_AGENT, isActive: true },
-      include: {
+      take: 50,
+      skip: 0,
+      select: {
+        id: true,
         _count: {
           select: { leads: { where: { stage: { notIn: ['BOOKING_DONE', 'LOST'] } } } }
         }
-      } as any
+      }
     });
 
     if (agents.length === 0) return null;
@@ -202,9 +211,19 @@ export class LeadsService {
       where: { tenantId: user.tenantId },
       take: limit,
       skip: (page - 1) * limit,
-      include: {
-        project: true,
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        stage: true,
+        scoreLabel: true,
+        score: true,
+        source: true,
+        createdAt: true,
+        assignedToId: true,
         assignedTo: { select: { id: true, name: true } },
+        project: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -413,6 +432,9 @@ export class LeadsService {
         // notify all SalesManagers + TenantAdmin
         const admins = await this.prisma.user.findMany({
           where: { tenantId: user.tenantId, role: { in: ['TENANT_ADMIN', 'SALES_MANAGER'] } },
+          take: 50,
+          skip: 0,
+          select: { id: true }
         });
         for (const admin of admins) {
           await this.notificationsService.create({
@@ -443,6 +465,9 @@ export class LeadsService {
           }
           const accounts = await this.prisma.user.findMany({
             where: { tenantId: user.tenantId, role: 'ACCOUNTS' as any },
+            take: 50,
+            skip: 0,
+            select: { id: true }
           });
           for (const acc of accounts) {
             await this.notificationsService.create({

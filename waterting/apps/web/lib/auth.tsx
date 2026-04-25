@@ -34,30 +34,46 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('waterting_user');
+      if (cached) return JSON.parse(cached);
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('waterting_user') && !!getToken();
+    }
+    return true;
+  });
 
   useEffect(() => {
     const token = getToken();
-    if (token) {
+    if (token && !user) {
       api.get<User>('/auth/me')
-        .then(setUser)
+        .then(u => {
+          localStorage.setItem('waterting_user', JSON.stringify(u));
+          setUser(u);
+        })
         .catch(() => { clearToken(); setUser(null); })
         .finally(() => setLoading(false));
-    } else {
+    } else if (!token) {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const login = async (email: string, password: string) => {
     const res = await api.publicPost<{ access_token: string; user: User }>('/auth/login', { email, password });
     setToken(res.access_token);
+    localStorage.setItem('waterting_user', JSON.stringify(res.user));
     setUser(res.user);
   };
 
   const register = async (data: { email: string; password: string; name: string; tenantName: string }) => {
     const res = await api.publicPost<{ access_token: string; user: User }>('/auth/register', data);
     setToken(res.access_token);
+    localStorage.setItem('waterting_user', JSON.stringify(res.user));
     setUser(res.user);
   };
 

@@ -23,6 +23,8 @@ export class AnalyticsService {
     const bookings = await this.prisma.booking.findMany({
       where: { lead: { tenantId } },
       select: { bookingAmount: true },
+      take: 50,
+      skip: 0
     });
     const avgDealSize = bookings.length > 0 ? Math.round(bookings.reduce((sum, b) => sum + b.bookingAmount, 0) / bookings.length) : 0;
 
@@ -58,7 +60,11 @@ export class AnalyticsService {
     // 4. Agent Performance
     const agents = await this.prisma.user.findMany({
       where: { tenantId, role: { in: ['SALES_AGENT', 'SALES_MANAGER'] } },
-      include: {
+      take: 50,
+      skip: 0,
+      select: {
+        id: true,
+        name: true,
         _count: {
           select: { leads: true, siteVisits: true }
         },
@@ -66,7 +72,7 @@ export class AnalyticsService {
           where: { stage: 'BOOKING_DONE' },
           select: { bookings: { select: { bookingAmount: true } } }
         }
-      } as any
+      }
     });
 
     const agentPerformance = (agents as any[]).map(a => {
@@ -114,6 +120,8 @@ export class AnalyticsService {
     const units = await this.prisma.unit.findMany({
       where: projectId ? { tower: { projectId } } : { tower: { project: { tenantId } } },
       select: { status: true, totalPrice: true },
+      take: 1000,
+      skip: 0
     });
 
     const counts = {

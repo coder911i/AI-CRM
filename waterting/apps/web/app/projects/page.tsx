@@ -29,7 +29,16 @@ export default function ProjectsPage() {
     } catch (err: any) { alert(err.message); }
   };
 
-  if (authLoading || loading) return <div className="loading-page"><div className="spinner" /></div>;
+  if (authLoading || loading) return (
+    <CRMLayout>
+      <div className="p-8 space-y-6">
+        <div className="h-12 w-64 animate-pulse bg-[#22262F] rounded-lg"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[1,2,3,4,5,6].map(i => <div key={i} className="h-64 animate-pulse bg-[#22262F] rounded-lg"></div>)}
+        </div>
+      </div>
+    </CRMLayout>
+  );
 
   return (
     <CRMLayout>

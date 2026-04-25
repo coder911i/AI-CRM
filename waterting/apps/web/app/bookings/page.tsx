@@ -18,7 +18,17 @@ export default function BookingsPage() {
     if (user) { api.get<any[]>('/bookings').then(setBookings).catch(console.error).finally(() => setLoading(false)); }
   }, [user, authLoading]);
 
-  if (authLoading || loading) return <div className="loading-page"><div className="spinner" /></div>;
+  if (authLoading || loading) return (
+    <CRMLayout>
+      <div className="p-8 space-y-8">
+        <div className="h-12 w-64 animate-pulse bg-[#22262F] rounded-lg"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1,2,3].map(i => <div key={i} className="h-32 animate-pulse bg-[#22262F] rounded-lg"></div>)}
+        </div>
+        <div className="h-[400px] w-full animate-pulse bg-[#22262F] rounded-lg"></div>
+      </div>
+    </CRMLayout>
+  );
 
   const statusBadge = (s: string) => {
     switch(s) { 

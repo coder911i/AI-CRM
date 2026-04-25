@@ -89,7 +89,7 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-slate-50 font-sans selection:bg-primary selection:text-white">
       {/* High-Density Administrative Sidebar */}
       <aside 
-        className={`fixed left-0 top-0 h-screen bg-slate-900 z-[100] transition-all duration-500 ease-in-out flex flex-col border-r border-white/5 shadow-2xl ${
+        className={`bg-[#0F1117] border-r border-[#2E3340] h-screen flex flex-col fixed left-0 top-0 z-40 transition-all duration-500 ease-in-out ${
           collapsed ? 'w-24' : 'w-72'
         }`}
       >
@@ -119,10 +119,10 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
                <Link 
                  key={item.href} 
                  href={item.href} 
-                 className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group relative ${
+                 className={`transition-all group relative ${
                    isActive 
-                   ? 'bg-primary text-white shadow-xl shadow-primary/20 translate-x-2' 
-                   : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                   ? 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-[#4F6EF7] bg-[#1A1D23] font-medium w-full' 
+                   : 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-[#8B909A] hover:bg-[#1A1D23] hover:text-[#F1F3F5] transition-colors duration-150 cursor-pointer w-full'
                  }`}
                >
                  <item.icon size={18} className={`shrink-0 transition-transform ${collapsed ? 'mx-auto' : ''} ${isActive ? 'scale-110' : 'group-hover:scale-110 duration-300'}`} />
@@ -174,8 +174,8 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Primary Context Workspace */}
-      <main className={`flex-1 min-h-screen transition-all duration-500 ${collapsed ? 'ml-24' : 'ml-72'} p-12 bg-white relative`}>
-        <header className="flex justify-between items-center mb-10 pb-6 border-b border-slate-100">
+      <main className={`bg-[#0F1117] flex-1 overflow-auto min-h-screen transition-all duration-500 ${collapsed ? 'ml-24' : 'ml-72'} relative`}>
+        <header className="bg-[#1A1D23] border-b border-[#2E3340] h-14 flex items-center justify-between px-6">
            <div className="flex items-center gap-6">
               <div className="relative group">
                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-primary transition-colors" size={14} />
@@ -194,7 +194,7 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
         </div>
         
         {/* Elite Administrative Quick-Action Trigger */}
-        <div className="fixed bottom-10 right-10 z-[1000] flex flex-col items-end gap-4">
+        <div className="fixed bottom-10 right-10 z-40 flex flex-col items-end gap-4">
           {fabOpen && (
             <div className="flex flex-col gap-3 mb-4 animate-in slide-in-from-bottom-5 duration-300">
               {[
@@ -224,7 +224,7 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
 
         {/* Operational Modality Layers */}
         {showNoteModal && (
-          <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setShowNoteModal(false)}>
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowNoteModal(false)}>
             <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
               <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                  <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
@@ -258,7 +258,7 @@ export default function CRMLayout({ children }: { children: React.ReactNode }) {
         )}
 
         {showLeadModal && (
-          <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setShowLeadModal(false)}>
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowLeadModal(false)}>
             <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
               <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                  <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">

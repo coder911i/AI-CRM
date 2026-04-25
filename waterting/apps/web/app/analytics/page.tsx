@@ -76,12 +76,15 @@ export default function AnalyticsPage() {
   }, [user, authLoading]);
 
   if (authLoading || loading) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-slate-900 z-[9999]">
-      <div className="flex flex-col items-center gap-6">
-        <div className="w-16 h-16 border-2 border-slate-700 border-t-primary rounded-full animate-spin shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]"></div>
-        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] animate-pulse">Syncing Intelligence...</span>
+    <CRMLayout>
+      <div className="p-8 space-y-12">
+        <div className="h-20 w-full animate-pulse bg-[#22262F] rounded-lg"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          {[1,2,3,4,5].map(i => <div key={i} className="h-32 animate-pulse bg-[#22262F] rounded-lg"></div>)}
+        </div>
+        <div className="h-[400px] w-full animate-pulse bg-[#22262F] rounded-lg"></div>
       </div>
-    </div>
+    </CRMLayout>
   );
 
   const stats = data?.overview || {
@@ -90,20 +93,20 @@ export default function AnalyticsPage() {
 
   return (
     <CRMLayout>
-      <div id="analytics-report" className="min-h-screen bg-white">
-        <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-8 py-6">
+      <div id="analytics-report" className="min-h-screen bg-[#0F1117] text-[#F1F3F5]">
+        <div className="sticky top-0 z-40 bg-[#1A1D23]/90 backdrop-blur-xl border-b border-[#2E3340] px-8 py-6">
           <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <div className="flex items-center gap-3 mb-1">
                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                 <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">Strategic Briefing</h1>
+                 <h1 className="text-3xl font-black text-[#F1F3F5] tracking-tighter uppercase italic leading-none">Strategic Briefing</h1>
               </div>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{user?.tenant?.name || 'Authorized'} Portfolio Performance Audit</p>
+              <p className="text-[#8B909A] text-[10px] font-black uppercase tracking-widest">{user?.tenant?.name || 'Authorized'} Portfolio Performance Audit</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="relative group">
                 <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-primary transition-colors" size={14} />
-                <select className="bg-slate-50 border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-xl pl-10 pr-6 py-3 outline-none focus:ring-4 focus:ring-primary/5 transition-all appearance-none cursor-pointer">
+                <select className="bg-[#0F1117] border border-[#2E3340] text-[#8B909A] text-[10px] font-black uppercase tracking-widest rounded-xl pl-10 pr-6 py-3 outline-none focus:ring-4 focus:ring-primary/5 transition-all appearance-none cursor-pointer">
                   <option value="30">Cycle: Last 30 Days</option>
                   <option value="90">Cycle: Last 90 Days</option>
                 </select>
@@ -111,7 +114,7 @@ export default function AnalyticsPage() {
               <button 
                 id="export-pdf-btn"
                 onClick={exportPDF}
-                className="bg-slate-900 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:bg-primary transition-all flex items-center gap-2 border border-slate-900"
+                className="bg-[#4F6EF7] text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#4F6EF7]/20 hover:bg-[#3D5CE5] transition-all flex items-center gap-2 border border-[#4F6EF7]"
               >
                 Export Dossier <Download size={14} />
               </button>
@@ -123,22 +126,22 @@ export default function AnalyticsPage() {
           {/* Section 1: Overview Registry */}
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {[
-              { label: 'Asset Entrants', val: stats.totalLeads, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-              { label: 'Realized Conversions', val: stats.converted, icon: Trophy, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-              { label: 'Efficiency Quotient', val: `${stats.conversionRate}%`, icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-50' },
-              { label: 'Actualized Revenue', val: `₹${(stats.totalRevenue / 10000000).toFixed(2)}Cr`, icon: IndianRupee, color: 'text-slate-900', bg: 'bg-slate-100', mono: true },
-              { label: 'AI Forecasting', val: `₹${(stats.forecastedRevenue / 10000000).toFixed(2)}Cr`, icon: Zap, color: 'text-primary', bg: 'bg-primary/5', sub: 'Next 30 Cycles', mono: true },
+              { label: 'Asset Entrants', val: stats.totalLeads, icon: Users, color: 'text-blue-500', bg: 'bg-[#1A1D23]' },
+              { label: 'Realized Conversions', val: stats.converted, icon: Trophy, color: 'text-emerald-500', bg: 'bg-[#1A1D23]' },
+              { label: 'Efficiency Quotient', val: `${stats.conversionRate}%`, icon: BarChart3, color: 'text-amber-500', bg: 'bg-[#1A1D23]' },
+              { label: 'Actualized Revenue', val: `₹${(stats.totalRevenue / 10000000).toFixed(2)}Cr`, icon: IndianRupee, color: 'text-[#F1F3F5]', bg: 'bg-[#1A1D23]', mono: true },
+              { label: 'AI Forecasting', val: `₹${(stats.forecastedRevenue / 10000000).toFixed(2)}Cr`, icon: Zap, color: 'text-[#4F6EF7]', bg: 'bg-[#1A1D23]', sub: 'Next 30 Cycles', mono: true },
             ].map((s, i) => (
-              <div key={i} className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
+              <div key={i} className="bg-[#1A1D23] p-8 rounded-3xl border border-[#2E3340] shadow-sm hover:border-[#4F6EF7] transition-all group relative overflow-hidden">
                 <div className={`absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform ${s.color}`}>
                    <s.icon size={64} />
                 </div>
                 <div className="relative z-10 space-y-4">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <label className="text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest flex items-center gap-2">
                      <s.icon size={12} className={s.color} /> {s.label}
                   </label>
-                  <h3 className={`text-2xl font-black text-slate-900 tracking-tighter uppercase ${s.mono ? 'font-mono' : ''}`}>{s.val}</h3>
-                  {s.sub && <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight italic leading-none">{s.sub}</p>}
+                  <h3 className={`text-2xl font-black text-[#F1F3F5] tracking-tighter uppercase ${s.mono ? 'font-mono' : ''}`}>{s.val}</h3>
+                  {s.sub && <p className="text-[8px] font-bold text-[#8B909A] uppercase tracking-tight italic leading-none">{s.sub}</p>}
                 </div>
               </div>
             ))}
@@ -182,13 +185,13 @@ export default function AnalyticsPage() {
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-200/60 shadow-lg overflow-hidden group">
-              <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                 <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                    <Activity size={14} className="text-slate-400" />
+            <div className="lg:col-span-2 bg-[#1A1D23] rounded-[2rem] border border-[#2E3340] shadow-lg overflow-hidden group">
+              <div className="px-8 py-6 border-b border-[#2E3340] flex justify-between items-center">
+                 <h3 className="text-[10px] font-black text-[#F1F3F5] uppercase tracking-widest flex items-center gap-2">
+                    <Activity size={14} className="text-[#8B909A]" />
                     Revenue Collection Timeline
                  </h3>
-                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">Authorized Real-Time Feed</span>
+                 <span className="text-[9px] font-bold text-[#5A5F6B] uppercase tracking-tighter italic">Authorized Real-Time Feed</span>
               </div>
               <div className="p-10 h-[380px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -212,10 +215,10 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-lg overflow-hidden group">
-              <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                 <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                    <Target size={14} className="text-slate-400" />
+            <div className="bg-[#1A1D23] rounded-[2rem] border border-[#2E3340] shadow-lg overflow-hidden group">
+              <div className="px-8 py-6 border-b border-[#2E3340] flex justify-between items-center">
+                 <h3 className="text-[10px] font-black text-[#F1F3F5] uppercase tracking-widest flex items-center gap-2">
+                    <Target size={14} className="text-[#8B909A]" />
                     Conversion Funnel
                  </h3>
               </div>
@@ -232,12 +235,12 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-lg overflow-hidden">
-            <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-              <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                <Activity size={14} className="text-slate-400" /> Interaction Density Heatmap
+          <div className="bg-[#1A1D23] rounded-[2rem] border border-[#2E3340] shadow-lg overflow-hidden">
+            <div className="px-8 py-6 border-b border-[#2E3340] flex justify-between items-center">
+              <h3 className="text-[10px] font-black text-[#F1F3F5] uppercase tracking-widest flex items-center gap-2">
+                <Activity size={14} className="text-[#8B909A]" /> Interaction Density Heatmap
               </h3>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">Global Activity Synchronization</span>
+              <span className="text-[9px] font-bold text-[#5A5F6B] uppercase tracking-tighter italic">Global Activity Synchronization</span>
             </div>
             <div className="p-12 overflow-x-auto no-scrollbar">
                <div className="flex gap-2.5">
@@ -259,8 +262,8 @@ export default function AnalyticsPage() {
                     </div>
                   ))}
                </div>
-               <div className="flex justify-between mt-8 items-center border-t border-slate-50 pt-6">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic leading-none">Inert State</span>
+               <div className="flex justify-between mt-8 items-center border-t border-[#2E3340] pt-6">
+                  <span className="text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest italic leading-none">Inert State</span>
                   <div className="flex gap-3 items-center">
                      {[0.1, 0.3, 0.6, 0.9].map(o => <div key={o} className="w-2.5 h-2.5 rounded-[3px] bg-primary" style={{ opacity: o }} />)}
                      <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 italic leading-none">Maximum Intensity</span>
@@ -270,27 +273,27 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-lg overflow-hidden flex flex-col">
-              <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                  <Briefcase size={14} className="text-slate-400" /> Lead Source ROI Briefing
+            <div className="bg-[#1A1D23] rounded-[2rem] border border-[#2E3340] shadow-lg overflow-hidden flex flex-col">
+              <div className="px-8 py-6 border-b border-[#2E3340] flex justify-between items-center">
+                <h3 className="text-[10px] font-black text-[#F1F3F5] uppercase tracking-widest flex items-center gap-2">
+                  <Briefcase size={14} className="text-[#8B909A]" /> Lead Source ROI Briefing
                 </h3>
               </div>
               <div className="p-8 flex-1">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50/50">
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Protocol Source</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Throughput</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Efficiency</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Value</th>
+                    <tr className="bg-[#0F1117]">
+                      <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest">Protocol Source</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest text-right">Throughput</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest">Efficiency</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest text-right">Value</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-[#2E3340]">
                     {(data?.sourceROI || []).map((s: any) => (
-                      <tr key={s.source} className="hover:bg-slate-50/30 transition-all">
-                        <td className="px-6 py-4 text-[10px] font-black text-slate-900 uppercase">{s.source}</td>
-                        <td className="px-6 py-4 text-xs font-black text-slate-900 font-mono text-right">{s.totalLeads}</td>
+                      <tr key={s.source} className="hover:bg-[#22262F] transition-all">
+                        <td className="px-6 py-4 text-[10px] font-black text-[#F1F3F5] uppercase">{s.source}</td>
+                        <td className="px-6 py-4 text-xs font-black text-[#F1F3F5] font-mono text-right">{s.totalLeads}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
@@ -299,7 +302,7 @@ export default function AnalyticsPage() {
                             <span className="text-[10px] font-black text-emerald-600 font-mono">{s.conversionRate}%</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-xs font-black text-slate-900 font-mono text-right italic">₹{(s.totalRevenue / 100000).toFixed(1)}L</td>
+                        <td className="px-6 py-4 text-xs font-black text-[#F1F3F5] font-mono text-right italic">₹{(s.totalRevenue / 100000).toFixed(1)}L</td>
                       </tr>
                     ))}
                   </tbody>
@@ -307,35 +310,35 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-lg overflow-hidden flex flex-col">
-              <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                  <UserCheck size={14} className="text-slate-400" /> Operational Efficiency (Top Agents)
+            <div className="bg-[#1A1D23] rounded-[2rem] border border-[#2E3340] shadow-lg overflow-hidden flex flex-col">
+              <div className="px-8 py-6 border-b border-[#2E3340] flex justify-between items-center">
+                <h3 className="text-[10px] font-black text-[#F1F3F5] uppercase tracking-widest flex items-center gap-2">
+                  <UserCheck size={14} className="text-[#8B909A]" /> Operational Efficiency (Top Agents)
                 </h3>
               </div>
               <div className="p-8 flex-1">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50/50">
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Logistician</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Inbound</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Visits</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Success</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Coefficient</th>
+                    <tr className="bg-[#0F1117]">
+                      <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest">Logistician</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest text-center">Inbound</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest text-center">Visits</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest text-center">Success</th>
+                      <th className="px-6 py-4 text-[9px] font-black text-[#5A5F6B] uppercase tracking-widest text-right">Coefficient</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-[#2E3340]">
                     {(data?.agentPerformance || []).map((a: any) => (
-                      <tr key={a.id} className="hover:bg-slate-50/30 transition-all">
+                      <tr key={a.id} className="hover:bg-[#22262F] transition-all">
                         <td className="px-6 py-4 flex items-center gap-3">
-                           <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center text-[9px] font-black text-white">{a.name.charAt(0)}</div>
-                           <span className="text-[10px] font-black text-slate-900 uppercase">{a.name}</span>
+                           <div className="w-7 h-7 rounded-lg bg-[#2E3340] flex items-center justify-center text-[9px] font-black text-[#F1F3F5]">{a.name.charAt(0)}</div>
+                           <span className="text-[10px] font-black text-[#F1F3F5] uppercase">{a.name}</span>
                         </td>
-                        <td className="px-6 py-4 text-[10px] font-bold text-slate-900 font-mono text-center">{a.assignedLeads}</td>
-                        <td className="px-6 py-4 text-[10px] font-bold text-slate-900 font-mono text-center">{a.siteVisits}</td>
-                        <td className="px-6 py-4 text-[10px] font-bold text-slate-900 font-mono text-center italic">{a.bookings}</td>
+                        <td className="px-6 py-4 text-[10px] font-bold text-[#F1F3F5] font-mono text-center">{a.assignedLeads}</td>
+                        <td className="px-6 py-4 text-[10px] font-bold text-[#F1F3F5] font-mono text-center">{a.siteVisits}</td>
+                        <td className="px-6 py-4 text-[10px] font-bold text-[#F1F3F5] font-mono text-center italic">{a.bookings}</td>
                         <td className="px-6 py-4 text-right">
-                           <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20">{a.conversionRate}%</span>
+                           <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-[#4F6EF7]/10 text-[#4F6EF7] border border-[#4F6EF7]/20">{a.conversionRate}%</span>
                         </td>
                       </tr>
                     ))}

@@ -71,10 +71,10 @@ export default function DashboardPage() {
 
   return (
     <CRMLayout>
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200/60">
+      <div className="bg-[#0F1117] min-h-full p-6 space-y-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[#2E3340]">
           <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Intelligence Dashboard</h1>
+            <h1 className="text-2xl font-extrabold text-[#F1F3F5] tracking-tight">Intelligence Dashboard</h1>
             <p className="text-slate-500 text-sm font-medium">Monitoring CRM vitals for {user?.name || 'Administrator'}</p>
           </motion.div>
           <motion.button 
@@ -111,7 +111,7 @@ export default function DashboardPage() {
         <AnimatePresence mode='wait'>
           {loading ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
-               {[1,2,3,4,5,6].map(i => <div key={i} className="h-28 bg-slate-100 animate-pulse rounded-xl" />)}
+               {[1,2,3,4,5,6].map(i => <div key={i} className="h-28 animate-pulse bg-[#22262F] rounded-lg" />)}
              </div>
           ) : (
             <motion.div 
@@ -121,21 +121,21 @@ export default function DashboardPage() {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5"
             >
               {[
-                { label: 'Total Base', value: stats?.totalLeads, icon: Users, color: 'text-blue-600 bg-blue-50' },
-                { label: 'Fresh Intake', value: stats?.newLeads, icon: Sparkles, color: 'text-emerald-600 bg-emerald-50' },
-                { label: 'Active Pipeline', value: stats?.activeLeads, icon: RefreshCcw, color: 'text-amber-600 bg-amber-50' },
-                { label: 'Closed Deals', value: stats?.totalBookings, icon: Target, color: 'text-indigo-600 bg-indigo-50' },
-                { label: 'Daily Visits', value: stats?.todaySiteVisits, icon: MapPin, color: 'text-sky-600 bg-sky-50' },
-                { label: 'Net Value', value: formatCompactCurrency(stats?.totalRevenue ?? 0), icon: Coins, color: 'text-slate-900 bg-slate-100' },
+                { label: 'Total Base', value: stats?.totalLeads, icon: Users, color: 'text-blue-500 bg-blue-500/10' },
+                { label: 'Fresh Intake', value: stats?.newLeads, icon: Sparkles, color: 'text-emerald-500 bg-emerald-500/10' },
+                { label: 'Active Pipeline', value: stats?.activeLeads, icon: RefreshCcw, color: 'text-amber-500 bg-amber-500/10' },
+                { label: 'Closed Deals', value: stats?.totalBookings, icon: Target, color: 'text-indigo-500 bg-indigo-500/10' },
+                { label: 'Daily Visits', value: stats?.todaySiteVisits, icon: MapPin, color: 'text-sky-500 bg-sky-500/10' },
+                { label: 'Net Value', value: formatCompactCurrency(stats?.totalRevenue ?? 0), icon: Coins, color: 'text-[#F1F3F5] bg-[#22262F]' },
               ].map((stat, idx) => (
-                <motion.div key={idx} variants={item} className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm hover:border-slate-300 transition-all flex flex-col justify-between h-32">
+                <motion.div key={idx} variants={item} className="bg-[#1A1D23] border border-[#2E3340] rounded-xl p-5 shadow-sm shadow-black/20 transition-all flex flex-col justify-between h-32">
                   <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-none">{stat.label}</span>
+                    <span className="text-xs font-medium uppercase tracking-wider text-[#5A5F6B] leading-none">{stat.label}</span>
                     <stat.icon size={16} className={stat.color.split(' ')[0]} />
                   </div>
                   <div>
-                    <div className="text-2xl font-black text-slate-900 leading-none">{stat.value ?? 0}</div>
-                    <div className="mt-2 h-1 w-8 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="text-3xl font-bold tabular-nums text-[#F1F3F5] leading-none">{stat.value ?? 0}</div>
+                    <div className="mt-2 h-1 w-8 bg-[#2E3340] rounded-full overflow-hidden">
                        <div className={`h-full w-2/3 ${stat.color.split(' ')[0].replace('text', 'bg')}`} />
                     </div>
                   </div>
@@ -191,27 +191,27 @@ export default function DashboardPage() {
             )}
 
             {!loading && (
-              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 bg-slate-50/50">
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Global Intake Ledger</h3>
-                  <button onClick={() => router.push('/leads')} className="text-primary text-[11px] font-black uppercase tracking-tighter hover:underline">Full Audit &rarr;</button>
+              <div className="bg-[#1A1D23] border border-[#2E3340] rounded-xl p-5">
+                <div className="flex items-center justify-between border-b border-[#2E3340] pb-4 mb-4">
+                  <h3 className="text-sm font-black text-[#F1F3F5] uppercase tracking-widest">Global Intake Ledger</h3>
+                  <button onClick={() => router.push('/leads')} className="text-[#4F6EF7] text-[11px] font-black uppercase tracking-tighter hover:underline">Full Audit &rarr;</button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                       <thead>
-                        <tr className="text-slate-500 text-[10px] font-bold uppercase tracking-widest bg-slate-50/80">
-                          <th className="px-6 py-3 border-b border-slate-100">Identity</th>
-                          <th className="px-6 py-3 border-b border-slate-100">Origin</th>
-                          <th className="px-6 py-3 border-b border-slate-100">Phase</th>
-                          <th className="px-6 py-3 border-b border-slate-100">Custodian</th>
+                        <tr className="text-[#5A5F6B] text-[10px] font-bold uppercase tracking-widest bg-[#0F1117]">
+                          <th className="px-6 py-3 border-b border-[#2E3340]">Identity</th>
+                          <th className="px-6 py-3 border-b border-[#2E3340]">Origin</th>
+                          <th className="px-6 py-3 border-b border-[#2E3340]">Phase</th>
+                          <th className="px-6 py-3 border-b border-[#2E3340]">Custodian</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-[#2E3340]">
                         {stats?.recentLeads?.map((lead: any) => (
-                          <tr key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} className="hover:bg-slate-50/80 cursor-pointer transition-colors group">
+                          <tr key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} className="hover:bg-[#22262F] cursor-pointer transition-colors group">
                             <td className="px-6 py-4">
-                              <div className="font-bold text-slate-900 text-sm group-hover:text-primary transition-colors">{lead.name}</div>
-                              <div className="text-[10px] font-mono text-slate-400 mt-0.5">{lead.phone}</div>
+                              <div className="font-bold text-[#F1F3F5] text-sm group-hover:text-[#4F6EF7] transition-colors">{lead.name}</div>
+                              <div className="text-[10px] font-mono text-[#8B909A] mt-0.5">{lead.phone}</div>
                             </td>
                             <td className="px-6 py-4">
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter bg-slate-100 text-slate-600 border border-slate-200">
@@ -235,10 +235,10 @@ export default function DashboardPage() {
 
           <div className="space-y-6">
             {!loading && (
-              <div className="bg-slate-900 border border-slate-800 text-white rounded-2xl p-7 shadow-xl">
-                <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800">
-                   <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                     <BarChart3 size={16} className="text-blue-500" />
+              <div className="bg-[#1A1D23] border border-[#2E3340] rounded-xl p-5">
+                <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#2E3340]">
+                   <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 text-[#F1F3F5]">
+                     <BarChart3 size={16} className="text-[#4F6EF7]" />
                      Pipeline Logic
                    </h3>
                 </div>
@@ -268,9 +268,9 @@ export default function DashboardPage() {
             )}
 
             {!loading && (
-              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-7">
-                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2">
-                   <CalendarDays size={16} className="text-primary" />
+              <div className="bg-[#1A1D23] border border-[#2E3340] rounded-xl p-5">
+                 <h3 className="text-sm font-black text-[#F1F3F5] uppercase tracking-widest mb-6 flex items-center gap-2">
+                   <CalendarDays size={16} className="text-[#4F6EF7]" />
                    Settlements
                  </h3>
                  <div className="space-y-4">

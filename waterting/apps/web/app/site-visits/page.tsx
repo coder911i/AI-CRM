@@ -83,7 +83,16 @@ export default function SiteVisitsPage() {
     } catch (err: any) { alert(err.message || 'Invalid token'); }
   };
 
-  if (authLoading || loading) return <div className="loading-page"><div className="spinner" /></div>;
+  if (authLoading || loading) return (
+    <CRMLayout>
+      <div className="p-8 space-y-8">
+        <div className="h-12 w-64 animate-pulse bg-[#22262F] rounded-lg"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1,2,3,4,5,6].map(i => <div key={i} className="h-64 animate-pulse bg-[#22262F] rounded-lg"></div>)}
+        </div>
+      </div>
+    </CRMLayout>
+  );
 
   const getStatusBadge = (v: any) => {
     if (v.outcome === 'NO_SHOW') return <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border bg-rose-50 text-rose-600 border-rose-100">NO SHOW</span>;
