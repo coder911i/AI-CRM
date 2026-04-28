@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api-client';
 import CRMLayout from '@/components/CRMLayout';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { 
   Users, 
   Sparkles, 
@@ -18,10 +19,12 @@ import {
   ArrowUpRight,
   PlusCircle,
   CalendarDays,
-  Target
+  Target,
+  Loader2,
+  Clock
 } from 'lucide-react';
 
-import { formatCurrency, formatCompactCurrency, formatDate } from '@/lib/utils';
+import { formatCompactCurrency, formatDate } from '@/lib/utils';
 
 interface DashboardStats {
   totalLeads: number;
@@ -42,16 +45,35 @@ export default function DashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [timeRange, setTimeRange] = useState('30D');
+
+  const fetchStats = useCallback(async (range: string = '30D') => {
+    try {
+      const data = await api.get<DashboardStats>(`/dashboard/stats?range=${range}`);
+      setStats(data);
+    } catch (err: any) {
+      toast.error('Failed to synchronize operational intelligence');
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) { router.push('/login'); return; }
     if (user) {
-      api.get<DashboardStats>('/dashboard/stats')
-        .then(setStats)
-        .catch(console.error)
-        .finally(() => setLoading(false));
+      fetchStats(timeRange);
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, fetchStats, timeRange]);
+
+  const handleManualRefresh = () => {
+    setRefreshing(true);
+    fetchStats(timeRange).then(() => {
+      toast.success('Matrix synchronization successful');
+    });
+  };
 
   const stageLabels: Record<string, string> = {
     NEW_LEAD: 'New', CONTACTED: 'Contacted', INTERESTED: 'Interested',
@@ -71,72 +93,101 @@ export default function DashboardPage() {
 
   return (
     <CRMLayout>
-      <div className="bg-[#0F1117] min-h-full p-6 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[#2E3340]">
+      <div className="bg-[var(--bg-primary)] min-h-full p-8 space-y-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b-4 border-[var(--border)]">
           <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
-            <h1 className="text-2xl font-extrabold text-[#F1F3F5] tracking-tight">Intelligence Dashboard</h1>
-            <p className="text-slate-500 text-sm font-medium">Monitoring CRM vitals for {user?.name || 'Administrator'}</p>
+             <div className="flex items-center gap-2 text-[10px] font-black text-[var(--accent)] uppercase tracking-[0.2em] mb-3">
+                <div className="w-1.5 h-1.5 bg-[var(--accent)]" />
+                Operational_Intelligence_Core
+             </div>
+             <h1 className="text-[26px] font-black text-[var(--text-primary)] uppercase tracking-tight italic">Executive_Control_Matrix</h1>
+             <p className="text-[var(--text-secondary)] text-[11px] font-bold uppercase mt-2 italic">Authorized_Proxy: {user?.name?.toUpperCase() || 'ROOT_ADMIN'}</p>
           </motion.div>
-          <motion.button 
-            whileHover={{ y: -2 }}
-            whileTap={{ y: 0 }}
-            onClick={() => router.push('/leads')}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-lg shadow-md hover:bg-primary-dark transition-all"
-          >
-            <PlusCircle size={16} />
-            Initialize New Lead
-          </motion.button>
+          <div className="flex gap-4">
+             <div className="relative group">
+                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--accent)]" size={16} />
+                <select 
+                   value={timeRange}
+                   onChange={(e) => setTimeRange(e.target.value)}
+                   className="pl-12 pr-10 py-3 bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[11px] font-black uppercase italic outline-none focus:border-[var(--accent)] appearance-none cursor-pointer transition-all"
+                >
+                   <option value="7D">OPERATIONAL_WINDOW: 7D</option>
+                   <option value="30D">OPERATIONAL_WINDOW: 30D</option>
+                   <option value="90D">OPERATIONAL_WINDOW: 90D</option>
+                   <option value="ALL">OPERATIONAL_WINDOW: TOTAL</option>
+                </select>
+             </div>
+             <button 
+                onClick={handleManualRefresh}
+                disabled={refreshing}
+                className="px-6 py-3 bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] text-[11px] font-black uppercase italic hover:bg-[var(--bg-elevated)] transition-all flex items-center gap-2"
+             >
+                {refreshing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCcw size={16} />} REFRESH_MATRIX
+             </button>
+             <button 
+                onClick={() => router.push('/leads')}
+                className="px-8 py-3 bg-[var(--accent)] border-2 border-[var(--accent)] text-white text-[11px] font-black uppercase italic hover:bg-white hover:text-[var(--accent)] transition-all flex items-center gap-3 shadow-[4px_4px_0px_0px_var(--accent-light)]"
+             >
+                <PlusCircle size={18} /> INITIALIZE_INTAKE
+             </button>
+          </div>
         </div>
 
-        {/* Stale Leads Warning */}
         {!loading && (stats?.staleLeadsCount ?? 0) > 0 && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }} 
+            initial={{ opacity: 0, scale: 0.99 }} 
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center justify-between shadow-sm"
+            className="bg-[var(--danger-bg)] border-2 border-[var(--danger)] p-6 flex items-center justify-between shadow-[8px_8px_0px_0px_var(--danger-bg)]"
           >
-            <div className="flex items-center gap-3 text-red-700">
-              <AlertCircle size={20} />
-              <div className="text-sm font-semibold">
-                Critical: {stats?.staleLeadsCount} Leads have exceeded the 72-hour contact threshold.
+            <div className="flex items-center gap-5 text-[var(--danger)]">
+              <AlertCircle size={28} />
+              <div className="text-[11px] font-black uppercase tracking-widest leading-relaxed italic">
+                CRITICAL_ALERT: {stats?.staleLeadsCount} IDENTITIES EXCEEDED ENGAGEMENT_THRESHOLD. <br/>
+                <span className="text-[9px] opacity-70 italic tracking-tighter">IMMEDIATE CORRECTIVE PROTOCOL REQUIRED.</span>
               </div>
             </div>
-            <button onClick={() => router.push('/leads?filter=stale')} className="flex items-center gap-1 text-red-600 text-xs font-black uppercase tracking-widest hover:underline">
-              Remediate Now <ArrowUpRight size={14} />
+            <button 
+               onClick={() => router.push('/leads?filter=stale')} 
+               className="flex items-center gap-3 text-white bg-[var(--danger)] text-[10px] font-black uppercase px-6 py-2 hover:bg-white hover:text-[var(--danger)] border-2 border-[var(--danger)] transition-all italic"
+            >
+              REMEDIATE_FLOW <ArrowUpRight size={16} />
             </button>
           </motion.div>
         )}
 
-        {/* Stats Grid */}
         <AnimatePresence mode='wait'>
           {loading ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
-               {[1,2,3,4,5,6].map(i => <div key={i} className="h-28 animate-pulse bg-[#22262F] rounded-lg" />)}
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+               {[1,2,3,4,5,6].map(i => <div key={i} className="h-36 animate-pulse bg-[var(--bg-elevated)] border-2 border-[var(--border)] shadow-[4px_4px_0px_0px_var(--border)]" />)}
              </div>
           ) : (
             <motion.div 
               variants={container}
               initial="hidden"
               animate="show"
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6"
             >
               {[
-                { label: 'Total Base', value: stats?.totalLeads, icon: Users, color: 'text-blue-500 bg-blue-500/10' },
-                { label: 'Fresh Intake', value: stats?.newLeads, icon: Sparkles, color: 'text-emerald-500 bg-emerald-500/10' },
-                { label: 'Active Pipeline', value: stats?.activeLeads, icon: RefreshCcw, color: 'text-amber-500 bg-amber-500/10' },
-                { label: 'Closed Deals', value: stats?.totalBookings, icon: Target, color: 'text-indigo-500 bg-indigo-500/10' },
-                { label: 'Daily Visits', value: stats?.todaySiteVisits, icon: MapPin, color: 'text-sky-500 bg-sky-500/10' },
-                { label: 'Net Value', value: formatCompactCurrency(stats?.totalRevenue ?? 0), icon: Coins, color: 'text-[#F1F3F5] bg-[#22262F]' },
+                { label: 'Entity_Base', value: stats?.totalLeads, icon: Users, color: 'text-[var(--accent)]' },
+                { label: 'Fresh_Intake', value: stats?.newLeads, icon: Sparkles, color: 'text-[var(--success)]' },
+                { label: 'Active_Pipeline', value: stats?.activeLeads, icon: RefreshCcw, color: 'text-[var(--warning)]' },
+                { label: 'Closed_Deals', value: stats?.totalBookings, icon: Target, color: 'text-[var(--accent)]' },
+                { label: 'Daily_Visits', value: stats?.todaySiteVisits, icon: MapPin, color: 'text-[var(--accent)]' },
+                { label: 'Net_Value_Index', value: formatCompactCurrency(stats?.totalRevenue ?? 0), icon: Coins, color: 'text-[var(--text-primary)]' },
               ].map((stat, idx) => (
-                <motion.div key={idx} variants={item} className="bg-[#1A1D23] border border-[#2E3340] rounded-xl p-5 shadow-sm shadow-black/20 transition-all flex flex-col justify-between h-32">
+                <motion.div key={idx} variants={item} className="bg-[var(--bg-surface)] border-2 border-[var(--border)] p-6 transition-all flex flex-col justify-between h-40 hover:border-[var(--accent)] group shadow-[6px_6px_0px_0px_var(--border)] hover:shadow-[6px_6px_0px_0px_var(--accent-light)]">
                   <div className="flex justify-between items-start">
-                    <span className="text-xs font-medium uppercase tracking-wider text-[#5A5F6B] leading-none">{stat.label}</span>
-                    <stat.icon size={16} className={stat.color.split(' ')[0]} />
+                    <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] italic">{stat.label}</span>
+                    <stat.icon size={20} className={`${stat.color} group-hover:scale-125 transition-transform`} />
                   </div>
-                  <div>
-                    <div className="text-3xl font-bold tabular-nums text-[#F1F3F5] leading-none">{stat.value ?? 0}</div>
-                    <div className="mt-2 h-1 w-8 bg-[#2E3340] rounded-full overflow-hidden">
-                       <div className={`h-full w-2/3 ${stat.color.split(' ')[0].replace('text', 'bg')}`} />
+                  <div className="space-y-4">
+                    <div className="text-[32px] font-black tabular-nums text-[var(--text-primary)] font-mono italic leading-none">{stat.value ?? 0}</div>
+                    <div className="h-2 w-full bg-[var(--bg-elevated)] border border-[var(--border)] overflow-hidden">
+                       <motion.div 
+                          initial={{ width: 0 }} 
+                          animate={{ width: '70%' }} 
+                          className="h-full bg-[var(--accent)]" 
+                       />
                     </div>
                   </div>
                 </motion.div>
@@ -145,43 +196,44 @@ export default function DashboardPage() {
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            {/* AI High Engagement Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-12">
             {!loading && (stats?.hotLeads?.length ?? 0) > 0 && (
-              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-slate-900 rounded-2xl p-6 text-white shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-blue-500/20 transition-all" />
-                <div className="flex items-center justify-between mb-8 relative z-10">
+              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-[var(--bg-surface)] border-2 border-[var(--border)] p-10 text-[var(--text-primary)] relative overflow-hidden shadow-[12px_12px_0px_0px_var(--border)]">
+                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none rotate-12"><Flame size={180} /></div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 relative z-10">
                   <div>
-                    <h3 className="text-lg font-black flex items-center gap-2">
-                       <Flame size={18} className="text-orange-500" />
-                       Intelligence Insights: High Engagement
+                    <h3 className="text-[16px] font-black flex items-center gap-4 uppercase tracking-widest italic">
+                       <Flame size={24} className="text-[var(--warning)] animate-pulse" />
+                       Intelligence_Matrix: High_Velocity_Targets
                     </h3>
-                    <p className="text-slate-400 text-xs mt-1 font-medium italic">Advanced scoring indicates high conversion probability for these prospects.</p>
+                    <p className="text-[var(--text-secondary)] text-[11px] mt-2 font-black italic uppercase tracking-tight opacity-70">Predictive neural scoring identifying immediate conversion opportunities.</p>
                   </div>
-                  <div className="bg-slate-800 px-3 py-1 rounded text-[10px] font-black border border-slate-700 tracking-tighter">PREDICTIVE SCORE</div>
+                  <div className="bg-[var(--bg-elevated)] px-6 py-3 border-2 border-[var(--border)] text-[10px] font-black uppercase tracking-widest italic text-[var(--accent)]">
+                     SCORING_MATRIX:_NOMINAL
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                   {stats?.hotLeads?.slice(0, 4).map((lead: any) => (
                     <div 
                       key={lead.id} 
                       onClick={() => router.push(`/leads/${lead.id}`)}
-                      className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl p-4 cursor-pointer transition-all hover:border-blue-500/50"
+                      className="bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] border-2 border-[var(--border)] p-6 cursor-pointer transition-all hover:border-[var(--accent)] flex flex-col justify-between h-36 group shadow-[4px_4px_0px_0px_var(--border)]"
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <div className="font-bold text-sm text-slate-100">{lead.name}</div>
-                          <div className="text-[10px] text-slate-500 font-mono mt-0.5">{lead.phone}</div>
+                          <div className="font-black text-[15px] text-[var(--text-primary)] uppercase tracking-tight group-hover:text-[var(--accent)] transition-colors italic leading-none">{lead.name}</div>
+                          <div className="text-[10px] text-[var(--text-secondary)] mt-2 font-mono italic opacity-60">{lead.phone}</div>
                         </div>
-                        <div className="text-blue-400 text-xs font-black">
-                          {lead.score || 95}%
+                        <div className="text-[var(--accent)] text-[22px] font-black font-mono italic">
+                          {lead.score || 95}<span className="text-[11px] opacity-40 ml-0.5">%</span>
                         </div>
                       </div>
-                      <div className="mt-3 flex gap-2">
-                        <span className="text-[9px] bg-slate-700 px-2 py-0.5 rounded text-slate-300 font-bold uppercase tracking-widest">{lead.source}</span>
-                        <span className="text-[9px] text-emerald-400 font-bold uppercase flex items-center gap-1">
-                           <div className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
-                           Priority
+                      <div className="flex gap-4 items-center">
+                        <span className="text-[9px] bg-[var(--bg-elevated)] border border-[var(--border)] px-3 py-1 text-[var(--text-secondary)] font-black uppercase tracking-tighter italic">{lead.source}</span>
+                        <div className="h-px flex-1 bg-[var(--border)]" />
+                        <span className="text-[10px] text-[var(--success)] font-black uppercase flex items-center gap-2 italic tracking-tighter">
+                           <div className="w-2 h-2 bg-[var(--success)] animate-pulse" /> TARGET_READY
                         </span>
                       </div>
                     </div>
@@ -191,39 +243,42 @@ export default function DashboardPage() {
             )}
 
             {!loading && (
-              <div className="bg-[#1A1D23] border border-[#2E3340] rounded-xl p-5">
-                <div className="flex items-center justify-between border-b border-[#2E3340] pb-4 mb-4">
-                  <h3 className="text-sm font-black text-[#F1F3F5] uppercase tracking-widest">Global Intake Ledger</h3>
-                  <button onClick={() => router.push('/leads')} className="text-[#4F6EF7] text-[11px] font-black uppercase tracking-tighter hover:underline">Full Audit &rarr;</button>
+              <div className="bg-[var(--bg-surface)] border-2 border-[var(--border)] shadow-[12px_12px_0px_0px_var(--border)] overflow-hidden">
+                <div className="flex items-center justify-between border-b-2 border-[var(--border)] bg-[var(--bg-elevated)] px-8 py-5">
+                  <h3 className="text-[14px] font-black text-[var(--text-primary)] uppercase tracking-widest italic flex items-center gap-4">
+                     <BarChart3 size={20} className="text-[var(--accent)]" />
+                     Primary_Operational_Ledger
+                  </h3>
+                  <button onClick={() => router.push('/leads')} className="text-[var(--accent)] text-[10px] font-black uppercase border-2 border-[var(--accent)] px-6 py-2 hover:bg-[var(--accent)] hover:text-white transition-all italic tracking-widest">FULL_SYNC_LEDGER &rarr;</button>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left">
+                  <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="text-[#5A5F6B] text-[10px] font-bold uppercase tracking-widest bg-[#0F1117]">
-                          <th className="px-6 py-3 border-b border-[#2E3340]">Identity</th>
-                          <th className="px-6 py-3 border-b border-[#2E3340]">Origin</th>
-                          <th className="px-6 py-3 border-b border-[#2E3340]">Phase</th>
-                          <th className="px-6 py-3 border-b border-[#2E3340]">Custodian</th>
+                        <tr className="text-[var(--text-secondary)] text-[10px] font-black uppercase tracking-[0.2em] bg-[var(--bg-elevated)]">
+                          <th className="px-8 py-5 border-r border-[var(--border)]">Entity_Identity_Label</th>
+                          <th className="px-8 py-5 border-r border-[var(--border)]">Origin_Vector</th>
+                          <th className="px-8 py-5 border-r border-[var(--border)]">Phase_State</th>
+                          <th className="px-8 py-5">Proxy_Custodian</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#2E3340]">
+                      <tbody className="divide-y-2 divide-[var(--border)]">
                         {stats?.recentLeads?.map((lead: any) => (
-                          <tr key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} className="hover:bg-[#22262F] cursor-pointer transition-colors group">
-                            <td className="px-6 py-4">
-                              <div className="font-bold text-[#F1F3F5] text-sm group-hover:text-[#4F6EF7] transition-colors">{lead.name}</div>
-                              <div className="text-[10px] font-mono text-[#8B909A] mt-0.5">{lead.phone}</div>
+                          <tr key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} className="hover:bg-[var(--bg-elevated)] cursor-pointer transition-colors group">
+                            <td className="px-8 py-6 border-r border-[var(--border)]">
+                              <div className="font-black text-[var(--text-primary)] text-[14px] group-hover:text-[var(--accent)] transition-colors uppercase italic leading-none">{lead.name}</div>
+                              <div className="text-[10px] text-[var(--text-secondary)] mt-2 font-mono italic opacity-60">{lead.phone}</div>
                             </td>
-                            <td className="px-6 py-4">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter bg-slate-100 text-slate-600 border border-slate-200">
+                            <td className="px-8 py-6 border-r border-[var(--border)]">
+                              <span className="inline-flex items-center px-4 py-1.5 text-[10px] font-black uppercase bg-[var(--bg-surface)] border-2 border-[var(--border)] tracking-widest italic">
                                 {lead.source}
                               </span>
                             </td>
-                            <td className="px-6 py-4">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter bg-blue-50 text-primary border border-blue-100">
+                            <td className="px-8 py-6 border-r border-[var(--border)]">
+                              <span className="inline-flex items-center px-4 py-1.5 text-[10px] font-black uppercase bg-[var(--accent-light)] text-[var(--accent)] border-2 border-[var(--accent)] tracking-widest italic">
                                 {stageLabels[lead.stage] || lead.stage}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-slate-600 text-xs font-medium italic">{lead.assignedTo?.name || 'Unassigned'}</td>
+                            <td className="px-8 py-6 text-[var(--text-secondary)] text-[12px] font-black italic uppercase tracking-tight">{lead.assignedTo?.name || 'VOID_ASSIGNMENT'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -233,60 +288,66 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-12">
             {!loading && (
-              <div className="bg-[#1A1D23] border border-[#2E3340] rounded-xl p-5">
-                <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#2E3340]">
-                   <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 text-[#F1F3F5]">
-                     <BarChart3 size={16} className="text-[#4F6EF7]" />
-                     Pipeline Logic
+              <div className="bg-[var(--bg-surface)] border-2 border-[var(--border)] p-8 shadow-[12px_12px_0px_0px_var(--border)]">
+                <div className="flex items-center justify-between mb-10 pb-5 border-b-2 border-[var(--border)] border-dashed">
+                   <h3 className="text-[14px] font-black uppercase flex items-center gap-4 text-[var(--text-primary)] tracking-widest italic">
+                     <Target size={20} className="text-[var(--accent)]" />
+                     Pipeline_Logic_Status
                    </h3>
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-10">
                   {stats?.stageDistribution?.map((s) => (
-                    <div key={s.stage} className="space-y-2.5">
+                    <div key={s.stage} className="space-y-4">
                       <div className="flex justify-between items-end">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stageLabels[s.stage] || s.stage}</span>
-                        <span className="text-xs font-mono font-bold text-slate-300">{s.count}</span>
+                        <span className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] italic">{stageLabels[s.stage] || s.stage}</span>
+                        <span className="text-[13px] font-black text-[var(--text-primary)] font-mono italic">{s.count}</span>
                       </div>
-                      <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-2.5 w-full bg-[var(--bg-elevated)] border border-[var(--border)] overflow-hidden relative">
                         <motion.div 
                           initial={{ width: 0 }} 
                           animate={{ width: `${(s.count / (stats.totalLeads || 1)) * 100}%` }}
                           transition={{ duration: 1, delay: 0.2 }}
-                          className="h-full bg-blue-500"
+                          className="h-full bg-[var(--accent)] shadow-[2px_0px_4px_rgba(0,0,0,0.1)]"
                         />
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-8 pt-6 border-t border-slate-800 flex justify-between items-center text-[10px] font-bold text-slate-500">
-                   <span>TOTAL ASSETS</span>
-                   <span className="text-white font-mono">{stats?.totalLeads}</span>
+                <div className="mt-12 pt-8 border-t-2 border-[var(--border)] border-dashed flex justify-between items-center text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic">
+                   <span>Aggregated_Assets_Count</span>
+                   <span className="text-[var(--text-primary)] font-mono italic text-[18px]">{stats?.totalLeads}</span>
                 </div>
               </div>
             )}
 
             {!loading && (
-              <div className="bg-[#1A1D23] border border-[#2E3340] rounded-xl p-5">
-                 <h3 className="text-sm font-black text-[#F1F3F5] uppercase tracking-widest mb-6 flex items-center gap-2">
-                   <CalendarDays size={16} className="text-[#4F6EF7]" />
-                   Settlements
+              <div className="bg-[var(--bg-surface)] border-2 border-[var(--border)] p-8 shadow-[12px_12px_0px_0px_var(--border)]">
+                 <h3 className="text-[14px] font-black text-[var(--text-primary)] uppercase mb-10 flex items-center gap-4 tracking-widest italic">
+                   <CalendarDays size={22} className="text-[var(--accent)]" />
+                   Settlement_Ledger
                  </h3>
-                 <div className="space-y-4">
+                 <div className="space-y-6">
                     {stats?.upcomingPayments?.length ? stats.upcomingPayments.map((p: any) => (
-                      <div key={p.id} className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-all group">
-                        <div className="flex justify-between items-start mb-2">
-                           <span className="font-black text-slate-900 text-sm tracking-tight">₹{p.amount.toLocaleString()}</span>
-                           <span className="text-[9px] font-black text-primary bg-primary-light px-2 py-0.5 rounded uppercase border border-primary/20">{formatDate(p.dueDate)}</span>
+                      <div 
+                         key={p.id} 
+                         onClick={() => router.push(`/bookings/${p.bookingId}`)}
+                         className="p-6 bg-[var(--bg-elevated)] border-2 border-[var(--border)] hover:border-[var(--accent)] transition-all group cursor-pointer shadow-[4px_4px_0px_0px_var(--border)] hover:shadow-[4px_4px_0px_0px_var(--accent-light)]"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                           <span className="font-black text-[var(--text-primary)] text-[20px] font-mono italic group-hover:text-[var(--accent)] transition-colors">₹{p.amount.toLocaleString()}</span>
+                           <span className="text-[10px] font-black text-[var(--accent)] bg-[var(--accent-light)] px-3 py-1.5 border-2 border-[var(--accent)] uppercase tracking-tighter italic">{formatDate(p.dueDate)}</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Unit {p.booking.unit.unitNumber} • {p.booking.buyerName}</div>
+                        <div className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-widest italic opacity-70">Unit {p.booking?.unit?.unitNumber || 'NULL'} • {p.booking?.buyerName || 'ANONYMOUS'}</div>
                       </div>
                     )) : (
-                      <div className="text-xs text-slate-400 text-center py-6 italic bg-slate-50/50 rounded-xl border border-dashed border-slate-200">No overdue settlements.</div>
+                      <div className="text-[11px] text-[var(--text-muted)] text-center py-16 italic bg-[var(--bg-primary)] border-4 border-dashed border-[var(--border)] uppercase font-black tracking-widest opacity-40">
+                        STATUS_NORMAL:_ZERO_OVERDUE_SETTLEMENTS
+                      </div>
                     )}
                  </div>
-                 <button onClick={() => router.push('/bookings')} className="w-full mt-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors border border-slate-100 rounded-lg">Open Ledger &rarr;</button>
+                 <button onClick={() => router.push('/bookings')} className="w-full mt-10 py-4 text-[11px] font-black uppercase text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all border-2 border-[var(--border)] italic tracking-widest">OPEN_FINANCIAL_MATRIX &rarr;</button>
               </div>
             )}
           </div>

@@ -18,7 +18,7 @@ import {
   Clock,
   ArrowUpRight,
   ShieldCheck,
-  Facebook
+  Share2 as Facebook
 } from 'lucide-react';
 
 export default function BuilderDashboardPage() {

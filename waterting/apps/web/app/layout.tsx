@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { SocketProvider } from "@/lib/socket";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "Waterting — AI-Powered Real Estate CRM",
@@ -13,7 +14,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <AuthProvider>
-          <SocketProvider>{children}</SocketProvider>
+          <SocketProvider>
+            {children}
+            <Toaster position="top-right" />
+          </SocketProvider>
         </AuthProvider>
       </body>
     </html>

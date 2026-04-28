@@ -85,91 +85,94 @@ export default function SiteVisitsPage() {
 
   if (authLoading || loading) return (
     <CRMLayout>
-      <div className="p-8 space-y-8">
-        <div className="h-12 w-64 animate-pulse bg-[#22262F] rounded-lg"></div>
+      <div className="p-8 space-y-8 bg-[var(--bg-primary)] min-h-screen">
+        <div className="h-12 w-64 animate-pulse bg-[var(--bg-elevated)] border border-[var(--border)]"></div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1,2,3,4,5,6].map(i => <div key={i} className="h-64 animate-pulse bg-[#22262F] rounded-lg"></div>)}
+          {[1,2,3,4,5,6].map(i => <div key={i} className="h-64 animate-pulse bg-[var(--bg-elevated)] border border-[var(--border)]"></div>)}
         </div>
       </div>
     </CRMLayout>
   );
 
   const getStatusBadge = (v: any) => {
-    if (v.outcome === 'NO_SHOW') return <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border bg-rose-50 text-rose-600 border-rose-100">NO SHOW</span>;
-    if (v.outcome) return <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border bg-emerald-50 text-emerald-600 border-emerald-100">{v.outcome.replace(/_/g, ' ')}</span>;
-    if (v.checkInTime && !v.checkOutTime) return <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border bg-amber-50 text-amber-600 border-amber-100 animate-pulse">IN PROGRESS</span>;
-    return <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border bg-slate-50 text-slate-500 border-slate-100">SCHEDULED</span>;
+    if (v.outcome === 'NO_SHOW') return <span className="px-3 py-1 text-[9px] font-black uppercase tracking-widest border-2 bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)] italic">NO_SHOW_DETECTION</span>;
+    if (v.outcome) return <span className="px-3 py-1 text-[9px] font-black uppercase tracking-widest border-2 bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)] italic">{v.outcome.replace(/_/g, ' ')}</span>;
+    if (v.checkInTime && !v.checkOutTime) return <span className="px-3 py-1 text-[9px] font-black uppercase tracking-widest border-2 bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning)] animate-pulse italic">PHASE_IN_PROGRESS</span>;
+    return <span className="px-3 py-1 text-[9px] font-black uppercase tracking-widest border-2 bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border)] italic">PROTOCOL_SCHEDULED</span>;
   };
 
   return (
     <CRMLayout>
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+      <div className="bg-[var(--bg-primary)] p-8 min-h-full space-y-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b-4 border-[var(--border)]">
            <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-3">
-                 <MapPin size={28} className="text-primary" />
-                 Operational Logistics
+              <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--accent)] uppercase tracking-widest mb-3">
+                 <div className="w-1.5 h-1.5 bg-[var(--accent)]" />
+                 Operational Logistics Core
+              </div>
+              <h1 className="text-[24px] font-black text-[var(--text-primary)] uppercase tracking-tight italic flex items-center gap-4">
+                 <MapPin size={24} className="text-[var(--accent)]" />
+                 Occupancy Deployment Ledger
               </h1>
-              <p className="text-slate-400 text-sm font-medium mt-1">Real-time tracking of {visits.length} scheduled occupancy visits</p>
+              <p className="text-[var(--text-secondary)] text-[11px] font-bold uppercase mt-2 italic">Monitoring {visits.length} active synchronization protocols in real-time</p>
            </div>
-           <button className="btn btn-primary flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-6 shadow-xl shadow-primary/20" onClick={() => setShowQrModal(true)}>
-              <QrCode size={16} /> Scan Protocol Hash
+           <button className="px-8 py-4 bg-[var(--accent)] border-2 border-[var(--accent)] text-white text-[11px] font-black uppercase tracking-[0.2em] hover:bg-white hover:text-[var(--accent)] transition-all flex items-center gap-3 shadow-[4px_4px_0px_0px_var(--accent-light)] italic" onClick={() => setShowQrModal(true)}>
+              <QrCode size={18} /> INITIALIZE SCAN PROTOCOL
            </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {visits.map(v => (
-            <div key={v.id} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-xl transition-all group overflow-hidden">
-               <div className="p-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
+            <div key={v.id} className="bg-[var(--bg-surface)] border-2 border-[var(--border)] shadow-[6px_6px_0px_0px_var(--border)] group">
+               <div className="p-4 border-b-2 border-[var(--border)] bg-[var(--bg-elevated)] flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                     <div className="w-2 h-2 rounded-full bg-primary" />
-                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">VS-{v.id.slice(-6)}</span>
+                     <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase font-mono tracking-tighter">REF_LOG_VS-{v.id.slice(-6).toUpperCase()}</span>
                   </div>
                   {getStatusBadge(v)}
                </div>
                
-               <div className="p-6 space-y-6">
+               <div className="p-6 space-y-8">
                   <div>
-                    <h3 className="text-base font-black text-slate-900 uppercase tracking-tight group-hover:text-primary transition-colors">{v.lead?.name}</h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5 flex items-center gap-1">
-                       <MapPin size={10} /> {v.lead?.project?.name || 'GENERIC_INVENTORY'}
+                    <h3 className="text-[18px] font-black text-[var(--text-primary)] uppercase group-hover:text-[var(--accent)] transition-colors italic leading-none">{v.lead?.name}</h3>
+                    <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase mt-2 flex items-center gap-1.5 italic">
+                       <Building size={12} /> {v.lead?.project?.name || 'CENTRAL_ASSET_MATRIX'}
                     </p>
                   </div>
 
-                  <div className="space-y-3">
-                     <div className="flex items-center gap-3 text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                        <UserCheck size={14} className="text-slate-300" />
-                        {v.agent?.name || 'UNASSIGNED_LOGISTICIAN'}
+                  <div className="space-y-4 border-l-2 border-[var(--accent-light)] pl-4">
+                     <div className="flex items-center gap-3 text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-tight">
+                        <UserCheck size={16} className="text-[var(--accent)]" />
+                        Custodian: {v.agent?.name || 'UNASSIGNED_PROXY'}
                      </div>
-                     <div className="flex items-center gap-3 text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                        <CalendarClock size={14} className="text-slate-300" />
-                        <span className="font-mono text-slate-900">{new Date(v.scheduledAt).toLocaleString()}</span>
+                     <div className="flex items-center gap-3 text-[12px] font-black text-[var(--text-primary)] uppercase">
+                        <CalendarClock size={16} className="text-[var(--accent)]" />
+                        <span className="font-mono tracking-tighter bg-[var(--bg-elevated)] px-2 py-1">{new Date(v.scheduledAt).toLocaleString().toUpperCase()}</span>
                      </div>
                      {v.checkInTime && (
-                       <div className="flex items-center gap-2 text-[9px] font-bold text-emerald-500 uppercase tracking-tighter bg-emerald-50 px-2 py-1 rounded">
-                          <CheckCircle2 size={10} /> Initialized: {new Date(v.checkInTime).toLocaleTimeString()}
+                       <div className="flex items-center gap-2 text-[10px] font-black text-[var(--success)] uppercase border-2 border-[var(--success)] bg-[var(--success-bg)] px-3 py-1.5 italic">
+                          <CheckCircle2 size={12} /> INITIALIZED: {new Date(v.checkInTime).toLocaleTimeString().toUpperCase()}
                        </div>
                      )}
                   </div>
 
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex flex-col gap-3 pt-4 border-t border-[var(--border)] border-dashed">
                      {!v.checkInTime && !v.outcome && (
                        <>
-                         <button className="flex-1 btn btn-primary py-2.5 text-[9px] font-black uppercase tracking-widest shadow-lg shadow-primary/10" onClick={() => handleCheckIn(v.id)}>Manual Check-In</button>
-                         <button className="btn btn-secondary py-2.5 px-3 text-[9px] font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity" onClick={() => handleNoShow(v.id)}>No-Show</button>
+                         <button className="w-full py-4 bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] text-[11px] font-black uppercase tracking-widest hover:bg-[var(--accent)] hover:text-white transition-all italic" onClick={() => handleCheckIn(v.id)}>MANUAL_INITIALIZE</button>
+                         <button className="w-full py-3 bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-secondary)] text-[11px] font-black uppercase tracking-widest hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-all italic" onClick={() => handleNoShow(v.id)}>LOG_VOID_ENTRY</button>
                        </>
                      )}
                      {v.checkInTime && !v.checkOutTime && (
-                       <button className="w-full btn btn-primary py-2.5 text-[9px] font-black uppercase tracking-widest shadow-lg shadow-primary/20" onClick={() => setShowCheckout(v)}>Conclude Visit</button>
+                       <button className="w-full py-4 bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] text-[11px] font-black uppercase tracking-widest hover:bg-[var(--accent)] hover:text-white transition-all italic" onClick={() => setShowCheckout(v)}>CONCLUDE_PROTOCOL</button>
                      )}
                      {v.outcome === 'NO_SHOW' && (
-                       <button className="w-full btn btn-secondary py-2.5 text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2" onClick={() => router.push(`/leads/${v.leadId}`)}>
-                          Reschedule Outcome <ChevronRight size={12} />
+                       <button className="w-full py-4 bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-secondary)] text-[11px] font-black uppercase tracking-widest hover:bg-[var(--bg-elevated)] transition-all flex items-center justify-center gap-3 italic" onClick={() => router.push(`/leads/${v.leadId}`)}>
+                          PHASE_RESCHEDULE <ChevronRight size={14} />
                        </button>
                      )}
                      {v.outcome && v.outcome !== 'NO_SHOW' && (
-                       <button className="w-full btn btn-secondary py-2.5 text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 group-hover:bg-primary/5 group-hover:text-primary transition-all" onClick={() => alert(`Outcome: ${v.outcome}\n\nNotes: ${v.notes}`)}>
-                          View Intelligence <Eye size={12} />
+                       <button className="w-full py-4 bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-secondary)] text-[11px] font-black uppercase tracking-widest hover:bg-[var(--bg-elevated)] transition-all flex items-center justify-center gap-3 italic" onClick={() => alert(`Outcome: ${v.outcome}\n\nNotes: ${v.notes}`)}>
+                          INTELLIGENCE_AUDIT <Eye size={14} />
                        </button>
                      )}
                   </div>
@@ -178,13 +181,13 @@ export default function SiteVisitsPage() {
           ))}
           
           {visits.length === 0 && (
-            <div className="col-span-full py-32 text-center bg-white rounded-3xl border border-dashed border-slate-200 shadow-inner flex flex-col items-center gap-4">
-               <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 border border-slate-100">
-                  <Activity size={32} />
+            <div className="col-span-full py-48 text-center bg-[var(--bg-surface)] border-4 border-dashed border-[var(--border)] flex flex-col items-center gap-6">
+               <div className="w-20 h-20 bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-muted)] border-2 border-[var(--border)]">
+                  <Activity size={40} />
                </div>
                <div>
-                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Logistic Void</h4>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter max-w-[220px] mx-auto mt-1">No operational site visits discovered in current synchronization cycle.</p>
+                  <h4 className="text-[16px] font-black text-[var(--text-primary)] uppercase tracking-[0.2em]">LOGISTIC_VOID_DETECTED</h4>
+                  <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase mt-2 italic max-w-[300px] mx-auto opacity-60">No operational deployment protocols currently indexed in matrix.</p>
                </div>
             </div>
           )}
@@ -192,28 +195,33 @@ export default function SiteVisitsPage() {
       </div>
 
       {showQrModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
-             <div className="px-8 py-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[var(--bg-primary)]/90 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setShowQrModal(false)}>
+          <div className="bg-[var(--bg-surface)] w-full max-w-md border-4 border-[var(--border)] shadow-[10px_10px_0px_0px_var(--border)] overflow-hidden" onClick={e => e.stopPropagation()}>
+             <div className="px-8 py-6 border-b-4 border-[var(--border)] flex justify-between items-center bg-[var(--bg-elevated)]">
                <div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Authorized Entry</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">Physical Verification Protocol</p>
+                  <h3 className="text-[14px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">Authorized Entry Matrix</h3>
+                  <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase mt-1 tracking-tighter">Physical Verification Protocol [VER_9.4]</p>
                </div>
-               <button className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400" onClick={() => setShowQrModal(false)}>
-                  <X size={20} />
+               <button className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors" onClick={() => setShowQrModal(false)}>
+                  <X size={24} />
                </button>
             </div>
             
-            <form onSubmit={handleQrCheckIn} className="p-8 space-y-6">
-               <p className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter leading-relaxed">Input the digital verification hash from the client's asset portal to initialize the structural visit.</p>
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Protocol Hash</label>
+            <form onSubmit={handleQrCheckIn} className="p-8 space-y-8">
+               <div className="bg-[var(--accent-light)] border border-[var(--accent)] p-4 text-[11px] text-[var(--accent)] font-bold uppercase leading-relaxed italic border-l-4">
+                  Input the digital verification hash from the client portal to initialize occupancy synchronization.
+               </div>
+               <div className="space-y-3">
+                  <label className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] flex items-center gap-2">
+                     <div className="w-1.5 h-1.5 bg-[var(--accent)]" />
+                     Protocol Hash
+                  </label>
                   <div className="relative">
-                     <QrCode size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-                     <input autoFocus className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-primary/10 transition-all font-mono placeholder:text-slate-200" value={qrToken} onChange={e => setQrToken(e.target.value)} placeholder="000-XXX-000" />
+                     <QrCode size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
+                     <input autoFocus className="w-full pl-14 pr-6 py-5 bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[16px] font-black text-[var(--text-primary)] focus:border-[var(--accent)] outline-none font-mono placeholder:text-[var(--text-muted)] uppercase italic" value={qrToken} onChange={e => setQrToken(e.target.value)} placeholder="000-XXX-000" />
                   </div>
                </div>
-               <button type="submit" className="w-full btn btn-primary py-4 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
+               <button type="submit" className="w-full py-5 bg-[var(--accent)] border-2 border-[var(--accent)] text-white text-[12px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-[var(--accent)] transition-all italic shadow-[4px_4px_0px_0px_var(--accent-light)]">
                   AUTHORIZE PHYSICAL ENTRY
                </button>
             </form>
@@ -222,62 +230,65 @@ export default function SiteVisitsPage() {
       )}
 
       {showCheckout && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-8 py-6 border-b border-slate-50 bg-slate-900">
-               <h3 className="text-sm font-black text-white uppercase tracking-widest">Post-Visit Intelligence</h3>
-               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter mt-0.5 italic">Structural feedback required for conclusion</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[var(--bg-primary)]/90 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setShowCheckout(null)}>
+          <div className="bg-[var(--bg-surface)] w-full max-w-lg border-4 border-[var(--border)] shadow-[10px_10px_0px_0px_var(--border)] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="px-8 py-6 border-b-4 border-[var(--border)] bg-[var(--bg-elevated)] flex justify-between items-center">
+               <h3 className="text-[14px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">Mission De-Brief Intelligence</h3>
+               <button className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors" onClick={() => setShowCheckout(null)}><X size={24} /></button>
             </div>
             
-            <form onSubmit={handleCheckOutSubmit} className="p-8 space-y-8">
+            <form onSubmit={handleCheckOutSubmit} className="p-8 space-y-10">
               <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                   <TrendingUp size={12} /> Acquisition Trajectory *
+                <label className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 bg-[var(--accent)]" />
+                   Acquisition Trajectory
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                    {['INTERESTED', 'BOOKED', 'NEED_MORE_TIME', 'NOT_INTERESTED', 'NO_SHOW'].map(opt => (
-                     <label key={opt} className={`flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-all ${
+                     <label key={opt} className={`flex items-center justify-center p-4 border-2 cursor-pointer transition-all ${
                         feedback.outcome === opt 
-                        ? 'border-primary bg-primary/5 text-primary' 
-                        : 'border-slate-100 hover:border-slate-200 text-slate-400 hover:text-slate-600'
+                        ? 'border-[var(--accent)] bg-[var(--accent-light)] text-[var(--accent)] shadow-[3px_3px_0px_0px_var(--accent)]' 
+                        : 'border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
                      }`}>
                        <input type="radio" value={opt} checked={feedback.outcome === opt} onChange={e => setFeedback({...feedback, outcome: e.target.value})} className="hidden" />
-                       <span className="text-[9px] font-black uppercase tracking-widest text-center leading-none">{opt.replace(/_/g, ' ')}</span>
+                       <span className="text-[10px] font-black uppercase text-center tracking-tighter">{opt.replace(/_/g, ' ')}</span>
                      </label>
                    ))}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                   <MessageSquare size={12} /> Strategic Observations *
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 bg-[var(--accent)]" />
+                   Tactical Observations
                 </label>
-                <textarea className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/10 transition-all font-sans placeholder:text-slate-200" required rows={3} value={feedback.notes} onChange={e => setFeedback({...feedback, notes: e.target.value})} placeholder="Input key verbal signals and resistance markers..." />
+                <textarea className="w-full px-5 py-4 bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[13px] font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent)] resize-none uppercase italic placeholder:text-[var(--text-muted)]" required rows={4} value={feedback.notes} onChange={e => setFeedback({...feedback, notes: e.target.value})} placeholder="Input critical mission signals..." />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                       <History size={12} /> Follow-Up Offset
+              <div className="grid grid-cols-2 gap-8">
+                 <div className="space-y-3">
+                    <label className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] flex items-center gap-2">
+                       <div className="w-1.5 h-1.5 bg-[var(--border)]" />
+                       Follow-Up Offset
                     </label>
-                    <input type="date" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black focus:ring-2 focus:ring-primary/10 transition-all uppercase" value={feedback.followUpDate} onChange={e => setFeedback({...feedback, followUpDate: e.target.value})} />
+                    <input type="date" className="w-full px-5 py-3 bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[12px] font-black text-[var(--text-primary)] outline-none focus:border-[var(--accent)] uppercase" value={feedback.followUpDate} onChange={e => setFeedback({...feedback, followUpDate: e.target.value})} />
                  </div>
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                       <Star size={12} /> Lead Potency ({feedback.rating}/5)
+                 <div className="space-y-3">
+                    <label className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] flex items-center gap-2">
+                       <div className="w-1.5 h-1.5 bg-[var(--border)]" />
+                       Intensity Index ({feedback.rating}.0)
                     </label>
-                    <div className="flex items-center gap-4 h-[46px]">
-                       <input type="range" min="1" max="5" className="flex-1 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary" value={feedback.rating} onChange={e => setFeedback({...feedback, rating: parseInt(e.target.value)})} />
-                       <span className="text-sm font-black text-slate-900 font-mono">{feedback.rating}.0</span>
+                    <div className="flex items-center gap-6 h-[46px] bg-[var(--bg-elevated)] border-2 border-[var(--border)] px-4">
+                       <input type="range" min="1" max="5" className="flex-1 h-2 bg-[var(--bg-primary)] appearance-none cursor-pointer accent-[var(--accent)] border border-[var(--border)]" value={feedback.rating} onChange={e => setFeedback({...feedback, rating: parseInt(e.target.value)})} />
+                       <span className="text-[14px] font-black text-[var(--text-primary)] font-mono italic">{feedback.rating}.0</span>
                     </div>
                  </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-50">
-                <button type="submit" className="w-full btn btn-primary py-4 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all" disabled={!feedback.notes}>
-                   FINALIZE VISIT INTELLIGENCE
+              <div className="pt-6 border-t-2 border-[var(--border)]">
+                <button type="submit" className="w-full py-5 bg-[var(--accent)] border-2 border-[var(--accent)] text-white text-[13px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-[var(--accent)] transition-all italic shadow-[6px_6px_0px_0px_var(--accent-light)]" disabled={!feedback.notes}>
+                   FINALIZE MISSION INTELLIGENCE
                 </button>
-                <p className="text-[8px] text-slate-300 font-bold text-center mt-4 uppercase tracking-tighter">DATA WILL BE SYNCHRONIZED WITH LEAD TIMELINE IMMEDIATELY</p>
               </div>
             </form>
           </div>

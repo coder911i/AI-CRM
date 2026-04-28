@@ -131,63 +131,76 @@ export default function InventoryPage() {
     return matchesStatus && matchesSearch && matchesTower;
   });
 
-  if (loading) return <div className="loading-page"><div className="spinner" /></div>;
+  if (loading) {
+    return (
+      <CRMLayout>
+        <div className="p-8 space-y-6 bg-[var(--bg-primary)] min-h-screen">
+          <div className="h-10 w-64 animate-pulse bg-[var(--bg-elevated)] border border-[var(--border)]"></div>
+          <div className="h-[600px] w-full animate-pulse bg-[var(--bg-elevated)] border border-[var(--border)]"></div>
+        </div>
+      </CRMLayout>
+    );
+  }
 
   return (
     <CRMLayout>
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+      <div className="bg-[var(--bg-primary)] p-6 min-h-full space-y-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[var(--border)]">
           <div>
-             <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-3">
-                <Grid size={28} className="text-primary" />
-                Inventory Matrix
+             <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider mb-2">
+                <div className="w-1.5 h-1.5 bg-[var(--accent)]" />
+                Asset Management Core
+             </div>
+             <h1 className="text-[20px] font-bold text-[var(--text-primary)] uppercase tracking-wide flex items-center gap-3 italic">
+                Inventory Matrix Ledger
              </h1>
-             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Real-time cross-tower structural synchronization</p>
+             <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-wider mt-1 italic">Real-time cross-tower structural synchronization: ACTIVE</p>
           </div>
-          <div className="flex gap-3">
-             <button className="btn btn-secondary flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-4 border-slate-200 shadow-sm" onClick={handleExportCSV}>
+          <div className="flex gap-2">
+             <button className="px-4 py-2 bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] text-[10px] font-bold uppercase hover:bg-[var(--bg-elevated)] transition-all flex items-center gap-2" onClick={handleExportCSV}>
                 <Download size={14} /> Intelligence Export
              </button>
-             <button className="btn btn-primary flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-6 shadow-xl shadow-primary/20" onClick={() => setShowBulkPrice(true)}>
+             <button className="px-4 py-2 bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] text-[10px] font-bold uppercase hover:bg-[var(--bg-elevated)] transition-all flex items-center gap-2" onClick={() => setShowBulkPrice(true)}>
                 <RefreshCcw size={14} /> Bulk Re-Valuation
              </button>
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-2xl border border-slate-200/60 shadow-sm">
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="space-y-2">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Focus Project</label>
+        <div className="bg-[var(--bg-surface)] p-6 border border-[var(--border)] relative overflow-hidden">
+           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Grid size={80} /></div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+              <div className="space-y-1">
+                 <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Focus Project Protocol</label>
                  <select 
-                    className="form-select h-11 border-slate-200 font-black text-xs uppercase tracking-widest bg-slate-50" 
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 text-[12px] font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent)] uppercase appearance-none" 
                     value={selectedProjectId} 
                     onChange={(e) => { setSelectedProjectId(e.target.value); setSelectedTowerId(''); }}
                  >
                     <option value="">Select Protocol</option>
-                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    {projects.map(p => <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>)}
                  </select>
               </div>
-              <div className="space-y-2">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Structural Block</label>
+              <div className="space-y-1">
+                 <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Structural Block Selection</label>
                  <select 
-                    className="form-select h-11 border-slate-200 font-black text-xs uppercase tracking-widest bg-slate-50"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 text-[12px] font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent)] uppercase appearance-none"
                     value={selectedTowerId}
                     onChange={(e) => setSelectedTowerId(e.target.value)}
                  >
                     <option value="">All Functional Units</option>
                     {projects.find(p => p.id === selectedProjectId)?.towers.map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
+                      <option key={t.id} value={t.id}>{t.name.toUpperCase()}</option>
                     ))}
                  </select>
               </div>
-              <div className="space-y-2">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lead Filter Search</label>
-                 <div className="relative group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" size={14} />
+              <div className="space-y-1">
+                 <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Unit Identity Query</label>
+                 <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={14} />
                     <input 
                        type="text" 
-                       className="form-input h-11 pl-10 border-slate-200 font-black text-xs uppercase tracking-widest bg-slate-50" 
-                       placeholder="QUERY UNIT ID..." 
+                       className="w-full bg-[var(--bg-surface)] border border-[var(--border)] pl-10 pr-4 py-2 text-[12px] font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent)] uppercase placeholder:text-[var(--text-muted)]" 
+                       placeholder="SEARCH UNIT ID..." 
                        value={searchQuery}
                        onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -195,14 +208,14 @@ export default function InventoryPage() {
               </div>
            </div>
 
-           <div className="flex gap-2 mt-8 overflow-x-auto no-scrollbar pb-2">
+           <div className="flex gap-1.5 mt-8 overflow-x-auto no-scrollbar border-t border-[var(--border)] pt-6">
               {['ALL', 'AVAILABLE', 'RESERVED', 'BOOKED', 'SOLD', 'BLOCKED'].map(s => (
                 <button 
                   key={s} 
-                  className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
+                  className={`px-4 py-1.5 text-[9px] font-bold uppercase border-2 transition-all ${
                     filterStatus === s 
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-lg' 
-                    : 'bg-white text-slate-500 border-slate-100 hover:bg-slate-50'
+                    ? 'bg-[var(--accent)] text-white border-[var(--accent)]' 
+                    : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border)] hover:bg-[var(--bg-elevated)]'
                   }`}
                   onClick={() => setFilterStatus(s)}
                 >
@@ -213,63 +226,69 @@ export default function InventoryPage() {
         </div>
 
         {isRefreshing ? (
-           <div className="py-32 flex flex-col items-center gap-4 text-slate-300">
-              <RefreshCcw size={32} className="animate-spin" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Synchronizing Matrix...</span>
+           <div className="py-48 flex flex-col items-center gap-6 bg-[var(--bg-surface)] border border-[var(--border)] border-dashed">
+              <RefreshCcw size={48} className="animate-spin text-[var(--accent)]" />
+              <div className="text-center space-y-1">
+                 <span className="text-[12px] font-bold uppercase tracking-[0.2em] text-[var(--text-primary)] block">Synchronizing Matrix...</span>
+                 <span className="text-[10px] font-bold uppercase text-[var(--text-muted)] block">Establishing Encrypted Data Link</span>
+              </div>
            </div>
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-16">
             {Array.from(new Set(filteredUnits.map(u => u.tower?.name || 'GENERIC-SHELL'))).map(towerName => {
               const towerUnits = filteredUnits.filter(u => u.tower?.name === towerName);
               const floors = Array.from(new Set(towerUnits.map(u => u.floor))).sort((a, b) => b - a);
 
               return (
-                <div key={towerName} className="bg-white p-10 rounded-[2rem] border border-slate-200/60 shadow-md">
-                  <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50">
-                     <h3 className="text-xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-2">
-                        <Building2 size={24} className="text-primary" />
+                <div key={towerName} className="bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+                  <div className="px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+                     <h3 className="text-[14px] font-bold text-[var(--text-primary)] uppercase tracking-widest flex items-center gap-3">
+                        <Building2 size={18} className="text-[var(--accent)]" />
                         {towerName} 
-                        <span className="text-[10px] text-slate-300 font-bold ml-2">/ Block Terminal</span>
+                        <span className="text-[10px] text-[var(--text-muted)] font-bold border-l border-[var(--border)] pl-3 ml-1 italic tracking-normal uppercase">Active Sector Terminal</span>
                      </h3>
-                     <div className="flex gap-2">
-                        {['AVAILABLE', 'RESERVED', 'SOLD'].map(status => (
-                           <div key={status} className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-50 border border-slate-100">
-                              <div className={`w-1.5 h-1.5 rounded-full ${
-                                 status === 'AVAILABLE' ? 'bg-emerald-500' : status === 'RESERVED' ? 'bg-amber-400' : 'bg-blue-600'
-                              }`} />
-                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{towerUnits.filter(u => u.status === status).length} {status}</span>
+                     <div className="flex flex-wrap gap-4">
+                        {[
+                          { s: 'AVAILABLE', c: 'var(--success)' },
+                          { s: 'RESERVED', c: 'var(--warning)' },
+                          { s: 'BOOKED', c: 'var(--accent)' },
+                          { s: 'SOLD', c: 'var(--text-muted)' }
+                        ].map(({s, c}) => (
+                           <div key={s} className="flex items-center gap-2 border border-[var(--border)] px-3 py-1 bg-[var(--bg-surface)]">
+                              <div className="w-2 h-2" style={{ backgroundColor: c }} />
+                              <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-tighter">{towerUnits.filter(u => u.status === s).length} {s}</span>
                            </div>
                         ))}
                      </div>
                   </div>
                   
-                  <div className="space-y-3">
+                  <div className="divide-y divide-[var(--border)] bg-[var(--bg-primary)]">
                     {floors.map(floor => (
-                      <div key={floor} className="flex gap-10 items-center group/floor hover:bg-slate-50/50 p-2 rounded-xl transition-all">
-                        <div className="w-14 flex flex-col items-center">
-                           <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest group-hover/floor:text-primary transition-colors">Level</span>
-                           <span className="text-lg font-black text-slate-400 font-mono group-hover/floor:text-slate-900 transition-colors">{String(floor).padStart(2, '0')}</span>
+                      <div key={floor} className="flex gap-0 items-stretch hover:bg-[var(--bg-elevated)] transition-colors group/floor border-b border-[var(--border)] last:border-b-0">
+                        <div className="w-20 flex flex-col items-center justify-center border-r border-[var(--border)] bg-[var(--bg-elevated)] shrink-0">
+                           <span className="text-[8px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">LEVEL</span>
+                           <span className="text-[18px] font-bold text-[var(--text-primary)] font-mono italic">{String(floor).padStart(2, '0')}</span>
                         </div>
-                        <div className="flex gap-2 flex-wrap flex-1 min-w-0">
+                        <div className="flex gap-2 p-4 flex-wrap flex-1 min-w-0">
                           {towerUnits.filter(u => u.floor === floor).sort((a,b) => a.unitNumber.localeCompare(b.unitNumber)).map(unit => (
                             <div 
                               key={unit.id} 
                               onClick={() => { setSelectedUnit(unit); setNewStatus(unit.status); }}
-                              className={`w-20 h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-sm border relative group/unit ${
-                                unit.status === 'AVAILABLE' ? 'bg-white border-emerald-100' : 
-                                unit.status === 'RESERVED' ? 'bg-amber-50 border-amber-200' : 
-                                unit.status === 'BOOKED' ? 'bg-blue-50 border-blue-200' : 
-                                'bg-slate-100 border-slate-200 opacity-60'
+                              className={`w-14 h-12 border-2 flex flex-col items-center justify-center cursor-pointer transition-all relative group/unit ${
+                                unit.status === 'AVAILABLE' ? 'bg-[var(--bg-surface)] border-[var(--border)] hover:border-[var(--success)] hover:bg-[var(--success-bg)]' : 
+                                unit.status === 'RESERVED' ? 'bg-[var(--warning-bg)] border-[var(--warning)] hover:brightness-95' : 
+                                unit.status === 'BOOKED' ? 'bg-[var(--accent-light)] border-[var(--accent)] hover:brightness-95' : 
+                                'bg-[var(--bg-elevated)] border-[var(--border)] opacity-40 grayscale pointer-events-none'
                               }`}
                             >
-                              <span className={`text-[10px] font-black tracking-tight ${unit.status === 'AVAILABLE' ? 'text-slate-900' : 'text-slate-600'}`}>{unit.unitNumber.split('-').pop()}</span>
-                              <div className={`w-1 h-1 rounded-full absolute bottom-1.5 ${
-                                unit.status === 'AVAILABLE' ? 'bg-emerald-500' : 
-                                unit.status === 'RESERVED' ? 'bg-amber-500' : 
-                                unit.status === 'BOOKED' ? 'bg-blue-600' : 
-                                'bg-slate-400'
+                              <span className="text-[11px] font-bold font-mono text-[var(--text-primary)]">{unit.unitNumber.split('-').pop()}</span>
+                              <div className={`absolute bottom-0 left-0 w-full h-[3px] ${
+                                unit.status === 'AVAILABLE' ? 'bg-[var(--success)]' : 
+                                unit.status === 'RESERVED' ? 'bg-[var(--warning)]' : 
+                                unit.status === 'BOOKED' ? 'bg-[var(--accent)]' : 
+                                'bg-[var(--text-muted)]'
                               }`} />
-                              <div className="absolute inset-0 bg-primary/0 group-hover/unit:bg-primary/5 rounded-lg transition-colors" />
+                              <div className="absolute inset-0 bg-[var(--accent)] opacity-0 group-hover/unit:opacity-5 transition-opacity" />
                             </div>
                           ))}
                         </div>
@@ -284,99 +303,96 @@ export default function InventoryPage() {
       </div>
 
       {selectedUnit && (
-        <div className="modal-overlay" onClick={() => setSelectedUnit(null)}>
-          <div className="bg-white w-[400px] h-full fixed right-0 top-0 shadow-2xl p-10 flex flex-col border-l border-slate-100 animate-in slide-in-from-right duration-300" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-10 pb-6 border-b border-slate-100">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-primary)]/80 backdrop-blur-sm" onClick={() => setSelectedUnit(null)}>
+          <div className="bg-[var(--bg-surface)] w-full max-w-sm border-2 border-[var(--border)] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-[var(--border)] flex justify-between items-center bg-[var(--bg-elevated)]">
                <div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Unit {selectedUnit.unitNumber}</h3>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Asset Control Override</p>
+                  <h3 className="text-[14px] font-bold text-[var(--text-primary)] uppercase tracking-widest italic">Unit Protocol {selectedUnit.unitNumber}</h3>
+                  <p className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wider mt-0.5">Tactical Asset Override Interface</p>
                </div>
-               <button className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400 border-0 bg-transparent cursor-pointer" onClick={() => setSelectedUnit(null)}>
-                 <X size={24} />
+               <button className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors" onClick={() => setSelectedUnit(null)}>
+                 <X size={20} />
                </button>
             </div>
 
-            <div className="space-y-8 flex-1">
-               <div className="grid grid-cols-2 gap-4">
+            <div className="p-6 space-y-6">
+               <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: 'Current State', val: selectedUnit.status, icon: ShieldCheck, color: 'text-primary' },
-                    { label: 'Asset Type', val: selectedUnit.type, icon: Layout, color: 'text-slate-400' },
-                    { label: 'Valuation', val: `₹${(selectedUnit.totalPrice/100000).toFixed(1)}L`, icon: IndianRupee, color: 'text-slate-400' },
-                    { label: 'Area Cert.', val: `${selectedUnit.carpetArea} FT`, icon: Activity, color: 'text-slate-400' },
+                    { label: 'IDENT_STATE', val: selectedUnit.status, icon: ShieldCheck, color: 'text-[var(--accent)]' },
+                    { label: 'CONFIG_TYPE', val: selectedUnit.type, icon: Layout, color: 'text-[var(--text-secondary)]' },
+                    { label: 'VALUATION', val: `₹${(selectedUnit.totalPrice/100000).toFixed(1)}L`, icon: IndianRupee, color: 'text-[var(--text-primary)]' },
+                    { label: 'DIMENSIONS', val: `${selectedUnit.carpetArea} FT²`, icon: Activity, color: 'text-[var(--text-secondary)]' },
                   ].map((spec, i) => (
-                    <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 flex items-center gap-1.5">
-                          <spec.icon size={10} className={spec.color} /> {spec.label}
+                    <div key={i} className="bg-[var(--bg-elevated)] p-4 border border-[var(--border)] group hover:border-[var(--accent)] transition-colors">
+                       <label className="text-[9px] font-bold text-[var(--text-muted)] uppercase block mb-1.5 flex items-center gap-1.5 tracking-tighter">
+                          <spec.icon size={11} className={spec.color} /> {spec.label}
                        </label>
-                       <span className="text-xs font-black text-slate-900 uppercase tracking-tight">{spec.val}</span>
+                       <span className="text-[12px] font-bold text-[var(--text-primary)] uppercase font-mono italic">{spec.val}</span>
                     </div>
                   ))}
                </div>
 
-               <div className="space-y-4 pt-10">
-                  <div className="space-y-2">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Modify Protocol State</label>
-                     <select className="form-select h-12 border-slate-200 font-black text-xs uppercase tracking-widest bg-slate-50" value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
-                       <option value="AVAILABLE">DEPLOY_AVAILABLE</option>
-                       <option value="RESERVED">INITIALIZE_HOLD</option>
-                       <option value="BLOCKED">INTERNAL_BLOCK</option>
-                       <option value="SOLD">FINALIZE_SALE</option>
+               <div className="space-y-4 pt-6 border-t border-[var(--border)]">
+                  <div className="space-y-1">
+                     <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Protocol State Modification</label>
+                     <select className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2.5 text-[12px] font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent)] uppercase appearance-none" value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
+                       <option value="AVAILABLE">DEPLOY: STATUS_AVAILABLE</option>
+                       <option value="RESERVED">HOLD: INITIALIZE_RESERVATION</option>
+                       <option value="BLOCKED">INTERNAL: STATUS_BLOCKED</option>
+                       <option value="SOLD">ARCHIVE: STATUS_SOLD</option>
                      </select>
                   </div>
-                  <div className="flex gap-3 pt-6">
-                    <button className="flex-1 btn btn-secondary h-12 font-black uppercase text-[10px] tracking-widest" onClick={() => setSelectedUnit(null)}>Discard</button>
-                    <button className="flex-1 btn btn-primary h-12 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20" onClick={handleStatusUpdate}>Apply Change</button>
+                  <div className="flex gap-2">
+                    <button className="flex-1 py-2 text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase transition-colors" onClick={() => setSelectedUnit(null)}>Abondon</button>
+                    <button className="flex-1 py-2.5 bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] text-[10px] font-bold uppercase hover:bg-[var(--bg-elevated)] transition-all" onClick={handleStatusUpdate}>Apply Protocol</button>
                   </div>
                </div>
-            </div>
 
-            <div className="mt-auto pt-10 border-t border-slate-100 space-y-4">
                {['AVAILABLE', 'RESERVED'].includes(selectedUnit.status) && (
-                 <button className="w-full bg-slate-900 text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all shadow-2xl flex items-center justify-center gap-2" onClick={() => router.push(`/bookings/create?unitId=${selectedUnit.id}`)}>
-                    <RefreshCcw size={14} /> Open Booking Protocol
+                 <button className="w-full bg-[var(--bg-primary)] border-2 border-dashed border-[var(--border)] text-[var(--text-primary)] py-3 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--bg-elevated)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all flex items-center justify-center gap-3 mt-4" onClick={() => router.push(`/bookings/create?unitId=${selectedUnit.id}`)}>
+                    <RefreshCcw size={14} /> Open Booking Transaction
                  </button>
                )}
-               <p className="text-[9px] font-bold text-slate-300 text-center uppercase tracking-widest">Asset Integrity Verified: {selectedUnit.id}</p>
             </div>
           </div>
         </div>
       )}
 
       {showBulkPrice && (
-        <div className="modal-overlay" onClick={() => setShowBulkPrice(false)}>
-          <div className="modal-content" style={{ maxWidth: 450 }} onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
-               <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                  <RefreshCcw size={18} className="text-primary" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-primary)]/80 backdrop-blur-sm" onClick={() => setShowBulkPrice(false)}>
+          <div className="bg-[var(--bg-surface)] w-full max-w-sm border-2 border-[var(--border)] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-[var(--border)] flex justify-between items-center bg-[var(--bg-elevated)]">
+               <h3 className="text-[12px] font-bold uppercase text-[var(--text-primary)] flex items-center gap-2 tracking-widest italic">
+                  <RefreshCcw size={18} className="text-[var(--accent)]" />
                   Bulk Valuation Update
                </h3>
-               <button className="p-1 hover:bg-slate-100 rounded-full transition-colors text-slate-400 border-0 bg-transparent cursor-pointer" onClick={() => setShowBulkPrice(false)}>
+               <button className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors" onClick={() => setShowBulkPrice(false)}>
                   <X size={20} />
                </button>
             </div>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Structural Block (Tower)</label>
-                <select className="form-select h-11 border-slate-200 font-black text-xs uppercase" value={bulkTowerId} onChange={(e) => setBulkTowerId(e.target.value)}>
-                  <option value="">Select Target Module</option>
+            <div className="p-6 space-y-6">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Target Structural Block (Tower)</label>
+                <select className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2.5 text-[12px] font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent)] uppercase appearance-none" value={bulkTowerId} onChange={(e) => setBulkTowerId(e.target.value)}>
+                  <option value="">Select Target Sector</option>
                   {projects.find(p => p.id === selectedProjectId)?.towers.map(t => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
+                    <option key={t.id} value={t.id}>{t.name.toUpperCase()}</option>
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Level (Optional)</label>
-                   <input type="number" className="form-input h-11 border-slate-200" value={bulkFloor} onChange={(e) => setBulkFloor(e.target.value === '' ? '' : Number(e.target.value))} placeholder="All Levels" />
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-1">
+                   <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Level Focus</label>
+                   <input type="number" className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2.5 text-[12px] font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent)] font-mono" value={bulkFloor} onChange={(e) => setBulkFloor(e.target.value === '' ? '' : Number(e.target.value))} placeholder="GLOBAL" />
                  </div>
-                 <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Base Price (₹)</label>
-                   <input type="number" className="form-input h-11 border-slate-200 font-mono font-bold" value={bulkPrice} onChange={(e) => setBulkPrice(Number(e.target.value))} placeholder="85,00,000" />
+                 <div className="space-y-1">
+                   <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">New Base Valuation</label>
+                   <input type="number" className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2.5 text-[12px] font-mono font-bold text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" value={bulkPrice} onChange={(e) => setBulkPrice(Number(e.target.value))} placeholder="₹ AMOUNT" />
                  </div>
               </div>
-              <div className="flex gap-3 pt-8 border-t border-slate-50">
-                <button className="flex-1 btn btn-secondary py-3 text-[10px] font-black uppercase tracking-widest" onClick={() => setShowBulkPrice(false)}>Discard</button>
-                <button className="flex-1 btn btn-primary py-3 text-[10px] font-black uppercase tracking-widest" onClick={handleBulkPriceUpdate}>Authorize Update</button>
+              <div className="flex gap-2 pt-8 border-t border-[var(--border)]">
+                <button className="flex-1 py-2 text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase transition-colors" onClick={() => setShowBulkPrice(false)}>Discard</button>
+                <button className="flex-1 py-2.5 bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] text-[10px] font-bold uppercase hover:bg-[var(--bg-elevated)] transition-all" onClick={handleBulkPriceUpdate}>Authorize Update</button>
               </div>
             </div>
           </div>

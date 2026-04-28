@@ -20,22 +20,22 @@ export default function BookingsPage() {
 
   if (authLoading || loading) return (
     <CRMLayout>
-      <div className="p-8 space-y-8">
-        <div className="h-12 w-64 animate-pulse bg-[#22262F] rounded-lg"></div>
+      <div className="p-8 space-y-8 bg-[var(--bg-primary)] min-h-full">
+        <div className="h-10 w-64 animate-pulse bg-[var(--bg-elevated)] border border-[var(--border)]"></div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1,2,3].map(i => <div key={i} className="h-32 animate-pulse bg-[#22262F] rounded-lg"></div>)}
+          {[1,2,3].map(i => <div key={i} className="h-32 animate-pulse bg-[var(--bg-elevated)] border border-[var(--border)]"></div>)}
         </div>
-        <div className="h-[400px] w-full animate-pulse bg-[#22262F] rounded-lg"></div>
+        <div className="h-[500px] w-full animate-pulse bg-[var(--bg-elevated)] border border-[var(--border)]"></div>
       </div>
     </CRMLayout>
   );
 
   const statusBadge = (s: string) => {
     switch(s) { 
-      case 'CONFIRMED': return 'bg-emerald-50 text-emerald-600 border-emerald-100'; 
-      case 'CANCELLED': return 'bg-rose-50 text-rose-600 border-rose-100'; 
-      case 'PAYMENT_PENDING': return 'bg-amber-50 text-amber-600 border-amber-100'; 
-      default: return 'bg-slate-50 text-slate-600 border-slate-100'; 
+      case 'CONFIRMED': return 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]'; 
+      case 'CANCELLED': return 'bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]'; 
+      case 'PAYMENT_PENDING': return 'bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning)]'; 
+      default: return 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border)]'; 
     }
   };
 
@@ -43,127 +43,139 @@ export default function BookingsPage() {
 
   return (
     <CRMLayout>
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+      <div className="bg-[var(--bg-primary)] p-6 min-h-full space-y-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[var(--border)]">
            <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-3">
-                 <Receipt size={28} className="text-primary" />
-                 Transaction Ledger
+              <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider mb-2">
+                 <div className="w-1.5 h-1.5 bg-[var(--accent)]" />
+                 Financial Transaction Ledger
+              </div>
+              <h1 className="text-[20px] font-bold text-[var(--text-primary)] uppercase tracking-wide flex items-center gap-3 italic">
+                 Audit Intelligence Matrix
               </h1>
-              <p className="text-slate-400 text-sm font-medium mt-1">Audit-ready documentation: {bookings.length} finalized records</p>
+              <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-wider mt-1 italic">Verified Records: {bookings.length} Finalized Submissions</p>
            </div>
            <div className="flex gap-2">
-              <button className="btn btn-secondary flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-4 border-slate-200 shadow-sm">
-                 <Download size={14} /> Export Report
+              <button className="px-6 py-2 bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] text-[10px] font-bold uppercase hover:bg-[var(--bg-elevated)] transition-all flex items-center gap-2">
+                 <Download size={14} /> Structural Export
               </button>
            </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl flex items-center gap-5">
-              <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                 <IndianRupee size={24} className="text-blue-400" />
-              </div>
-              <div>
-                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Closure Capital</label>
-                 <div className="text-2xl font-black text-white font-mono tracking-tighter">₹{(totalValue/100000).toFixed(2)}L</div>
-              </div>
-           </div>
-           <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-sm flex items-center gap-5">
-              <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
-                 <PieChart size={24} className="text-primary" />
-              </div>
-              <div>
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Asset Velocity</label>
-                 <div className="text-2xl font-black text-slate-900 font-mono tracking-tighter">{(bookings.length / 30).toFixed(1)}/day</div>
+           <div className="bg-[var(--bg-surface)] p-6 border-2 border-[var(--accent)] relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-2 opacity-5"><IndianRupee size={60} /></div>
+              <div className="flex items-center gap-5 relative z-10">
+                 <div className="w-14 h-14 bg-[var(--accent-light)] flex items-center justify-center border-2 border-[var(--accent)]">
+                    <IndianRupee size={28} className="text-[var(--accent)]" />
+                 </div>
+                 <div>
+                    <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.1em] block mb-0.5 italic">Capital Closure</label>
+                    <div className="text-[28px] font-bold text-[var(--text-primary)] font-mono tracking-tight italic">₹{(totalValue/100000).toFixed(2)}L</div>
+                 </div>
               </div>
            </div>
-           <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-sm flex items-center gap-5">
-              <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
-                 <TrendingUp size={24} className="text-emerald-500" />
+           <div className="bg-[var(--bg-surface)] p-6 border-2 border-[var(--border)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 opacity-5"><PieChart size={60} /></div>
+              <div className="flex items-center gap-5 relative z-10">
+                 <div className="w-14 h-14 bg-[var(--bg-elevated)] flex items-center justify-center border-2 border-[var(--border)]">
+                    <PieChart size={28} className="text-[var(--accent)]" />
+                 </div>
+                 <div>
+                    <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.1em] block mb-0.5 italic">Asset Velocity</label>
+                    <div className="text-[28px] font-bold text-[var(--text-primary)] font-mono tracking-tight italic">{(bookings.length / 30).toFixed(1)} <span className="text-[14px]">D/R</span></div>
+                 </div>
               </div>
-              <div>
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Efficiency Rating</label>
-                 <div className="text-2xl font-black text-slate-900 font-mono tracking-tighter">94.2%</div>
+           </div>
+           <div className="bg-[var(--bg-surface)] p-6 border-2 border-[var(--border)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 opacity-5"><TrendingUp size={60} /></div>
+              <div className="flex items-center gap-5 relative z-10">
+                 <div className="w-14 h-14 bg-[var(--bg-elevated)] flex items-center justify-center border-2 border-[var(--border)]">
+                    <TrendingUp size={28} className="text-[var(--success)]" />
+                 </div>
+                 <div>
+                    <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.1em] block mb-0.5 italic">Operational Index</label>
+                    <div className="text-[28px] font-bold text-[var(--text-primary)] font-mono tracking-tight italic">94.2%</div>
+                 </div>
               </div>
            </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm overflow-hidden">
-           <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-              <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                 <Filter size={14} className="text-slate-400" />
-                 Active Booking Matrix
+        <div className="bg-[var(--bg-surface)] border-2 border-[var(--border)] overflow-hidden">
+           <div className="px-5 py-4 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex justify-between items-center">
+              <h3 className="text-[12px] font-bold text-[var(--text-primary)] uppercase tracking-widest flex items-center gap-3 italic">
+                 <Filter size={16} className="text-[var(--accent)]" />
+                 Active Transaction Matrix
               </h3>
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest tracking-tighter italic">Live Synchronization Enabled</span>
+              <div className="text-[9px] font-bold text-[var(--text-muted)] uppercase border border-[var(--border)] px-4 py-1.5 bg-[var(--bg-surface)] tracking-tighter">
+                 Real-Time Ledger Synchronization Active
+              </div>
            </div>
            <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50/10 border-b border-slate-50">
-                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Buyer Identity</th>
-                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Asset Mapping</th>
-                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Valuation</th>
-                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction State</th>
-                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Timestamp</th>
-                    <th className="px-6 py-4"></th>
+                  <tr className="bg-[var(--bg-elevated)] border-b-2 border-[var(--border)]">
+                    <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest border-r border-[var(--border)]">Entity Identity</th>
+                    <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest border-r border-[var(--border)]">Asset Coordinates</th>
+                    <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest border-r border-[var(--border)]">Valuation Index</th>
+                    <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest text-center border-r border-[var(--border)]">Operational State</th>
+                    <th className="px-5 py-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Entry Timestamp</th>
+                    <th className="px-5 py-4"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-[var(--border)]">
                   {bookings.map(b => (
-                    <tr key={b.id} className="hover:bg-slate-50/50 transition-colors cursor-pointer group" onClick={() => router.push(`/bookings/${b.id}`)}>
-                      <td className="px-6 py-5">
-                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 uppercase border border-slate-200 shadow-sm">
+                    <tr key={b.id} className="hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer group" onClick={() => router.push(`/bookings/${b.id}`)}>
+                      <td className="px-5 py-5 border-r border-[var(--border)]">
+                         <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-[var(--bg-elevated)] border-2 border-[var(--border)] flex items-center justify-center text-[12px] font-bold text-[var(--text-primary)] uppercase font-mono group-hover:border-[var(--accent)] transition-colors">
                                {b.buyerName ? b.buyerName[0] : 'U'}
                             </div>
-                            <span className="text-sm font-black text-slate-900 group-hover:text-primary transition-colors tracking-tight">{b.buyerName}</span>
+                            <span className="text-[13px] font-bold text-[var(--text-primary)] uppercase tracking-tight group-hover:text-[var(--accent)] transition-colors italic">{b.buyerName}</span>
                          </div>
                       </td>
-                      <td className="px-6 py-5">
-                         <div className="space-y-0.5">
-                            <div className="text-xs font-bold text-slate-700 uppercase tracking-tighter flex items-center gap-1.5">
-                               <Layout size={12} className="text-slate-300" /> Unit {b.unit?.unitNumber || 'TDB'}
+                      <td className="px-5 py-5 border-r border-[var(--border)]">
+                         <div className="space-y-1">
+                            <div className="text-[12px] font-bold text-[var(--text-primary)] uppercase tracking-tight flex items-center gap-2">
+                               <Layout size={14} className="text-[var(--accent)]" /> Unit {b.unit?.unitNumber || 'TDB'}
                             </div>
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                               <Building2 size={10} /> {b.unit?.tower?.project?.name || 'GENERIC ASSET'}
+                            <div className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-2 italic">
+                               <Building2 size={12} /> {b.unit?.tower?.project?.name || 'GENERIC ASSET'}
                             </div>
                          </div>
                       </td>
-                      <td className="px-6 py-5">
-                         <span className="text-sm font-black text-slate-900 font-mono tracking-tighter">₹{b.bookingAmount?.toLocaleString()}</span>
+                      <td className="px-5 py-5 border-r border-[var(--border)]">
+                         <span className="text-[13px] font-bold text-[var(--text-primary)] font-mono italic">₹{b.bookingAmount?.toLocaleString()}</span>
                       </td>
-                      <td className="px-6 py-5">
-                         <span className={`px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-widest border transition-all ${statusBadge(b.status)}`}>
+                      <td className="px-5 py-5 text-center border-r border-[var(--border)]">
+                         <span className={`px-3 py-1 text-[9px] font-bold uppercase tracking-[0.1em] border-2 ${statusBadge(b.status)}`}>
                             {b.status?.replace(/_/g,' ')}
                          </span>
                       </td>
-                      <td className="px-6 py-5">
-                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <Calendar size={12} className="text-slate-300" />
+                      <td className="px-5 py-5">
+                         <div className="flex items-center gap-2 text-[11px] font-bold text-[var(--text-secondary)] uppercase font-mono">
+                            <Calendar size={14} className="text-[var(--text-muted)]" />
                             {new Date(b.createdAt).toLocaleDateString()}
                          </div>
                       </td>
-                      <td className="px-6 py-5 text-right">
-                         <div className="inline-flex p-2 rounded-lg bg-slate-50 text-slate-300 group-hover:bg-primary/5 group-hover:text-primary transition-all">
-                            <ChevronRight size={16} />
-                         </div>
+                      <td className="px-5 py-5 text-right">
+                         <ChevronRight size={20} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-all inline translate-x-0 group-hover:translate-x-1" />
                       </td>
                     </tr>
                   ))}
                   
                   {!bookings.length && (
                     <tr>
-                      <td colSpan={6} className="py-32 text-center bg-white">
-                        <div className="space-y-4">
-                           <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-50 rounded-full mb-4 text-slate-200 shadow-inner border border-slate-100">
-                              <Receipt size={32} />
+                      <td colSpan={6} className="py-32 text-center bg-[var(--bg-surface)]">
+                        <div className="space-y-6">
+                           <div className="inline-flex items-center justify-center w-20 h-20 bg-[var(--bg-elevated)] border-2 border-dashed border-[var(--border)] text-[var(--text-muted)] group">
+                              <Receipt size={40} className="group-hover:scale-110 transition-transform" />
                            </div>
                            <div>
-                              <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Ledger Inactive</h4>
-                              <p className="text-[11px] text-slate-400 font-medium italic mt-1 max-w-[200px] mx-auto uppercase tracking-tighter">No finalized transaction records discovered in current matrix.</p>
+                              <h4 className="text-[14px] font-bold text-[var(--text-primary)] uppercase tracking-[0.2em] italic">Ledger Matrix Inactive</h4>
+                              <p className="text-[10px] text-[var(--text-secondary)] font-bold italic mt-2 max-w-[280px] mx-auto uppercase tracking-tighter leading-relaxed">No finalized transaction records identified within current synchronization cycle.</p>
                            </div>
-                           <button className="btn btn-secondary text-[10px] font-black uppercase tracking-widest mt-6" onClick={() => router.push('/leads')}>Initialize Deal Protocol</button>
+                           <button className="px-10 py-3 bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] text-[10px] font-bold uppercase hover:bg-[var(--bg-elevated)] transition-all italic mt-8" onClick={() => router.push('/leads')}>Initialize Transaction Protocol</button>
                         </div>
                       </td>
                     </tr>

@@ -110,8 +110,8 @@ export default function ProjectDetailPage() {
     } catch (err: any) { alert(err.message); }
   };
 
-  if (authLoading || loading) return <div className="loading-page"><div className="spinner" /></div>;
-  if (!project) return <CRMLayout><div className="flex flex-col items-center justify-center py-32 text-slate-300 gap-4"><Building2 size={64} /><h3 className="text-xl font-black uppercase">Project Nullified</h3></div></CRMLayout>;
+  if (authLoading || loading) return <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center"><div className="w-10 h-10 border-2 border-[var(--border)] border-t-[var(--accent)] animate-spin" /></div>;
+  if (!project) return <CRMLayout><div className="flex flex-col items-center justify-center py-32 text-[var(--text-muted)] gap-4"><Building2 size={64} /><h3 className="text-[20px] font-bold uppercase">Project Nullified</h3></div></CRMLayout>;
 
   const allUnits = towers.flatMap(t => t.units || []);
   const unitStats = [
@@ -131,54 +131,54 @@ export default function ProjectDetailPage() {
 
   return (
     <CRMLayout>
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+      <div className="bg-[var(--bg-primary)] p-6 min-h-full space-y-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[var(--border)]">
            <div>
               <div className="flex items-center gap-3 mb-2">
-                 <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">{project.name}</h1>
-                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${project.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                 <h1 className="text-[28px] font-bold text-[var(--text-primary)] tracking-wide uppercase italic">{project.name}</h1>
+                 <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase tracking-wider ${project.status === 'ACTIVE' ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]' : 'bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning)]'}`}>
                     Status: {project.status}
                  </span>
               </div>
-              <div className="flex items-center gap-4 text-slate-400 font-medium text-sm">
-                 <span className="flex items-center gap-1.5"><MapPin size={14} className="text-primary" /> {project.location}</span>
-                 <span className="w-1 h-1 bg-slate-200 rounded-full" />
-                 <span className="flex items-center gap-1.5 uppercase text-xs tracking-widest font-black text-slate-500">{project.type}</span>
+              <div className="flex items-center gap-4 text-[var(--text-secondary)] font-bold text-[10px] uppercase">
+                 <span className="flex items-center gap-1.5"><MapPin size={14} className="text-[var(--accent)]" /> {project.location}</span>
+                 <span className="w-1 h-1 bg-[var(--border)]" />
+                 <span className="tracking-widest text-[var(--text-muted)]">{project.type}</span>
               </div>
            </div>
            <div className="flex gap-2">
-              <button className="btn btn-secondary flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-5 shadow-sm border-slate-200">
+              <button className="bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] px-6 py-2 text-[10px] font-bold uppercase hover:bg-[var(--bg-elevated)] transition-all flex items-center gap-2">
                  <Settings size={14} /> Global Config
               </button>
            </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
            {[
-             { label: 'Asset Blocks', value: towers.length, icon: <Layers className="text-blue-500" /> },
-             { label: 'Inventory Units', value: towers.reduce((acc, t) => acc + (t._count?.units || 0), 0), icon: <Layout className="text-indigo-500" /> },
-             { label: 'Active Enquiries', value: project._count?.leads || 0, icon: <Users className="text-violet-500" /> },
-             { label: 'Project Flux', value: `${project.constructionUpdates?.[0]?.progressPct || 45}%`, icon: <Activity className="text-emerald-500" /> }
+             { label: 'Asset Blocks', value: towers.length, icon: <Layers size={18} /> },
+             { label: 'Inventory Units', value: towers.reduce((acc, t) => acc + (t._count?.units || 0), 0), icon: <Layout size={18} /> },
+             { label: 'Active Enquiries', value: project._count?.leads || 0, icon: <Users size={18} /> },
+             { label: 'Project Flux', value: `${project.constructionUpdates?.[0]?.progressPct || 45}%`, icon: <Activity size={18} /> }
            ].map((stat, i) => (
-             <div key={i} className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
+             <div key={i} className="bg-[var(--bg-surface)] p-4 border border-[var(--border)] flex items-center gap-4 hover:border-[var(--accent)] transition-all">
+                <div className="w-10 h-10 border border-[var(--border)] flex items-center justify-center text-[var(--accent)] bg-[var(--bg-elevated)]">
                    {stat.icon}
                 </div>
                 <div>
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">{stat.label}</label>
-                   <div className="text-xl font-black text-slate-900 font-mono tracking-tighter">{stat.value}</div>
+                   <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block mb-0.5">{stat.label}</label>
+                   <div className="text-[18px] font-bold text-[var(--text-primary)] font-mono tracking-tight uppercase">{stat.value}</div>
                 </div>
              </div>
            ))}
         </div>
 
-        <div className="border-b border-slate-100 flex gap-10 overflow-x-auto scrollbar-hide">
+        <div className="border-b border-[var(--border)] flex gap-8 overflow-x-auto no-scrollbar">
           {tabs.map(tab => (
             <button 
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap ${
-                activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-600'
+              className={`flex items-center gap-2 py-3 text-[11px] font-bold uppercase tracking-wider border-b-2 transition-all whitespace-nowrap ${
+                activeTab === tab.id ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
               {tab.icon}
@@ -189,13 +189,13 @@ export default function ProjectDetailPage() {
 
         <div className="min-h-[400px]">
           {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8 bg-white p-8 rounded-xl border border-slate-100 shadow-sm">
-                <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-10 flex items-center gap-2">
-                   <Target size={16} className="text-primary" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-8 bg-[var(--bg-surface)] p-6 border border-[var(--border)]">
+                <h3 className="text-[12px] font-bold text-[var(--text-primary)] uppercase tracking-wider mb-8 flex items-center gap-2">
+                   <Target size={16} className="text-[var(--accent)]" />
                    Sales Extraction Funnel
                 </h3>
-                <div className="h-[300px] flex items-end justify-between gap-4 px-4 overflow-hidden pt-10">
+                <div className="h-[280px] flex items-end justify-between gap-4 px-4 overflow-hidden pt-8">
                    {[
                      { label: 'INTAKE', count: 45, pct: 100 },
                      { label: 'CONTACT', count: 32, pct: 71 },
@@ -204,36 +204,35 @@ export default function ProjectDetailPage() {
                      { label: 'CONVERSION', count: 5, pct: 11 }
                    ].map((bar, i) => (
                      <div key={i} className="flex-1 flex flex-col items-center group">
-                        <div className="w-full bg-slate-50 rounded-t-lg relative flex flex-col justify-end transition-all hover:bg-primary/5 border-x border-t border-slate-100" style={{ height: `${bar.pct}%` }}>
-                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-400 group-hover:text-primary transition-colors">{bar.count}</div>
-                           <div className="w-full h-[3px] bg-primary rounded-t-full shadow-[0_-4px_12px_rgba(37,99,235,0.4)]" />
+                        <div className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] relative flex flex-col justify-end transition-all hover:border-[var(--accent)]" style={{ height: `${bar.pct}%` }}>
+                           <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{bar.count}</div>
+                           <div className="w-full h-1 bg-[var(--accent)]" />
                         </div>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4">{bar.label}</span>
+                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mt-4">{bar.label}</span>
                      </div>
                    ))}
                 </div>
               </div>
-              <div className="lg:col-span-4 bg-white p-8 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
-                 <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-10 w-full text-left flex items-center gap-2">
-                   <TrendingUp size={16} className="text-primary" />
+              <div className="lg:col-span-4 bg-[var(--bg-surface)] p-6 border border-[var(--border)] flex flex-col items-center">
+                 <h3 className="text-[12px] font-bold text-[var(--text-primary)] uppercase tracking-wider mb-8 w-full text-left flex items-center gap-2">
+                   <TrendingUp size={16} className="text-[var(--accent)]" />
                    Inventory Saturation
                  </h3>
-                 <div className="relative w-48 h-48 mb-6 flex items-center justify-center">
-                    <div className="absolute inset-0 rounded-full border-[1.5rem] border-slate-50" />
-                    <div className="absolute inset-0 rounded-full border-[1.5rem] border-primary border-t-transparent border-l-transparent -rotate-45" />
-                    <div>
-                       <div className="text-3xl font-black text-slate-900 tracking-tighter">72%</div>
-                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Saturated</div>
+                 <div className="relative w-40 h-40 mb-6 flex items-center justify-center border-8 border-[var(--bg-elevated)]">
+                    <div className="absolute inset-0 border-8 border-[var(--accent)] border-t-transparent border-l-transparent -rotate-45" />
+                    <div className="text-center">
+                       <div className="text-[24px] font-bold text-[var(--text-primary)] tracking-tight">72%</div>
+                       <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Saturated</div>
                     </div>
                  </div>
-                 <div className="space-y-3 w-full">
+                 <div className="space-y-2 w-full">
                     {unitStats.map((stat, i) => (
-                      <div key={i} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-emerald-500' : i === 1 ? 'bg-amber-400' : 'bg-blue-600'}`} />
+                      <div key={i} className="flex justify-between items-center bg-[var(--bg-elevated)] p-2 border border-[var(--border)]">
+                         <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-2">
+                            <span className={`w-2 h-2 ${i === 0 ? 'bg-[var(--success)]' : i === 1 ? 'bg-[var(--warning)]' : 'bg-[var(--accent)]'}`} />
                             {stat.name}
                          </span>
-                         <span className="text-xs font-black text-slate-900 font-mono tracking-tighter">{stat.value}</span>
+                         <span className="text-[11px] font-bold text-[var(--text-primary)] font-mono">{stat.value}</span>
                       </div>
                     ))}
                  </div>
@@ -244,29 +243,29 @@ export default function ProjectDetailPage() {
           {activeTab === 'towers' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Structural Blocks</h3>
-                 <button className="btn btn-secondary flex items-center gap-2 text-[10px] font-black uppercase tracking-widest" onClick={() => setShowAddTower(true)}>
+                 <h3 className="text-[12px] font-bold text-[var(--text-primary)] uppercase tracking-wider">Structural Blocks</h3>
+                 <button className="bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] px-4 py-2 text-[10px] font-bold uppercase hover:bg-[var(--bg-elevated)] transition-all flex items-center gap-2" onClick={() => setShowAddTower(true)}>
                     <Plus size={14} /> Append Tower
                  </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {towers.map(t => (
-                  <div key={t.id} className={`bg-white p-6 rounded-xl border transition-all cursor-pointer group ${selectedTower === t.id ? 'border-primary ring-1 ring-primary/20 shadow-lg' : 'border-slate-200/60 hover:border-slate-300 shadow-sm'}`} onClick={() => { setSelectedTower(t.id); setActiveTab('inventory'); }}>
+                  <div key={t.id} className={`bg-[var(--bg-surface)] p-6 border transition-all cursor-pointer group ${selectedTower === t.id ? 'border-[var(--accent)] bg-[var(--bg-elevated)]' : 'border-[var(--border)] hover:border-[var(--accent)]'}`} onClick={() => { setSelectedTower(t.id); setActiveTab('inventory'); }}>
                     <div className="flex justify-between items-start mb-6">
-                      <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-sm">
-                         <Building2 size={24} className={selectedTower === t.id ? 'text-primary' : 'text-slate-300'} />
+                      <div className="w-12 h-12 bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center text-[var(--accent)]">
+                         <Building2 size={24} />
                       </div>
                       <div className="text-right">
-                         <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-bold uppercase tracking-tighter">
+                         <span className="px-2 py-0.5 border border-[var(--success)] text-[var(--success)] bg-[var(--success-bg)] text-[10px] font-bold uppercase tracking-wider">
                             {t.units?.filter((u:any) => u.status === 'AVAILABLE').length || 0} Open
                          </span>
                       </div>
                     </div>
-                    <h4 className="text-lg font-black text-slate-900 tracking-tight">{t.name}</h4>
-                    <p className="text-xs text-slate-400 font-medium mt-1 uppercase tracking-widest">{t.totalFloors} Structural Levels</p>
-                    <div className="mt-8 pt-4 border-t border-slate-50 flex justify-between items-center">
-                       <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest group-hover:text-primary transition-colors">Access Matrix</span>
-                       <ChevronRight size={16} className="text-slate-300 group-hover:text-primary transition-all translate-x-0 group-hover:translate-x-1" />
+                    <h4 className="text-[18px] font-bold text-[var(--text-primary)] tracking-tight uppercase">{t.name}</h4>
+                    <p className="text-[10px] text-[var(--text-muted)] font-bold mt-1 uppercase tracking-widest">{t.totalFloors} Structural Levels</p>
+                    <div className="mt-8 pt-4 border-t border-[var(--border)] flex justify-between items-center">
+                       <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest group-hover:text-[var(--accent)] transition-colors">Access Matrix</span>
+                       <ChevronRight size={16} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-all" />
                     </div>
                   </div>
                 ))}
@@ -276,57 +275,54 @@ export default function ProjectDetailPage() {
 
           {activeTab === 'inventory' && (
             <div className="space-y-8">
-              <div className="flex justify-between items-end pb-4 border-b border-slate-100">
+              <div className="flex justify-between items-end pb-4 border-b border-[var(--border)]">
                 <div className="flex gap-4 items-end">
-                   <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Asset Focus</label>
-                      <select className="form-select h-10 border-slate-200 font-black text-xs uppercase tracking-widest min-w-[180px] pr-10 shadow-sm" value={selectedTower || ''} onChange={e => setSelectedTower(e.target.value)}>
+                   <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider ml-1">Asset Focus</label>
+                      <select className="bg-[var(--bg-surface)] border border-[var(--border)] h-9 px-3 text-[11px] font-bold uppercase tracking-widest min-w-[160px] outline-none focus:border-[var(--accent)]" value={selectedTower || ''} onChange={e => setSelectedTower(e.target.value)}>
                         {towers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                       </select>
                    </div>
-                   <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-1 ml-4 flex items-center gap-3">
-                      <Layout size={20} className="text-primary" />
+                   <h3 className="text-[20px] font-bold text-[var(--text-primary)] uppercase tracking-tight mb-1 ml-4 flex items-center gap-3">
+                      <Layout size={20} className="text-[var(--accent)]" />
                       Spatial Matrix
                    </h3>
                 </div>
-                <button className="btn btn-primary flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-5 shadow-md" onClick={() => setShowAddUnit(true)}>
+                <button className="bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] px-4 py-2 text-[10px] font-bold uppercase hover:bg-[var(--bg-elevated)] transition-all flex items-center gap-2" onClick={() => setShowAddUnit(true)}>
                    <Plus size={16} /> Deploy Unit
                 </button>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {Array.from({length: towers.find(t=>t.id===selectedTower)?.totalFloors || 0}, (_, i) => i + 1).reverse().map(floor => (
-                  <div key={floor} className="flex gap-6 items-center p-2 rounded-lg hover:bg-slate-50/50 transition-colors">
-                    <div className="w-16 flex flex-col items-center flex-shrink-0 group">
-                       <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-0.5 group-hover:text-primary transition-colors">Floor</span>
-                       <span className="text-base font-black text-slate-400 group-hover:text-slate-900 transition-colors font-mono">{String(floor).padStart(2, '0')}</span>
+                  <div key={floor} className="flex gap-4 items-center p-2 border border-transparent hover:bg-[var(--bg-elevated)] hover:border-[var(--border)] transition-all">
+                    <div className="w-12 flex flex-col items-center flex-shrink-0 group">
+                       <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase mb-0.5">Floor</span>
+                       <span className="text-[14px] font-bold text-[var(--text-secondary)] font-mono">{String(floor).padStart(2, '0')}</span>
                     </div>
-                    <div className="flex gap-2 flex-1 overflow-x-auto scrollbar-hide py-1">
+                    <div className="flex gap-1 flex-1 overflow-x-auto no-scrollbar py-1">
                       {towers.find(t=>t.id===selectedTower)?.units?.filter((u:any) => u.floor === floor).sort((a:any, b:any) => a.unitNumber.localeCompare(b.unitNumber)).map((u:any) => (
                         <div 
                           key={u.id} 
                           onClick={() => setSelectedUnit(u)}
-                          className={`min-w-[90px] h-12 rounded-lg border flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-sm relative group ${
-                            u.status === 'AVAILABLE' ? 'bg-white border-emerald-100 hover:border-emerald-300' : 
-                            u.status === 'RESERVED' ? 'bg-amber-50 border-amber-200' : 
-                            u.status === 'BOOKED' ? 'bg-blue-50 border-blue-200' : 
-                            'bg-slate-100 border-slate-200 opacity-60'
+                          className={`min-w-[80px] h-10 border flex items-center justify-center cursor-pointer transition-all hover:border-[var(--accent)] relative group ${
+                            u.status === 'AVAILABLE' ? 'bg-[var(--bg-surface)] border-[var(--border)]' : 
+                            u.status === 'RESERVED' ? 'bg-[var(--warning-bg)] border-[var(--warning)]' : 
+                            u.status === 'BOOKED' ? 'bg-[var(--accent-light)] border-[var(--accent)]' : 
+                            'bg-[var(--bg-elevated)] border-[var(--border)] opacity-60'
                           }`}
                         >
-                          <span className={`text-xs font-black tracking-tight ${u.status === 'AVAILABLE' ? 'text-slate-900' : 'text-slate-600'}`}>{u.unitNumber}</span>
-                          <div className={`w-1 h-1 rounded-full absolute bottom-1.5 ${
-                            u.status === 'AVAILABLE' ? 'bg-emerald-500' : 
-                            u.status === 'RESERVED' ? 'bg-amber-500' : 
-                            u.status === 'BOOKED' ? 'bg-blue-600' : 
-                            'bg-slate-400'
+                          <span className={`text-[11px] font-bold tracking-tight ${u.status === 'AVAILABLE' ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>{u.unitNumber}</span>
+                          <div className={`w-1.5 h-1.5 absolute bottom-1 right-1 ${
+                            u.status === 'AVAILABLE' ? 'bg-[var(--success)]' : 
+                            u.status === 'RESERVED' ? 'bg-[var(--warning)]' : 
+                            u.status === 'BOOKED' ? 'bg-[var(--accent)]' : 
+                            'bg-[var(--text-muted)]'
                           }`} />
-                          <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                             <div className="w-4 h-4 rounded-full bg-primary text-white flex items-center justify-center shadow-lg"><Plus size={10} /></div>
-                          </div>
                         </div>
                       ))}
                       {towers.find(t=>t.id===selectedTower)?.units?.filter((u:any) => u.floor === floor).length === 0 && (
-                        <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic py-3 ml-2">Baseline Structural Frame Only</div>
+                        <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest italic py-2 ml-2">Baseline Structural Frame Only</div>
                       )}
                     </div>
                   </div>
@@ -336,64 +332,61 @@ export default function ProjectDetailPage() {
           )}
 
           {activeTab === 'media' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                   <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                      <FileText size={16} className="text-primary" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex justify-between items-center">
+                   <h3 className="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
+                      <FileText size={16} className="text-[var(--accent)]" />
                       Documentation Matrix
                    </h3>
-                   <button className="text-[10px] font-black text-primary hover:bg-blue-50 px-3 py-1.5 rounded transition-all border border-blue-100 uppercase tracking-widest">
+                   <button className="text-[10px] font-bold text-[var(--accent)] hover:bg-[var(--accent-light)] px-3 py-1 border border-[var(--accent)] uppercase tracking-wider">
                       Upload PDF
                    </button>
                 </div>
-                <div className="p-6 space-y-3">
+                <div className="p-4 space-y-2">
                   {project.media?.filter((m:any) => m.type === 'BROCHURE').map((m:any) => (
-                    <div key={m.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between group hover:bg-white transition-all">
+                    <div key={m.id} className="p-3 bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-between group hover:border-[var(--accent)] transition-all">
                       <div className="flex items-center gap-3">
-                         <div className="w-9 h-9 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-red-500 shadow-sm">
+                         <div className="w-9 h-9 bg-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-center text-[var(--danger)]">
                             <FileText size={18} />
                          </div>
                          <div>
-                            <div className="text-xs font-black text-slate-900 uppercase tracking-tight">{m.title || 'BROCHURE_V1.pdf'}</div>
-                            <div className="text-[9px] font-bold text-slate-400">PDF Document • 4.2 MB</div>
+                            <div className="text-[11px] font-bold text-[var(--text-primary)] uppercase">{m.title || 'BROCHURE_V1.pdf'}</div>
+                            <div className="text-[9px] font-bold text-[var(--text-muted)] uppercase">PDF Document • 4.2 MB</div>
                          </div>
                       </div>
-                      <a href={m.url} target="_blank" className="p-2 hover:bg-blue-50 text-slate-400 hover:text-primary rounded-lg transition-colors border border-transparent hover:border-blue-100">
+                      <a href={m.url} target="_blank" className="p-2 text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
                          <FileDown size={18} />
                       </a>
                     </div>
                   ))}
                   {!project.media?.some((m:any) => m.type === 'BROCHURE') && (
-                     <div className="py-12 text-center text-slate-300 space-y-2">
+                     <div className="py-12 text-center text-[var(--text-muted)] space-y-2">
                         <FileText size={32} className="mx-auto opacity-20" />
                         <p className="text-[10px] font-bold uppercase tracking-widest">No Technical Data Registered</p>
                      </div>
                   )}
                 </div>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                   <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                      <ImageIcon size={16} className="text-primary" />
+              <div className="bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex justify-between items-center">
+                   <h3 className="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
+                      <ImageIcon size={16} className="text-[var(--accent)]" />
                       Visual Asset Repository
                    </h3>
-                   <button className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 border border-slate-200 bg-white">
+                   <button className="p-1 border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--accent)]">
                       <Plus size={16} />
                    </button>
                 </div>
-                <div className="p-6 grid grid-cols-3 gap-3">
+                <div className="p-4 grid grid-cols-3 gap-3">
                    {project.media?.filter((m:any) => m.type === 'IMAGE').map((m:any) => (
-                     <div key={m.id} className="relative aspect-square rounded-lg overflow-hidden border border-slate-100 group">
-                        <img src={m.url} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                           <MoreVertical size={16} className="text-white" />
-                        </div>
+                     <div key={m.id} className="relative aspect-square border border-[var(--border)] overflow-hidden group">
+                        <img src={m.url} className="w-full h-full object-cover" />
                      </div>
                    ))}
-                   <div className="aspect-square border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-300 hover:border-primary hover:text-primary transition-all cursor-pointer bg-slate-50/30">
+                   <div className="aspect-square border-2 border-dashed border-[var(--border)] flex flex-col items-center justify-center text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all cursor-pointer bg-[var(--bg-elevated)]">
                       <Plus size={24} />
-                      <span className="text-[8px] font-black uppercase tracking-widest mt-2">Append</span>
+                      <span className="text-[8px] font-bold uppercase tracking-widest mt-2">Append</span>
                    </div>
                 </div>
               </div>
@@ -402,51 +395,51 @@ export default function ProjectDetailPage() {
 
           {activeTab === 'construction' && (
             <div className="max-w-3xl space-y-8">
-              <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+              <div className="flex justify-between items-center pb-4 border-b border-[var(--border)]">
                  <div>
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Development Timeline</h3>
-                    <p className="text-xs text-slate-400 font-medium">Historical structural progression matrix</p>
+                    <h3 className="text-[20px] font-bold text-[var(--text-primary)] uppercase tracking-tight">Development Timeline</h3>
+                    <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase">Historical structural progression matrix</p>
                  </div>
-                 <button className="btn btn-primary flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-5" onClick={() => setShowAddUpdate(true)}>
+                 <button className="bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] px-6 py-2 text-[10px] font-bold uppercase hover:bg-[var(--bg-elevated)] transition-all flex items-center gap-2" onClick={() => setShowAddUpdate(true)}>
                     <Plus size={16} /> Commit Milestone
                  </button>
               </div>
-              <div className="relative pl-8 space-y-12 before:absolute before:left-3.5 before:top-4 before:bottom-4 before:w-px before:bg-slate-100">
+              <div className="relative pl-6 space-y-8 before:absolute before:left-0 before:top-4 before:bottom-4 before:w-[2px] before:bg-[var(--border)]">
                 {project.constructionUpdates?.length ? project.constructionUpdates.map((update:any) => (
                   <div key={update.id} className="relative group">
-                    <div className="absolute -left-[27px] top-1 w-3.5 h-3.5 rounded-full bg-white border-2 border-primary shadow-[0_0_0_4px_#fff]" />
-                    <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-sm group-hover:border-primary/30 transition-all">
-                      <div className="flex justify-between items-start mb-4">
+                    <div className="absolute -left-[28px] top-2 w-3 h-3 bg-[var(--bg-surface)] border-2 border-[var(--accent)]" />
+                    <div className="bg-[var(--bg-surface)] p-6 border border-[var(--border)] group-hover:border-[var(--accent)] transition-all">
+                      <div className="flex justify-between items-start mb-6">
                          <div>
-                            <h4 className="text-base font-black text-slate-900 tracking-tight">{update.milestoneName}</h4>
-                            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                            <h4 className="text-[16px] font-bold text-[var(--text-primary)] uppercase tracking-tight">{update.milestoneName}</h4>
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mt-1">
                                <Clock size={10} />
                                {new Date(update.updateDate).toLocaleDateString()}
                             </div>
                          </div>
-                         <span className="px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100">
+                         <span className="px-2 py-0.5 border border-[var(--success)] text-[var(--success)] bg-[var(--success-bg)] text-[10px] font-bold uppercase tracking-wider">
                             {update.progressPct}% REACHED
                          </span>
                       </div>
-                      <div className="h-1.5 bg-slate-50 rounded-full overflow-hidden mb-5">
-                         <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${update.progressPct}%` }} />
+                      <div className="h-1 bg-[var(--bg-elevated)] overflow-hidden mb-6">
+                         <div className="h-full bg-[var(--success)]" style={{ width: `${update.progressPct}%` }} />
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed font-bold">{update.description}</p>
+                      <p className="text-[11px] text-[var(--text-secondary)] font-bold uppercase">{update.description}</p>
                       {update.photoUrls?.length > 0 && (
-                        <div className="flex gap-2 mt-6 pt-6 border-t border-slate-50">
+                        <div className="flex gap-2 mt-6 pt-6 border-t border-[var(--border)]">
                           {update.photoUrls.map((url:string, i:number) => (
-                            <img key={i} src={url} className="w-16 h-16 rounded-lg object-cover border border-slate-100 hover:scale-110 transition-transform" />
+                            <img key={i} src={url} className="w-16 h-16 border border-[var(--border)] object-cover" />
                           ))}
                         </div>
                       )}
                     </div>
                   </div>
                 )) : (
-                  <div className="py-20 text-center space-y-4 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                     <Building2 size={48} className="mx-auto text-slate-200" />
+                  <div className="py-20 text-center space-y-4 bg-[var(--bg-elevated)] border border-dashed border-[var(--border)]">
+                     <Building2 size={48} className="mx-auto text-[var(--text-muted)]" />
                      <div>
-                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Structural Inertia</h4>
-                        <p className="text-[11px] text-slate-400 font-medium italic mt-1 uppercase tracking-tighter">No progression milestones have been committed.</p>
+                        <h4 className="text-[14px] font-bold text-[var(--text-primary)] uppercase tracking-wider">Structural Inertia</h4>
+                        <p className="text-[10px] text-[var(--text-muted)] font-bold italic mt-1 uppercase tracking-tighter">No progression milestones have been committed.</p>
                      </div>
                   </div>
                 )}
@@ -455,35 +448,34 @@ export default function ProjectDetailPage() {
           )}
 
           {activeTab === 'leads' && (
-            <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm overflow-hidden">
+            <div className="bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Entity Name</th>
-                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Phase</th>
-                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Engagement</th>
-                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Acquisition Date</th>
+                  <tr className="bg-[var(--bg-elevated)] border-b border-[var(--border)]">
+                    <th className="px-6 py-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Entity Name</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Phase</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Engagement</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Acquisition Date</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {/* Actual implementation would fetch leads filtered by projectId */}
-                  <tr className="hover:bg-slate-50/50 transition-colors cursor-pointer group">
+                <tbody className="divide-y divide-[var(--border)]">
+                  <tr className="hover:bg-[var(--bg-elevated)] transition-all cursor-pointer group">
                     <td className="px-6 py-4">
-                       <div className="text-sm font-black text-slate-900 group-hover:text-primary transition-colors tracking-tight">Prashant Gupta</div>
+                       <div className="text-[12px] font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors uppercase">Prashant Gupta</div>
                     </td>
                     <td className="px-6 py-4">
-                       <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100">INTERESTED</span>
+                       <span className="px-2 py-0.5 border border-[var(--warning)] text-[var(--warning)] bg-[var(--warning-bg)] text-[10px] font-bold uppercase tracking-wider">INTERESTED</span>
                     </td>
                     <td className="px-6 py-4">
-                       <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden max-w-[60px]">
-                             <div className="h-full bg-primary" style={{ width: '82%' }} />
+                       <div className="flex items-center gap-3">
+                          <div className="flex-1 h-1 bg-[var(--bg-elevated)] overflow-hidden max-w-[60px]">
+                             <div className="h-full bg-[var(--accent)]" style={{ width: '82%' }} />
                           </div>
-                          <span className="text-[10px] font-black text-slate-500 font-mono">82%</span>
+                          <span className="text-[10px] font-bold text-[var(--text-secondary)] font-mono">82%</span>
                        </div>
                     </td>
                     <td className="px-6 py-4">
-                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">2 Days Previous</span>
+                       <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">2 Days Previous</span>
                     </td>
                   </tr>
                 </tbody>
@@ -495,29 +487,29 @@ export default function ProjectDetailPage() {
 
       {/* MODALS */}
       {showAddTower && (
-        <div className="modal-overlay" onClick={() => setShowAddTower(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: 400}}>
-            <div className="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
-                 <Building2 size={18} className="text-primary" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-primary)]/80 backdrop-blur-sm" onClick={() => setShowAddTower(false)}>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
+              <h3 className="text-[12px] font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
+                 <Building2 size={18} className="text-[var(--accent)]" />
                  Initialize Tower Module
               </h3>
-              <button className="p-1 hover:bg-slate-100 rounded-full transition-colors text-slate-400 border-0 bg-transparent cursor-pointer" onClick={() => setShowAddTower(false)}>
+              <button className="text-[var(--text-muted)] hover:text-[var(--danger)]" onClick={() => setShowAddTower(false)}>
                  <X size={20} />
               </button>
             </div>
-            <form onSubmit={addTower} className="space-y-6">
-              <div className="form-group">
-                <label className="form-label">Structural Identifier (Name)</label>
-                <input className="form-input" required value={towerForm.name} onChange={e => setTowerForm({...towerForm, name: e.target.value})} placeholder="e.g. TOWER-ALPHA" />
+            <form onSubmit={addTower} className="p-6 space-y-6">
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Structural Identifier</label>
+                <input className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 text-[12px] font-bold uppercase outline-none focus:border-[var(--accent)]" required value={towerForm.name} onChange={e => setTowerForm({...towerForm, name: e.target.value})} placeholder="e.g. TOWER-ALPHA" />
               </div>
-              <div className="form-group">
-                <label className="form-label">Vertical Complexity (Total Floors)</label>
-                <input type="number" className="form-input" value={towerForm.totalFloors} onChange={e => setTowerForm({...towerForm, totalFloors: parseInt(e.target.value)})} />
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Vertical Complexity</label>
+                <input type="number" className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 text-[12px] font-bold font-mono outline-none focus:border-[var(--accent)]" value={towerForm.totalFloors} onChange={e => setTowerForm({...towerForm, totalFloors: parseInt(e.target.value)})} />
               </div>
-              <div className="flex gap-3 pt-6 border-t border-slate-100">
-                <button type="button" className="btn btn-secondary flex-1 font-bold uppercase text-[11px]" onClick={() => setShowAddTower(false)}>Discard</button>
-                <button type="submit" className="btn btn-primary flex-1 font-bold uppercase text-[11px]">Authorize Asset</button>
+              <div className="flex gap-3 pt-6 border-t border-[var(--border)]">
+                <button type="button" className="flex-1 px-4 py-2 text-[11px] font-bold uppercase text-[var(--text-muted)] hover:text-[var(--text-primary)]" onClick={() => setShowAddTower(false)}>Discard</button>
+                <button type="submit" className="flex-1 bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] px-4 py-2 text-[11px] font-bold uppercase hover:bg-[var(--bg-elevated)]">Authorize Asset</button>
               </div>
             </form>
           </div>
@@ -525,146 +517,144 @@ export default function ProjectDetailPage() {
       )}
 
       {showAddUnit && (
-        <div className="modal-overlay" onClick={() => setShowAddUnit(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: 450}}>
-            <div className="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
-                 <Layout size={18} className="text-primary" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-primary)]/80 backdrop-blur-sm" onClick={() => setShowAddUnit(false)}>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
+              <h3 className="text-[12px] font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
+                 <Layout size={18} className="text-[var(--accent)]" />
                  Deploy Inventory Unit
               </h3>
-              <button className="p-1 hover:bg-slate-100 rounded-full transition-colors text-slate-400 border-0 bg-transparent cursor-pointer" onClick={() => setShowAddUnit(false)}>
+              <button className="text-[var(--text-muted)] hover:text-[var(--danger)]" onClick={() => setShowAddUnit(false)}>
                  <X size={20} />
               </button>
             </div>
-            <form onSubmit={addUnit} className="space-y-6">
+            <form onSubmit={addUnit} className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label className="form-label">Elevation Level (Floor)</label>
-                  <input type="number" className="form-input" value={unitForm.floor} onChange={e => setUnitForm({...unitForm, floor: parseInt(e.target.value)})} />
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Elevation Level</label>
+                  <input type="number" className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 text-[12px] font-bold font-mono outline-none focus:border-[var(--accent)]" value={unitForm.floor} onChange={e => setUnitForm({...unitForm, floor: parseInt(e.target.value)})} />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Unit Designation</label>
-                  <input className="form-input font-black uppercase" required value={unitForm.unitNumber} onChange={e => setUnitForm({...unitForm, unitNumber: e.target.value})} placeholder="A-101" />
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Unit Designation</label>
+                  <input className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 text-[12px] font-bold uppercase outline-none focus:border-[var(--accent)]" required value={unitForm.unitNumber} onChange={e => setUnitForm({...unitForm, unitNumber: e.target.value})} placeholder="A-101" />
                 </div>
               </div>
-              <div className="form-group">
-                <label className="form-label">Classification Template</label>
-                <select className="form-select font-bold text-xs" value={unitForm.type} onChange={e => setUnitForm({...unitForm, type: e.target.value})}>
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Classification Template</label>
+                <select className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 text-[11px] font-bold uppercase outline-none focus:border-[var(--accent)]" value={unitForm.type} onChange={e => setUnitForm({...unitForm, type: e.target.value})}>
                   {['ONE_BHK','TWO_BHK','THREE_BHK','FOUR_BHK','STUDIO','PENTHOUSE','VILLA','PLOT'].map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
                 </select>
               </div>
-              <div className="form-group">
-                <label className="form-label">Market Valuation (₹)</label>
-                <input type="number" className="form-input font-mono font-bold" value={unitForm.totalPrice} onChange={e => setUnitForm({...unitForm, totalPrice: parseInt(e.target.value)})} />
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Market Valuation (₹)</label>
+                <input type="number" className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 text-[12px] font-bold font-mono outline-none focus:border-[var(--accent)]" value={unitForm.totalPrice} onChange={e => setUnitForm({...unitForm, totalPrice: parseInt(e.target.value)})} />
               </div>
-              <div className="flex gap-3 pt-6 border-t border-slate-100">
-                <button type="button" className="btn btn-secondary flex-1 font-bold uppercase text-[11px]" onClick={() => setShowAddUnit(false)}>Discard</button>
-                <button type="submit" className="btn btn-primary flex-1 font-bold uppercase text-[11px]">Authorize Deployment</button>
+              <div className="flex gap-3 pt-6 border-t border-[var(--border)]">
+                <button type="button" className="flex-1 px-4 py-2 text-[11px] font-bold uppercase text-[var(--text-muted)] hover:text-[var(--text-primary)]" onClick={() => setShowAddUnit(false)}>Discard</button>
+                <button type="submit" className="flex-1 bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] px-4 py-2 text-[11px] font-bold uppercase hover:bg-[var(--bg-elevated)]">Authorize Deployment</button>
               </div>
             </form>
           </div>
         </div>
-      )}
-
-      {selectedUnit && (
-        <div className="modal-overlay" onClick={() => setSelectedUnit(null)}>
-          <div className="bg-white w-[400px] h-full fixed right-0 top-0 shadow-2xl p-8 flex flex-col border-l border-slate-100" onClick={e => e.stopPropagation()}>
-             <div className="flex justify-between items-center mb-10 pb-4 border-b border-slate-100">
+      )}      {selectedUnit && (
+        <div className="fixed inset-0 z-[100] flex justify-end bg-[var(--bg-primary)]/80 backdrop-blur-sm" onClick={() => setSelectedUnit(null)}>
+          <div className="bg-[var(--bg-surface)] w-[380px] h-full border-l border-[var(--border)] p-6 flex flex-col" onClick={e => e.stopPropagation()}>
+             <div className="flex justify-between items-center mb-10 pb-4 border-b border-[var(--border)] bg-[var(--bg-elevated)] -mx-6 px-6 -mt-6 py-4">
                <div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Unit {selectedUnit.unitNumber}</h3>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Asset Control Panel</p>
+                  <h3 className="text-[24px] font-bold text-[var(--text-primary)] tracking-tight uppercase italic">Unit {selectedUnit.unitNumber}</h3>
+                  <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mt-1">Asset Control Panel</p>
                </div>
-               <button className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 border-0 bg-transparent cursor-pointer" onClick={() => setSelectedUnit(null)}>
+               <button className="text-[var(--text-muted)] hover:text-[var(--danger)]" onClick={() => setSelectedUnit(null)}>
                  <X size={24} />
                </button>
              </div>
 
-             <div className="space-y-8 flex-1 overflow-y-auto">
-               <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Live Status</label>
-                     <span className={`px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-widest border ${
-                       selectedUnit.status === 'AVAILABLE' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                       selectedUnit.status === 'RESERVED' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                       'bg-blue-50 text-blue-600 border-blue-100'
+             <div className="space-y-4 flex-1 overflow-y-auto">
+               <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-[var(--bg-elevated)] p-4 border border-[var(--border)]">
+                     <label className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest block mb-2">Live Status</label>
+                     <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase tracking-wider ${
+                       selectedUnit.status === 'AVAILABLE' ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]' :
+                       selectedUnit.status === 'RESERVED' ? 'bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning)]' :
+                       'bg-[var(--accent-light)] text-[var(--accent)] border-[var(--accent)]'
                      }`}>
                         {selectedUnit.status}
                      </span>
                   </div>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Template</label>
-                     <span className="text-xs font-black text-slate-900 uppercase tracking-tight">{selectedUnit.type.replace('_', ' ')}</span>
+                  <div className="bg-[var(--bg-elevated)] p-4 border border-[var(--border)]">
+                     <label className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest block mb-2">Template</label>
+                     <span className="text-[11px] font-bold text-[var(--text-primary)] uppercase">{selectedUnit.type.replace('_', ' ')}</span>
                   </div>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Valuation</label>
-                     <span className="text-xs font-black text-slate-900 font-mono">₹{selectedUnit.totalPrice.toLocaleString()}</span>
+                  <div className="bg-[var(--bg-elevated)] p-4 border border-[var(--border)]">
+                     <label className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest block mb-2">Valuation</label>
+                     <span className="text-[11px] font-bold text-[var(--text-primary)] font-mono">₹{selectedUnit.totalPrice.toLocaleString()}</span>
                   </div>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Elevation</label>
-                     <span className="text-xs font-black text-slate-900 uppercase tracking-tight">Level {selectedUnit.floor}</span>
+                  <div className="bg-[var(--bg-elevated)] p-4 border border-[var(--border)]">
+                     <label className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest block mb-2">Elevation</label>
+                     <span className="text-[11px] font-bold text-[var(--text-primary)] uppercase">Level {selectedUnit.floor}</span>
                   </div>
                </div>
                
-               <div className="space-y-3 pt-10">
+               <div className="space-y-2 pt-8">
                  {selectedUnit.status === 'AVAILABLE' && (
-                    <button className="btn btn-secondary w-full flex items-center justify-center gap-3 font-black uppercase text-xs tracking-widest border-amber-200 text-amber-700 bg-amber-50/50 hover:bg-amber-50" onClick={() => updateUnitStatus(selectedUnit.id, 'RESERVED')}>
+                    <button className="w-full bg-[var(--warning-bg)] border-2 border-[var(--warning)] text-[var(--warning)] px-4 py-3 text-[11px] font-bold uppercase flex items-center justify-center gap-2" onClick={() => updateUnitStatus(selectedUnit.id, 'RESERVED')}>
                        <Lock size={16} /> Authorize Hold
                     </button>
                  )}
                  {selectedUnit.status === 'RESERVED' && (
-                    <button className="btn btn-secondary w-full flex items-center justify-center gap-3 font-black uppercase text-xs tracking-widest border-emerald-200 text-emerald-700 bg-emerald-50/50 hover:bg-emerald-50" onClick={() => updateUnitStatus(selectedUnit.id, 'AVAILABLE')}>
+                    <button className="w-full bg-[var(--success-bg)] border-2 border-[var(--success)] text-[var(--success)] px-4 py-3 text-[11px] font-bold uppercase flex items-center justify-center gap-2" onClick={() => updateUnitStatus(selectedUnit.id, 'AVAILABLE')}>
                        <Unlock size={16} /> Release Asset
                     </button>
                  )}
                  {(selectedUnit.status === 'AVAILABLE' || selectedUnit.status === 'RESERVED') && (
-                    <button className="btn btn-primary w-full flex items-center justify-center gap-3 font-black uppercase text-xs tracking-widest h-12 shadow-lg" onClick={() => router.push(`/bookings/create?unitId=${selectedUnit.id}`)}>
+                    <button className="w-full bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] px-4 py-3 text-[11px] font-bold uppercase flex items-center justify-center gap-2" onClick={() => router.push(`/bookings/create?unitId=${selectedUnit.id}`)}>
                        <Calendar size={18} /> Initiate Booking Protocol
                     </button>
                  )}
-                 <button className="btn btn-secondary w-full flex items-center justify-center gap-3 font-black uppercase text-xs tracking-widest border-slate-200 h-12">
+                 <button className="w-full bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] px-4 py-3 text-[11px] font-bold uppercase flex items-center justify-center gap-2">
                     <Edit size={16} /> Edit Attributes
                  </button>
-                 <button className="btn btn-danger w-full flex items-center justify-center gap-3 font-black uppercase text-xs tracking-widest bg-red-50 text-red-600 border-red-100 hover:bg-red-100 mt-10 h-12" onClick={() => updateUnitStatus(selectedUnit.id, 'BLOCKED')}>
+                 <button className="w-full bg-[var(--danger-bg)] border-2 border-[var(--danger)] text-[var(--danger)] px-4 py-3 text-[11px] font-bold uppercase flex items-center justify-center gap-2 mt-8" onClick={() => updateUnitStatus(selectedUnit.id, 'BLOCKED')}>
                     <Ban size={16} /> Terminate Availability
                  </button>
                </div>
              </div>
              
-             <div className="pt-6 border-t border-slate-100 text-center">
-                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Asset ID: {selectedUnit.id}</p>
+             <div className="pt-4 border-t border-[var(--border)] text-center">
+                 <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Asset ID: {selectedUnit.id}</p>
              </div>
           </div>
         </div>
-      )}
+      )}    )}
 
       {showAddUpdate && (
-        <div className="modal-overlay" onClick={() => setShowAddUpdate(false)}>
-           <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: 400}}>
-             <div className="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
-                 <Building2 size={18} className="text-primary" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-primary)]/80 backdrop-blur-sm" onClick={() => setShowAddUpdate(false)}>
+           <div className="bg-[var(--bg-surface)] border border-[var(--border)] w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+             <div className="flex justify-between items-center px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-elevated)]">
+              <h3 className="text-[12px] font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
+                 <Building2 size={18} className="text-[var(--accent)]" />
                  Post Structural Milestone
               </h3>
-              <button className="p-1 hover:bg-slate-100 rounded-full transition-colors text-slate-400 border-0 bg-transparent cursor-pointer" onClick={() => setShowAddUpdate(false)}>
+              <button className="text-[var(--text-muted)] hover:text-[var(--danger)]" onClick={() => setShowAddUpdate(false)}>
                  <X size={20} />
               </button>
             </div>
-             <form onSubmit={handleAddUpdate} className="space-y-6">
-                <div className="form-group">
-                   <label className="form-label">Milestone Identifier</label>
-                   <input className="form-input" required value={updateForm.milestoneName} onChange={e => setUpdateForm({...updateForm, milestoneName: e.target.value})} placeholder="e.g. 5th Floor Slab Casting" />
+             <form onSubmit={handleAddUpdate} className="p-6 space-y-6">
+                <div className="space-y-1">
+                   <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Milestone Identifier</label>
+                   <input className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 text-[12px] font-bold uppercase outline-none focus:border-[var(--accent)]" required value={updateForm.milestoneName} onChange={e => setUpdateForm({...updateForm, milestoneName: e.target.value})} placeholder="e.g. 5th Floor Slab Casting" />
                 </div>
-                <div className="form-group">
-                   <label className="form-label">Progression Yield ({updateForm.progressPct}%)</label>
-                   <input type="range" min="0" max="100" className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary" value={updateForm.progressPct} onChange={e => setUpdateForm({...updateForm, progressPct: parseInt(e.target.value)})} />
+                <div className="space-y-1">
+                   <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Progression Yield ({updateForm.progressPct}%)</label>
+                   <input type="range" min="0" max="100" className="w-full h-1 bg-[var(--bg-elevated)] appearance-none cursor-pointer accent-[var(--accent)]" value={updateForm.progressPct} onChange={e => setUpdateForm({...updateForm, progressPct: parseInt(e.target.value)})} />
                 </div>
-                <div className="form-group">
-                   <label className="form-label">Tactical Narrative</label>
-                   <textarea className="form-textarea h-24" rows={3} value={updateForm.description} onChange={e => setUpdateForm({...updateForm, description: e.target.value})} placeholder="Describe structural achievements..." />
+                <div className="space-y-1">
+                   <label className="text-[11px] font-bold text-[var(--text-secondary)] uppercase">Tactical Narrative</label>
+                   <textarea className="w-full bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 text-[12px] font-bold uppercase outline-none focus:border-[var(--accent)] h-24" rows={3} value={updateForm.description} onChange={e => setUpdateForm({...updateForm, description: e.target.value})} placeholder="Describe structural achievements..." />
                 </div>
-                <div className="flex gap-3 pt-6 border-t border-slate-100">
-                   <button type="button" className="btn btn-secondary flex-1 font-bold uppercase text-[11px]" onClick={() => setShowAddUpdate(false)}>Discard</button>
-                   <button type="submit" className="btn btn-primary flex-1 font-bold uppercase text-[11px]">Authorize Update</button>
+                <div className="flex gap-3 pt-6 border-t border-[var(--border)]">
+                   <button type="button" className="flex-1 px-4 py-2 text-[11px] font-bold uppercase text-[var(--text-muted)] hover:text-[var(--text-primary)]" onClick={() => setShowAddUpdate(false)}>Discard</button>
+                   <button type="submit" className="flex-1 bg-[var(--accent-light)] border-2 border-[var(--accent)] text-[var(--accent)] px-4 py-2 text-[11px] font-bold uppercase hover:bg-[var(--bg-elevated)]">Authorize Update</button>
                 </div>
              </form>
            </div>
