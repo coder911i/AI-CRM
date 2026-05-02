@@ -1,20 +1,17 @@
 import { Module } from '@nestjs/common';
 import { WebhooksService } from './webhooks.service';
 import { WebhooksController } from './webhooks.controller';
-import { LeadsService } from '../leads/leads.service';
+import { LeadsModule } from '../leads/leads.module';
 import { NotificationsModule } from '../notifications/notifications.module';
-import { BullModule } from '@nestjs/bull';
+import { PrismaModule } from '../../common/prisma/prisma.module';
 
 @Module({
   imports: [
+    PrismaModule,
+    LeadsModule,
     NotificationsModule,
-    BullModule.registerQueue(
-      { name: 'ai-scoring' },
-      { name: 'email' },
-      { name: 'pdf' },
-    ),
   ],
   controllers: [WebhooksController],
-  providers: [WebhooksService, LeadsService],
+  providers: [WebhooksService],
 })
 export class WebhooksModule {}
