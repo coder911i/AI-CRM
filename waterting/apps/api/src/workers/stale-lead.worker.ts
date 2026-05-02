@@ -45,6 +45,7 @@ export class StaleLeadWorker {
           // Log activity
           await this.prisma.activity.create({
             data: {
+              tenantId: lead.tenantId,
               leadId: lead.id,
               type: 'AI_ACTION' as any,
               title: 'Stale Lead Recommendation',

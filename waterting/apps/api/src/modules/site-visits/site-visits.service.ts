@@ -26,6 +26,7 @@ export class SiteVisitsService {
 
     await this.prisma.activity.create({
       data: {
+        tenantId: user.tenantId,
         leadId: data.leadId,
         userId: user.sub,
         type: ActivityType.VISIT_SCHEDULED,
@@ -115,6 +116,7 @@ export class SiteVisitsService {
     // Log activity
     await this.prisma.activity.create({
       data: {
+        tenantId: user.tenantId,
         leadId: visit.leadId,
         userId: user.sub,
         type: ActivityType.VISIT_COMPLETED,

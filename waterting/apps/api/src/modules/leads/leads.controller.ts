@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request, Res, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request, Res, Query, NotFoundException, Delete } from '@nestjs/common';
 import { LeadsService } from './leads.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -205,5 +205,11 @@ Would you like to schedule a site visit? Reply YES and I'll confirm a slot.`;
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
     res.send(header + rows);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.TENANT_ADMIN)
+  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.leadsService.remove(user, id);
   }
 }

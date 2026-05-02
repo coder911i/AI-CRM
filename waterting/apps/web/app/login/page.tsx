@@ -67,7 +67,7 @@ export default function LoginPage() {
               <input
                 id="login-email"
                 type="email"
-                className="w-full bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] px-5 py-4 text-[14px] font-bold focus:outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-light)] transition-all uppercase placeholder:text-[var(--text-muted)] italic"
+                className="w-full bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] px-5 py-4 text-[14px] font-bold focus:outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-light)] transition-all placeholder:text-[var(--text-muted)]"
                 placeholder="USER@DOMAIN.TLD"
                 value={email}
                 onChange={e => setEmail(e.target.value)}

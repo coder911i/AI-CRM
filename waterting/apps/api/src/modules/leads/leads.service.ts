@@ -43,6 +43,7 @@ export class LeadsService {
       // Log interaction but don't double count
       await this.prisma.activity.create({
         data: {
+          tenantId,
           leadId: existing.id,
           type: ActivityType.NOTE,
           title: `Duplicate lead inquiry received from ${data.source || 'Webhook'}`,
@@ -199,10 +200,22 @@ export class LeadsService {
           lastActivityAt: new Date(),
         },
       });
-      // Queue AI scoring job after creation
-      await this.aiScoringQueue.add('score-lead', {
-        leadId: lead.id,
-        tenantId: user.tenantId,
+      await this.aiScoringQueue.add(
+        'score-lead',
+        { leadId: lead.id, tenantId: user.tenantId },
+        { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
+      );
+
+      // 4. Log initial activity
+      await this.prisma.activity.create({
+        data: {
+          tenantId: user.tenantId,
+          leadId: lead.id,
+          userId: user.sub,
+          type: ActivityType.SYSTEM,
+          title: 'Lead Created',
+          description: `Lead created via ${lead.source}`,
+        },
       });
 
       await this.automationsService.evaluateAutomations(user.tenantId, 'LEAD_CREATED', { 
@@ -285,10 +298,20 @@ export class LeadsService {
     });
     if (!agent) throw new NotFoundException('Agent not found');
 
-    return this.prisma.lead.update({
+    const updated = await this.prisma.lead.update({
       where: { id },
       data: { assignedToId: userId },
     });
+
+    // Notify agent via WhatsApp
+    if (agent.phone) {
+      await this.comm.sendWhatsApp(
+        agent.phone,
+        `New Lead Assigned: ${lead.name}\nPhone: ${lead.phone}\nSource: ${lead.source}\nLink: ${process.env.FRONTEND_URL}/leads/${lead.id}`
+      );
+    }
+
+    return updated;
   }
 
   async parseWhatsAppLead(user: JwtPayload, text: string) {
@@ -342,6 +365,7 @@ export class LeadsService {
 
     return this.prisma.activity.create({
       data: {
+        tenantId: user.tenantId,
         leadId: id,
         userId: user.sub,
         type: ActivityType.NOTE,
@@ -359,6 +383,7 @@ export class LeadsService {
 
     return this.prisma.activity.create({
       data: {
+        tenantId: user.tenantId,
         leadId: id,
         userId: user.sub,
         type: ActivityType.CALL,
@@ -380,6 +405,7 @@ export class LeadsService {
 
       await tx.activity.create({
         data: {
+          tenantId: user.tenantId,
           leadId: id,
           userId: user.sub,
           type: ActivityType.STAGE_CHANGE,
@@ -549,5 +575,12 @@ export class LeadsService {
     return updated;
   }
 
+  async remove(user: JwtPayload, id: string) {
+    const lead = await this.prisma.lead.findFirst({
+      where: { id, tenantId: user.tenantId },
+    });
+    if (!lead) throw new NotFoundException('Lead not found');
 
+    return this.prisma.lead.delete({ where: { id } });
+  }
 }

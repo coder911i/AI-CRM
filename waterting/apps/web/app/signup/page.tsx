@@ -73,14 +73,14 @@ export default function SignupPage() {
                      <div className="w-1.5 h-1.5 bg-[var(--border)]" />
                      Full Name
                   </label>
-                  <input id="signup-name" className="w-full bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] px-5 py-4 text-[13px] font-bold focus:outline-none focus:border-[var(--accent)] transition-all uppercase placeholder:text-[var(--text-muted)] italic" placeholder="ENTITY_NAME" value={formData.name} onChange={e => update('name', e.target.value)} required />
+                  <input id="signup-name" className="w-full bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] px-5 py-4 text-[13px] font-bold focus:outline-none focus:border-[var(--accent)] transition-all placeholder:text-[var(--text-muted)]" placeholder="Your Name" value={formData.name} onChange={e => update('name', e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] flex items-center gap-2">
                      <div className="w-1.5 h-1.5 bg-[var(--border)]" />
                      Work Email
                   </label>
-                  <input id="signup-email" type="email" className="w-full bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] px-5 py-4 text-[13px] font-bold focus:outline-none focus:border-[var(--accent)] transition-all uppercase placeholder:text-[var(--text-muted)] italic" placeholder="USER@DOMAIN.TLD" value={formData.email} onChange={e => update('email', e.target.value)} required />
+                  <input id="signup-email" type="email" className="w-full bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] px-5 py-4 text-[13px] font-bold focus:outline-none focus:border-[var(--accent)] transition-all placeholder:text-[var(--text-muted)]" placeholder="user@domain.com" value={formData.email} onChange={e => update('email', e.target.value)} required />
                 </div>
               </div>
             )}
@@ -90,7 +90,7 @@ export default function SignupPage() {
                    <div className="w-1.5 h-1.5 bg-[var(--border)]" />
                    Organization Identity
                 </label>
-                <input id="signup-tenant" className="w-full bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] px-5 py-4 text-[13px] font-bold focus:outline-none focus:border-[var(--accent)] transition-all uppercase placeholder:text-[var(--text-muted)] italic" placeholder="TENANT_NAME" value={formData.tenantName} onChange={e => update('tenantName', e.target.value)} required />
+                <input id="signup-tenant" className="w-full bg-[var(--bg-surface)] border-2 border-[var(--border)] text-[var(--text-primary)] px-5 py-4 text-[13px] font-bold focus:outline-none focus:border-[var(--accent)] transition-all placeholder:text-[var(--text-muted)]" placeholder="Company Name" value={formData.tenantName} onChange={e => update('tenantName', e.target.value)} required />
               </div>
             )}
             {step === 3 && (

@@ -44,6 +44,7 @@ export class UnitHoldExpiryWorker {
           if (booking?.lead) {
             await this.prisma.activity.create({
               data: {
+                tenantId: unit.tower.project.tenantId,
                 leadId: booking.leadId,
                 type: 'SYSTEM' as any,
                 title: 'Unit Hold Expired',

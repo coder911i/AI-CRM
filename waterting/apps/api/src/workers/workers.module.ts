@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { AiLeadScoringWorker } from './ai-lead-scoring.worker';
 import { EmailWorker } from './email.worker';
@@ -13,6 +13,8 @@ import { AIService } from '../common/ai/ai.service';
 import { AiFollowUpWorker } from './ai-follow-up.worker';
 import { DailyBriefingWorker } from './daily-briefing.worker';
 import { WhatsAppWorker } from './whatsapp.worker';
+import { PortalSyncWorker } from './portal-sync.worker';
+import { LeadsModule } from '../modules/leads/leads.module';
 
 import { CommunicationModule } from '../common/comm/communication.module';
 
@@ -20,6 +22,7 @@ import { CommunicationModule } from '../common/comm/communication.module';
   imports: [
     PrismaModule,
     CommunicationModule,
+    forwardRef(() => LeadsModule),
     BullModule.registerQueue(
       { name: 'ai-scoring' },
       { name: 'email' },
@@ -41,6 +44,7 @@ import { CommunicationModule } from '../common/comm/communication.module';
     AiFollowUpWorker,
     DailyBriefingWorker,
     WhatsAppWorker,
+    PortalSyncWorker,
   ],
   exports: [EventsGateway, AiFollowUpWorker]
 })

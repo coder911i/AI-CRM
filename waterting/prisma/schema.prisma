@@ -128,6 +128,7 @@ enum ActivityType {
   VISIT_COMPLETED
   DOCUMENT_SHARED
   AI_ACTION
+  SYSTEM
 }
 
 // ── Core Models ────────────────────────────────────────────────
@@ -154,6 +155,7 @@ model Tenant {
   properties    Property[]
   supportTickets SupportTicket[]
   ads           Ad[]
+  activities    Activity[]
 }
 
 model User {
@@ -354,6 +356,7 @@ model Lead {
 
 model Activity {
   id          String       @id @default(cuid())
+  tenantId    String
   leadId      String?
   userId      String?
   type        ActivityType
@@ -362,9 +365,11 @@ model Activity {
   metadata    Json         @default("{}")
   createdAt   DateTime     @default(now())
 
+  tenant      Tenant  @relation(fields: [tenantId], references: [id])
   lead        Lead?   @relation(fields: [leadId], references: [id])
-  user        User?  @relation(fields: [userId], references: [id])
+  user        User?   @relation(fields: [userId], references: [id])
 
+  @@index([tenantId])
   @@index([leadId])
 }
 

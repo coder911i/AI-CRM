@@ -100,4 +100,20 @@ export class BookingsController {
       data: { status: 'REJECTED', reason: dto.reason },
     });
   }
+
+  @Post(':id/co-buyers')
+  async addCoBuyer(
+    @Param('id') id: string,
+    @Body() dto: { name: string; phone: string; email?: string; relationship: string },
+    @CurrentUser() user: JwtPayload
+  ) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, lead: { tenantId: user.tenantId } }
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    return this.prisma.coBuyer.create({
+      data: { ...dto, bookingId: id }
+    });
+  }
 }

@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { CommunicationService } from '../common/comm/communication.service';
 import * as Sentry from '@sentry/node';
 
 @Injectable()
@@ -11,7 +12,9 @@ export class VisitReminderWorker {
 
   constructor(
     private prisma: PrismaService,
+    private comm: CommunicationService,
     @InjectQueue('email') private emailQueue: Queue,
+    @InjectQueue('whatsapp') private whatsappQueue: Queue,
   ) {}
 
   @Cron('0 8 * * *') // Daily 8 AM
@@ -31,12 +34,19 @@ export class VisitReminderWorker {
       let processed = 0;
       for (const visit of visits) {
         try {
-          if (!visit.lead.email || visit.lead.emailOptOut) continue;
-          await this.emailQueue.add('send', {
-            to: visit.lead.email,
-            subject: `Reminder: Visit tomorrow`,
-            html: `Hi ${visit.lead.name}, your site visit is tomorrow at ${visit.scheduledAt.toLocaleString('en-IN')}`,
-          });
+          if (visit.lead.email && !visit.lead.emailOptOut) {
+            await this.emailQueue.add('send', {
+              to: visit.lead.email,
+              subject: `Reminder: Visit tomorrow`,
+              html: `Hi ${visit.lead.name}, your site visit is tomorrow at ${visit.scheduledAt.toLocaleString('en-IN')}`,
+            });
+          }
+          if (visit.lead.phone) {
+            await this.whatsappQueue.add('send', {
+              to: visit.lead.phone,
+              message: `Hi ${visit.lead.name}, this is a reminder for your site visit tomorrow at ${visit.scheduledAt.toLocaleTimeString()}. See you there!`,
+            });
+          }
           processed++;
         } catch (e) {
           Sentry.captureException(e);
@@ -66,12 +76,19 @@ export class VisitReminderWorker {
       let processed = 0;
       for (const visit of visits) {
         try {
-          if (!visit.lead.email || visit.lead.emailOptOut) continue;
-          await this.emailQueue.add('send', {
-            to: visit.lead.email,
-            subject: `Your visit is in 2 hours`,
-            html: `Hi ${visit.lead.name}, your site visit is in 2 hours at ${visit.scheduledAt.toLocaleTimeString('en-IN')}.`,
-          });
+          if (visit.lead.email && !visit.lead.emailOptOut) {
+            await this.emailQueue.add('send', {
+              to: visit.lead.email,
+              subject: `Your visit is in 2 hours`,
+              html: `Hi ${visit.lead.name}, your site visit is in 2 hours at ${visit.scheduledAt.toLocaleTimeString('en-IN')}.`,
+            });
+          }
+          if (visit.lead.phone) {
+            await this.whatsappQueue.add('send', {
+              to: visit.lead.phone,
+              message: `Your visit at ${visit.scheduledAt.toLocaleTimeString()} is in 2 hours. Our agent will be waiting for you.`,
+            });
+          }
           processed++;
         } catch (e) {
           Sentry.captureException(e);

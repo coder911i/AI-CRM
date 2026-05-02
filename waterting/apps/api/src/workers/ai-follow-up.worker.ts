@@ -190,6 +190,7 @@ export class AiFollowUpWorker {
 
         await this.prisma.activity.create({
           data: {
+            tenantId: lead.tenantId,
             leadId: lead.id,
             type: 'WHATSAPP',
             title: `AI WhatsApp ${type}`,
@@ -226,6 +227,7 @@ export class AiFollowUpWorker {
 
         await this.prisma.activity.create({
           data: {
+            tenantId: lead.tenantId,
             leadId: lead.id,
             type: 'AI_ACTION' as any,
             title: `AI email sent: ${sequenceType} (Day ${day})`,

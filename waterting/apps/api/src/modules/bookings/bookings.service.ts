@@ -3,6 +3,8 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload, BookingStatus, UnitStatus, ActivityType } from '@waterting/shared';
 import { AuditService } from '../../common/audit/audit.service';
 import { AutomationsService } from '../automations/automations.service';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class BookingsService {
@@ -10,6 +12,7 @@ export class BookingsService {
     private prisma: PrismaService,
     private audit: AuditService,
     private automationsService: AutomationsService,
+    @InjectQueue('pdf') private pdfQueue: Queue,
   ) {}
 
   async create(user: JwtPayload, data: any) {
@@ -28,9 +31,17 @@ export class BookingsService {
         throw new BadRequestException('Unit is not available for booking');
       }
 
+      // Calculate GST (5% by default)
+      const gstRate = 5.0;
+      const gstAmount = data.bookingAmount * (gstRate / 100);
+      const grandTotal = data.bookingAmount + gstAmount;
+
       const booking = await prisma.booking.create({
         data: {
           ...data,
+          gstRate,
+          gstAmount,
+          grandTotal,
           status: BookingStatus.INITIATED,
         },
       });
@@ -39,6 +50,31 @@ export class BookingsService {
         where: { id: unit.id },
         data: { status: UnitStatus.BOOKED },
       });
+
+      // Update lead stage to BOOKING_DONE
+      await prisma.lead.update({
+        where: { id: data.leadId },
+        data: { stage: 'BOOKING_DONE' as any },
+      });
+
+      // Log Activity
+      await prisma.activity.create({
+        data: {
+          tenantId: user.tenantId,
+          leadId: data.leadId,
+          userId: user.sub,
+          type: ActivityType.SYSTEM,
+          title: 'Booking Created',
+          description: `Booking created for Unit ${unit.unitNumber} (${unit.tower.project.name}). Amount: ₹${grandTotal.toLocaleString('en-IN')}`,
+        },
+      });
+
+      // Queue PDF generation
+      // We use a separate queue for PDFs to not block other jobs
+      const pdfQueue = (this as any).pdfQueue; // I need to inject this
+      if (pdfQueue) {
+        await pdfQueue.add('booking-confirmation', { bookingId: booking.id }, { attempts: 3, backoff: 5000 });
+      }
 
       // Audit Log for Booking Creation
       await this.audit.log({
@@ -51,6 +87,8 @@ export class BookingsService {
           unitId: data.unitId,
           leadId: data.leadId,
           bookingAmount: data.bookingAmount,
+          gstAmount,
+          grandTotal,
           buyerName: data.buyerName,
         },
       });

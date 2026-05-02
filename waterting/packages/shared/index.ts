@@ -119,6 +119,7 @@ export enum ActivityType {
   VISIT_COMPLETED = 'VISIT_COMPLETED',
   DOCUMENT_SHARED = 'DOCUMENT_SHARED',
   AI_ACTION = 'AI_ACTION',
+  SYSTEM = 'SYSTEM',
 }
 
 // ── Interfaces ─────────────────────────────────────────────────

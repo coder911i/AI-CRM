@@ -31,6 +31,7 @@ export class ListingSyncService {
 
     await this.prisma.activity.create({
       data: {
+        tenantId: user.tenantId,
         type: 'AI_ACTION' as any,
         title: `Listing sync requested for ${portals.join(', ')}`,
         description: 'Listing queued for sync. Portal API integration active.',

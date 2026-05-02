@@ -60,6 +60,7 @@ export class AutomationsService {
           if (action.type === 'CREATE_ACTIVITY') {
             await this.prisma.activity.create({ 
               data: { 
+                tenantId,
                 leadId: context.leadId, 
                 type: 'NOTE' as any, 
                 title: 'Automated Action',

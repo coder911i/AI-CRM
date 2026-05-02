@@ -93,6 +93,7 @@ export class AiLeadScoringWorker {
       // Log activity
       await this.prisma.activity.create({
         data: {
+          tenantId,
           leadId,
           type: 'AI_ACTION' as any,
           title: `AI Score: ${score}/100 (${scoreLabel})`,
