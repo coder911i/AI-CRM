@@ -14,9 +14,12 @@ import { AiFollowUpWorker } from './ai-follow-up.worker';
 import { DailyBriefingWorker } from './daily-briefing.worker';
 import { WhatsAppWorker } from './whatsapp.worker';
 
+import { CommunicationModule } from '../common/comm/communication.module';
+
 @Module({
   imports: [
     PrismaModule,
+    CommunicationModule,
     BullModule.registerQueue(
       { name: 'ai-scoring' },
       { name: 'email' },

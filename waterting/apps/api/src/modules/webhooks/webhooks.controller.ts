@@ -1,4 +1,6 @@
-import { Controller, Get, Post, Body, Query, Param, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param, Headers, UnauthorizedException, Req } from '@nestjs/common';
+import { Request } from 'express';
+import * as crypto from 'crypto';
 import { WebhooksService } from './webhooks.service';
 import { LeadsService } from '../leads/leads.service';
 import { Public } from '../../common/decorators/public.decorator';
@@ -21,8 +23,24 @@ export class WebhooksController {
 
   @Public()
   @Post('facebook/:tenantId')
-  handleFacebookLead(@Param('tenantId') tenantId: string, @Body() body: any) {
+  handleFacebookLead(@Param('tenantId') tenantId: string, @Body() body: any, @Req() req: Request) {
+    const rawBody = JSON.stringify(body);
+    const signature = req.headers['x-hub-signature-256'] as string;
+    if (!this.verifyFacebookSignature(rawBody, signature)) {
+      throw new UnauthorizedException('Invalid webhook signature');
+    }
     return this.webhooksService.handleFacebookLead(tenantId, body);
+  }
+
+  private verifyFacebookSignature(payload: string, signature: string): boolean {
+    const appSecret = process.env.FB_APP_SECRET;
+    if (!appSecret || !signature) return false;
+    const expected = 'sha256=' + crypto.createHmac('sha256', appSecret).update(payload).digest('hex');
+    try {
+      return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+    } catch (e) {
+      return false;
+    }
   }
 
   @Public()

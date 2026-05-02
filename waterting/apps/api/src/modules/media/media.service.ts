@@ -17,7 +17,9 @@ export class MediaService {
   }
 
   async upload(tenantId: string, module: string, entityId: string, file: Express.Multer.File) {
-    const key = `${tenantId}/${module}/${entityId}/${file.originalname}`;
+    const cleanFileName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const timestamp = Date.now();
+    const key = `${tenantId}/${module}/${entityId}/${timestamp}_${cleanFileName}`;
     
     await this.r2.send(new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME || 'waterting-assets',

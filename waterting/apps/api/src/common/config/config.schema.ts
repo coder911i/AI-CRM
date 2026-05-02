@@ -39,4 +39,5 @@ export const configValidationSchema = Joi.object({
   SENTRY_DSN: Joi.string().uri().optional(),
   FB_APP_ID: Joi.string().optional(),
   FB_VERIFY_TOKEN: Joi.string().optional(),
+  FB_APP_SECRET: Joi.string().optional(),
 });

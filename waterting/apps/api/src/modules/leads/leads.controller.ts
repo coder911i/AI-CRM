@@ -40,16 +40,22 @@ export class LeadsController {
         role: { in: ['SALES_AGENT', 'SALES_MANAGER'] },
         isActive: true,
       },
+      select: { id: true, name: true }
     });
 
-    const stats = await Promise.all(
-      agents.map(async (a) => {
-        const activeLeads = await this.prisma.lead.count({
-          where: { assignedToId: a.id, stage: { notIn: ['BOOKING_DONE', 'LOST'] } },
-        });
-        return { id: a.id, name: a.name, activeLeads };
-      }),
-    );
+    const leadCounts = await this.prisma.lead.groupBy({
+      by: ['assignedToId'],
+      where: { 
+        tenantId: user.tenantId,
+        stage: { notIn: ['BOOKING_DONE', 'LOST'] }
+      },
+      _count: { id: true },
+    });
+
+    const stats = agents.map(a => {
+      const count = leadCounts.find(c => c.assignedToId === a.id)?._count.id || 0;
+      return { id: a.id, name: a.name, activeLeads: count };
+    });
 
     return stats;
   }

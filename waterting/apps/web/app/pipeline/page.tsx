@@ -5,6 +5,7 @@ import CRMLayout from '@/components/CRMLayout';
 import { api } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import { useSocket } from '@/lib/socket';
 import toast from 'react-hot-toast';
 import { 
   Plus, 
@@ -36,6 +37,7 @@ const stages = [
 
 export default function PipelinePage() {
   const { user, loading: authLoading } = useAuth();
+  const { socket } = useSocket();
   const router = useRouter();
   
   const [leads, setLeads] = useState<any[]>([]);
@@ -84,6 +86,21 @@ export default function PipelinePage() {
     if (!authLoading && !user) { router.push('/login'); return; }
     if (user) loadData();
   }, [user, authLoading, loadData, router]);
+
+  // WebSocket listeners for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('lead:scored', () => loadData(true));
+    socket.on('lead:updated', () => loadData(true));
+    socket.on('lead:new', () => loadData(true));
+
+    return () => {
+      socket.off('lead:scored');
+      socket.off('lead:updated');
+      socket.off('lead:new');
+    };
+  }, [socket, loadData]);
 
   const handleDragStart = (leadId: string) => setDraggedLead(leadId);
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();

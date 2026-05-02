@@ -8,6 +8,7 @@ import { EventsGateway } from '../../gateways/events.gateway';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AIService } from '../../common/ai/ai.service';
 import { CommunicationService } from '../../common/comm/communication.service';
+import { AutomationsService } from '../automations/automations.service';
 
 @Injectable()
 export class LeadsService {
@@ -17,6 +18,7 @@ export class LeadsService {
     private notificationsService: NotificationsService,
     private aiService: AIService,
     private comm: CommunicationService,
+    private automationsService: AutomationsService,
     @InjectQueue('ai-scoring') private aiScoringQueue: Queue,
     @InjectQueue('email') private emailQueue: Queue,
     @InjectQueue('pdf') private pdfQueue: Queue,
@@ -109,6 +111,14 @@ export class LeadsService {
       tenantId,
     });
 
+    await this.automationsService.evaluateAutomations(tenantId, 'LEAD_CREATED', { 
+      leadId: lead.id, 
+      email: lead.email, 
+      phone: lead.phone, 
+      stage: lead.stage, 
+      score: lead.score 
+    });
+
     return lead;
   }
 
@@ -194,6 +204,15 @@ export class LeadsService {
         leadId: lead.id,
         tenantId: user.tenantId,
       });
+
+      await this.automationsService.evaluateAutomations(user.tenantId, 'LEAD_CREATED', { 
+        leadId: lead.id, 
+        email: lead.email, 
+        phone: lead.phone, 
+        stage: lead.stage, 
+        score: lead.score 
+      });
+
       return lead;
     } catch (e: any) {
       if (e.code === 'P2002') {
@@ -373,6 +392,15 @@ export class LeadsService {
 
     this.gateway.emitToTenant(user.tenantId, 'lead:updated', { leadId: id, stage });
     await this.handleStageTrigger(user, updated, stage);
+
+    await this.automationsService.evaluateAutomations(user.tenantId, 'LEAD_STAGE_UPDATED', { 
+      leadId: id, 
+      email: updated.email, 
+      phone: updated.phone, 
+      stage: updated.stage, 
+      score: updated.score 
+    });
+
     return updated;
   }
 

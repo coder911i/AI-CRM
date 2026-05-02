@@ -2,12 +2,14 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JwtPayload, BookingStatus, UnitStatus, ActivityType } from '@waterting/shared';
 import { AuditService } from '../../common/audit/audit.service';
+import { AutomationsService } from '../automations/automations.service';
 
 @Injectable()
 export class BookingsService {
   constructor(
     private prisma: PrismaService,
     private audit: AuditService,
+    private automationsService: AutomationsService,
   ) {}
 
   async create(user: JwtPayload, data: any) {
@@ -80,6 +82,15 @@ export class BookingsService {
           },
         });
       }
+
+      await this.automationsService.evaluateAutomations(user.tenantId, 'BOOKING_CREATED', { 
+        leadId: booking.leadId, 
+        email: lead?.email, 
+        phone: lead?.phone,
+        bookingId: booking.id,
+        unitNumber: unit.unitNumber,
+        projectName: unit.tower.project.name
+      });
 
       return booking;
     });
