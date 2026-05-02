@@ -1,9 +1,6 @@
 const getBase = () => {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  if (!url && typeof window !== 'undefined') {
-    console.error('[Waterting] NEXT_PUBLIC_API_URL not set');
-  }
-  return url?.replace(/\/$/, '') ?? '';
+  const url = process.env.NEXT_PUBLIC_API_URL || 'https://ai-crm-iay1.onrender.com';
+  return url.replace(/\/$/, '');
 };
 
 export const getToken = () => {

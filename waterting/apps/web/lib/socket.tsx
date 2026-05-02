@@ -27,7 +27,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://ai-crm-iay1.onrender.com';
     const newSocket = io(apiUrl, {
       auth: { token: localStorage.getItem('waterting_token') },
       query: { tenantId: user.tenantId },
