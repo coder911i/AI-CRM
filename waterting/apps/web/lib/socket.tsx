@@ -41,7 +41,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     });
 
     newSocket.on('connect', () => {
-      console.log('Connected to WebSocket server');
       setIsConnected(true);
       if (user) {
         newSocket.emit('join', { tenantId: user.tenantId });
@@ -64,7 +63,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     });
 
     newSocket.on('reconnect', (attemptNumber) => {
-      console.log(`WebSocket reconnected after ${attemptNumber} attempts`);
       setIsConnected(true);
     });
 
@@ -79,29 +77,21 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     // Heartbeat tracking
     const pingInterval = setInterval(() => {
       if (newSocket.connected) {
-        const start = Date.now();
-        newSocket.emit('ping', () => {
-          const latency = Date.now() - start;
-          // console.log(`Latency: ${latency}ms`);
-        });
+        newSocket.emit('ping', () => {});
       }
     }, 30000);
 
     newSocket.on('lead:new', (lead) => {
       // Global toast or state update could go here
-      console.log('New lead received:', lead);
     });
 
     newSocket.on('lead:scored', ({ leadId, score }) => {
-      console.log(`Lead ${leadId} scored: ${score}`);
     });
 
     newSocket.on('lead:updated', (lead) => {
-      console.log('Lead updated:', lead);
     });
 
     newSocket.on('unit:status', ({ unitId, status }) => {
-      console.log(`Unit ${unitId} status: ${status}`);
     });
 
     newSocket.on('notification', (notif) => {
